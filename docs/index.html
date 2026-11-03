@@ -1,0 +1,1715 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Forever Home Grünwald</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Maßstäbliches 3D-Modell, Ansichten und Lageplan zum Neubau an der Ebertstraße in Grünwald">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>:root {
+  /* Layout: ein Zeichenblatt – Plankopf oben, links die Zeichen- bzw. Modellfläche, rechts die Bedienleiste (mobil darunter). */
+  --paper: #f1f2ee; --surface: #fbfbf9; --ink: #1d242a; --ink-2: #58636d; --rule: #cad0d3; --rule-2: #e1e5e7;
+  --accent: #295a83; --accent-ink: #ffffff; --limit: #c0392b; --vogel: #2c5fc6; --tg: #cf7a23;
+  --lawn: #bcd3a1; --lawn-2: #7f9f62; --water: #9ccbe3; --stone: #dfd8cb; --pave: #e3e0d8; --street: #e2e2df;
+  --nb: #c6c3bc; --nb-2: #dcd9d3; --house: #39414a; --house-ink: #ffffff;
+  --m-putz: #efe8da; --m-putz-hell: #f6f2e9; --m-putz-2: #ddd3c0; --m-reveal: #cfc6b4; --m-sockel: #c9bfad;
+  --m-roof: #3b4148; --m-roof-line: #58606a; --m-zink: #59616a; --m-glass: #aebfcc; --m-curtain: #f4efe6; --m-frame: #1a1e22; --m-lamp: #f5d9a8;
+  --font-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11161a; --surface: #172027; --ink: #e3e8eb; --ink-2: #9ba7b1; --rule: #2c3841; --rule-2: #222c33;
+    --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --vogel: #7ea6ff; --tg: #f0a04f;
+    --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
+    --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
+    --m-putz: #d9d1c1; --m-putz-hell: #e4ddd0; --m-putz-2: #c1b7a4; --m-reveal: #a99f8c; --m-sockel: #a39886;
+    --m-roof: #2c3237; --m-roof-line: #4b535b; --m-zink: #474e55; --m-glass: #5f7c90; --m-curtain: #cfc7b9; --m-frame: #0c0e10; --m-lamp: #e9c98d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11161a; --surface: #172027; --ink: #e3e8eb; --ink-2: #9ba7b1; --rule: #2c3841; --rule-2: #222c33;
+  --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --vogel: #7ea6ff; --tg: #f0a04f;
+  --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
+  --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
+  --m-putz: #d9d1c1; --m-putz-hell: #e4ddd0; --m-putz-2: #c1b7a4; --m-reveal: #a99f8c; --m-sockel: #a39886;
+  --m-roof: #2c3237; --m-roof-line: #4b535b; --m-zink: #474e55; --m-glass: #5f7c90; --m-curtain: #cfc7b9; --m-frame: #0c0e10; --m-lamp: #e9c98d;
+  color-scheme: dark;
+}
+
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.45 var(--font-ui); -webkit-font-smoothing: antialiased; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app {
+  height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.plankopf {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px 24px;
+  padding-block: 14px 0; border-bottom: 1px solid var(--rule);
+}
+.pk-title h1 { font: 600 clamp(22px, 3vw, 30px)/1.05 var(--font-display); letter-spacing: 0.01em; margin: 0; text-wrap: balance; }
+.pk-sub { margin: 4px 0 0; color: var(--ink-2); font-size: 13px; }
+.pk-meta { display: flex; gap: 18px; margin: 0; font-size: 12px; }
+.pk-meta div { display: grid; gap: 1px; padding-left: 10px; border-left: 1px solid var(--rule); }
+.pk-meta dt { text-transform: uppercase; letter-spacing: 0.08em; font-size: 10.5px; color: var(--ink-2); }
+.pk-meta dd { margin: 0; font-family: var(--font-data); font-size: 12px; }
+.tabs { grid-column: 1 / -1; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin-top: 6px; }
+.tabs button {
+  border: 0; background: none; padding: 10px 12px 9px; cursor: pointer; white-space: nowrap;
+  font-weight: 500; color: var(--ink-2); border-bottom: 2px solid transparent;
+}
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs button:hover { color: var(--ink); }
+
+main { min-height: 0; }
+.view-wrap { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; padding-block: 14px 16px; min-height: 0; }
+.stage {
+  position: relative; min-height: 0; min-width: 0; overflow: hidden;
+  border: 1px solid var(--rule); border-radius: var(--r); background: var(--surface);
+}
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.stage svg { display: block; width: 100%; height: 100%; cursor: grab; user-select: none; }
+.stage svg:active { cursor: grabbing; }
+.panel { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 18px; padding-right: 2px; }
+.group { display: grid; gap: 9px; }
+.group h2 { margin: 0; font: 600 11px/1.2 var(--font-ui); text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-2); }
+.group p { margin: 0; color: var(--ink-2); font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button, .btn {
+  border: 1px solid var(--rule); background: var(--surface); padding: 6px 11px; border-radius: 999px; cursor: pointer;
+  font-size: 13px; font-weight: 500; line-height: 1.2;
+}
+.chips button:hover, .btn:hover { border-color: var(--ink-2); }
+.chips button[aria-pressed="true"], .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn { border-radius: var(--r); }
+.switch { display: flex; align-items: flex-start; gap: 9px; cursor: pointer; font-size: 13.5px; }
+.switch input { margin: 2px 0 0; accent-color: var(--accent); width: 15px; height: 15px; flex: none; }
+.switch .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; margin-top: 4px; border: 1px solid var(--ink-2); }
+.field { display: grid; gap: 4px; font-size: 13px; }
+.field > span { display: flex; justify-content: space-between; color: var(--ink-2); }
+.field output { font-family: var(--font-data); color: var(--ink); }
+.field input[type="date"] { border: 1px solid var(--rule); border-radius: var(--r); background: var(--surface); padding: 5px 8px; }
+.field input[type="range"] { width: 100%; accent-color: var(--accent); }
+.readout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0; }
+.readout div { border: 1px solid var(--rule-2); border-radius: var(--r); padding: 5px 7px; }
+.readout dt { font-size: 10.5px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.06em; }
+.readout dd { margin: 0; font: 500 13px var(--font-data); font-variant-numeric: tabular-nums; }
+
+.hud { position: absolute; left: 10px; bottom: 10px; right: 10px; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; pointer-events: none; }
+.hud-box { background: color-mix(in srgb, var(--surface) 86%, transparent); border: 1px solid var(--rule); border-radius: var(--r); padding: 5px 9px; font-size: 12px; backdrop-filter: blur(6px); }
+.hud-view { font-weight: 600; }
+.hud-sun { font-family: var(--font-data); font-size: 11.5px; color: var(--ink-2); }
+.hint { position: absolute; top: 10px; right: 10px; font-size: 11.5px; color: var(--ink-2); }
+.scalebar { display: grid; gap: 3px; justify-items: start; }
+.scalebar i { display: block; height: 6px; border: 1px solid var(--ink); border-top: 0; background: linear-gradient(90deg, var(--ink) 50%, transparent 50%); }
+.scalebar span { font: 500 11px var(--font-data); }
+.fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ink-2); }
+.stage-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; pointer-events: none; }
+.stage-top > * { pointer-events: auto; }
+.cap { max-width: 46ch; }
+.cap strong { display: block; font: 600 15px/1.25 var(--font-display); }
+.cap span { font-size: 12px; color: var(--ink-2); }
+.zoom { display: flex; gap: 4px; }
+.zoom button { width: 32px; height: 32px; border-radius: var(--r); border: 1px solid var(--rule); background: var(--surface); cursor: pointer; font-size: 15px; }
+.tip { position: absolute; z-index: 3; max-width: 260px; pointer-events: none; background: var(--ink); color: var(--paper); font-size: 12px; padding: 6px 9px; border-radius: var(--r); }
+
+.legend { display: grid; gap: 7px; }
+.notes { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.notes li { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 9px; }
+.notes li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; background: var(--ink-2); }
+.notes li.warn::before { background: var(--limit); }
+.notes li.info::before { background: var(--accent); }
+table.fl { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.fl th { text-align: left; font-weight: 400; padding: 4px 0; }
+table.fl td { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; padding: 4px 0 4px 8px; }
+table.fl tr + tr { border-top: 1px solid var(--rule-2); }
+table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
+
+#view-daten { height: 100%; overflow: auto; }
+.doc { max-width: 980px; padding-block: 22px 48px; display: grid; gap: 30px; }
+.doc h2 { font: 600 22px/1.2 var(--font-display); margin: 0 0 10px; text-wrap: balance; }
+.doc p, .doc li { max-width: 68ch; }
+.doc section { display: grid; gap: 8px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.fact { border: 1px solid var(--rule); border-radius: var(--r); background: var(--surface); padding: 10px 12px; display: grid; gap: 2px; }
+.fact b { font: 500 20px var(--font-data); font-variant-numeric: tabular-nums; }
+.fact span { font-size: 12px; color: var(--ink-2); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.cols ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.cols h3 { margin: 0 0 6px; font-size: 14px; }
+.tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-2); }
+.src { font-size: 12.5px; color: var(--ink-2); }
+
+/* ---------- Zeichnungen: Ansichten ---------- */
+.e-wall { fill: var(--m-putz); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.e-pil { fill: var(--m-putz-hell); stroke: var(--ink); stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
+.e-rust { stroke: var(--m-putz-2); stroke-width: 0.02; }
+.e-reveal { fill: var(--m-reveal); }
+.e-frame { fill: var(--m-frame); }
+.e-glass { fill: var(--m-glass); }
+.e-curtain { fill: var(--m-curtain); opacity: 0.55; }
+.e-sill, .e-sockel { fill: var(--m-sockel); stroke: var(--ink); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.e-roof { fill: var(--m-roof); }
+.e-roof-line { fill: none; stroke: var(--m-roof-line); stroke-width: 0.014; }
+.e-zink { fill: var(--m-zink); }
+.e-roofo { fill: url(#pSlate); stroke: var(--ink); stroke-width: 1.2px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.e-zinkf { fill: url(#pZink); stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.e-cap { fill: var(--m-zink); stroke: var(--ink); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.e-bar { fill: var(--m-frame); }
+.e-lamp { fill: var(--m-lamp); }
+.e-stone { fill: var(--stone); stroke: var(--ink); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.e-shade { fill: var(--ink); opacity: 0.09; }
+.e-ground { stroke: var(--ink); stroke-width: 2.2px; vector-effect: non-scaling-stroke; }
+.e-earth { fill: url(#pEarth); }
+.e-hatch { stroke: var(--ink-2); stroke-width: 0.018; }
+.e-dim { stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; fill: none; }
+.e-thin { stroke-width: 0.5px; }
+.e-dash { stroke-dasharray: 3 3; }
+.e-dimtxt { font: 500 0.3px var(--font-data); fill: var(--ink); text-anchor: middle; }
+.e-kote { font: 500 0.32px var(--font-data); fill: var(--ink); text-anchor: end; }
+.e-kname { font: 400 0.24px var(--font-ui); fill: var(--ink-2); text-anchor: start; }
+.e-beyond { fill: var(--m-reveal); opacity: 0.6; }
+.e-kmark { fill: var(--ink); }
+.e-limit { stroke: var(--limit); stroke-width: 1.4px; stroke-dasharray: 7 4; vector-effect: non-scaling-stroke; }
+.e-limittxt { font: 600 0.3px var(--font-ui); fill: var(--limit); text-anchor: end; }
+.e-limitdot { fill: var(--limit); }
+.e-cut { fill: var(--ink); }
+.e-cutroof { fill: var(--ink-2); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.e-room { fill: var(--surface); }
+.e-glassline { stroke: var(--m-glass); stroke-width: 2px; vector-effect: non-scaling-stroke; }
+.e-h230 { stroke: var(--accent); stroke-width: 1.2px; }
+.e-label { font: 500 0.36px var(--font-ui); fill: var(--ink-2); text-anchor: middle; }
+
+/* ---------- Zeichnungen: Lageplan ---------- */
+.s-street { fill: var(--street); }
+.s-parcel { stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; opacity: 0.7; }
+.s-nb { fill: var(--nb); stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.s-nb2 { fill: var(--nb-2); stroke: var(--ink-2); stroke-width: 0.5px; vector-effect: non-scaling-stroke; }
+.s-hnr { font: 500 1.05px var(--font-data); fill: var(--ink-2); text-anchor: middle; dominant-baseline: middle; }
+.s-streetname { font: italic 500 1.6px var(--font-display); fill: var(--ink-2); text-anchor: middle; letter-spacing: 0.05em; }
+.s-lawn { fill: var(--lawn); }
+.s-pave { fill: var(--pave); stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.s-stone { fill: var(--stone); stroke: var(--ink); stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
+.s-coping { fill: var(--stone); stroke: var(--ink); stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
+.s-water { fill: var(--water); stroke: var(--ink); stroke-width: 0.5px; vector-effect: non-scaling-stroke; }
+.s-annex { fill: var(--nb); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.s-house { fill: var(--house); stroke: var(--ink); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
+.s-win { fill: var(--m-glass); }
+.s-houselabel { font: 600 1.05px var(--font-ui); fill: var(--house-ink); text-anchor: middle; }
+.s-small { font-size: 0.72px; font-weight: 500; }
+.s-tiny { font-size: 0.52px; font-weight: 500; }
+.s-lbl { font: 500 0.8px var(--font-ui); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
+.s-entry { fill: var(--accent); }
+.s-tg { fill: none; stroke: var(--tg); stroke-width: 1.6px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
+.s-tglabel { font: 600 0.62px var(--font-ui); fill: var(--tg); text-anchor: middle; }
+.s-bestand { fill: url(#pBestand); stroke: var(--ink-2); stroke-width: 1px; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+.s-hatchline { stroke: var(--ink-2); stroke-width: 0.08; }
+.s-vab { fill: none; stroke: var(--vogel); stroke-width: 0.9px; vector-effect: non-scaling-stroke; }
+.s-vab-in { stroke-dasharray: 3 3; }
+.s-vtg { fill: none; stroke: var(--tg); stroke-width: 1px; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
+.s-vhaus { fill: color-mix(in srgb, var(--vogel) 12%, transparent); stroke: var(--vogel); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
+.s-vlabel { font: 600 0.75px var(--font-ui); fill: var(--vogel); text-anchor: middle; }
+.s-ab { fill: url(#pAbstand); stroke: var(--limit); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.s-abline { stroke: var(--limit); stroke-width: 0.06; opacity: 0.7; }
+.s-ab-over { fill: var(--limit); opacity: 0.55; }
+.s-ablabel { font: 600 0.62px var(--font-data); fill: var(--limit); text-anchor: middle; }
+.s-tree { fill: color-mix(in srgb, var(--lawn-2) 32%, transparent); stroke: var(--lawn-2); stroke-width: 0.9px; vector-effect: non-scaling-stroke; }
+.s-tree-p { stroke-width: 1.3px; }
+.s-trunk { fill: var(--lawn-2); }
+.s-schutz { fill: color-mix(in srgb, var(--limit) 7%, transparent); stroke: var(--limit); stroke-width: 1.2px; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.s-schutzlabel { font: 600 0.7px var(--font-ui); fill: var(--limit); text-anchor: middle; }
+.s-linie { fill: none; stroke: var(--vogel); stroke-width: 1.2px; stroke-dasharray: 10 3 2 3; vector-effect: non-scaling-stroke; }
+.s-linielabel { font: 500 0.62px var(--font-ui); fill: var(--vogel); }
+.s-grenze { fill: none; stroke: var(--ink); stroke-width: 2px; stroke-dasharray: 14 4 2 4; vector-effect: non-scaling-stroke; }
+.s-stone-mark { fill: var(--surface); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.s-edge { font: 500 0.78px var(--font-data); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
+.s-plotarea { font: 600 1.0px var(--font-ui); fill: var(--ink-2); text-anchor: middle; }
+.s-dim { stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.s-dimtxt { font: 500 0.66px var(--font-data); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; paint-order: stroke; stroke: var(--surface); stroke-width: 0.14px; }
+.s-na-dark { fill: var(--ink); }
+.s-na-light { fill: var(--surface); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.s-na-txt { font: 600 1.3px var(--font-ui); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
+.s-sb-a { fill: var(--ink); }
+.s-sb-b { fill: var(--surface); stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.s-sbtxt { font: 500 0.75px var(--font-data); fill: var(--ink); text-anchor: middle; }
+[data-tip] { cursor: help; }
+[data-tip]:hover { filter: brightness(1.06); }
+
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .app { height: auto; min-height: 100%; }
+  .plankopf { grid-template-columns: minmax(0, 1fr); }
+  .pk-meta { flex-wrap: wrap; gap: 10px; }
+  .view-wrap { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .stage { height: 62vh; min-height: 320px; }
+  .panel { overflow: visible; }
+  .hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="plankopf">
+    <div class="pk-title">
+      <h1>Forever Home Grünwald</h1>
+      <p class="pk-sub">Ebertstraße 14 · Neubau Einfamilienhaus mit Tiefgarage · maßstäbliche Konzeptstudie</p>
+    </div>
+    <dl class="pk-meta">
+      <div><dt>Konzept</dt><dd>Chaline Deutsch · 28.10.2026</dd></div>
+      <div><dt>Baurecht</dt><dd>Vogel+Partner · 30.10.2026</dd></div>
+      <div><dt>Stand</dt><dd>03.11.2026</dd></div>
+    </dl>
+    <nav class="tabs" role="tablist" aria-label="Ansichten">
+      <button role="tab" id="tab-modell" aria-controls="view-modell" data-view="modell">3D-Modell</button>
+      <button role="tab" id="tab-ansichten" aria-controls="view-ansichten" data-view="ansichten">Ansichten &amp; Schnitt</button>
+      <button role="tab" id="tab-lageplan" aria-controls="view-lageplan" data-view="lageplan">Lageplan</button>
+      <button role="tab" id="tab-daten" aria-controls="view-daten" data-view="daten">Kennzahlen &amp; Hinweise</button>
+    </nav>
+  </header>
+  <main>
+    <section id="view-modell" class="view-wrap" role="tabpanel" aria-labelledby="tab-modell">
+      <div class="stage" id="stage3d">
+        <canvas aria-label="3D-Modell des Hauses mit Grundstück"></canvas>
+        <div class="fallback" hidden>Das 3D-Modell braucht WebGL. Die Ansichten und der Lageplan funktionieren auch ohne.</div>
+        <div class="hint hud-box">Ziehen: drehen · Rechts ziehen: verschieben · Rad: zoomen</div>
+        <div class="hud">
+          <div class="hud-box"><div class="hud-view">Garten</div><div class="hud-sun"></div></div>
+          <div class="hud-box scalebar" hidden><i></i><span>5 m</span></div>
+        </div>
+      </div>
+      <aside class="panel" aria-label="Steuerung 3D-Modell">
+        <section class="group">
+          <h2>Blick</h2>
+          <div class="chips" id="camChips">
+            <button data-cam="garten" aria-pressed="true">Garten</button>
+            <button data-cam="eingang">Eingang</button>
+            <button data-cam="ost">Ost</button>
+            <button data-cam="west">West</button>
+            <button data-cam="vogel" data-label="Vogelperspektive">Vogel</button>
+            <button data-cam="oben" data-label="Draufsicht">Draufsicht</button>
+            <button data-cam="front" data-label="Frontansicht Süd, orthogonal">Frontal maßstäblich</button>
+          </div>
+          <label class="switch"><input type="checkbox" id="optRotate"> Langsam ums Haus fahren</label>
+        </section>
+        <section class="group">
+          <h2>Sonnenstand Grünwald</h2>
+          <div class="chips" id="dateChips">
+            <button data-date="06-21" aria-pressed="true">21. Juni</button>
+            <button data-date="03-20">20. März</button>
+            <button data-date="12-21">21. Dez.</button>
+            <button data-date="heute">Heute</button>
+          </div>
+          <label class="field"><span>Datum</span><input type="date" id="sunDate" value="2026-06-21"></label>
+          <label class="field"><span>Uhrzeit <output id="sunTimeOut">17:00</output></span><input type="range" id="sunTime" min="4" max="22.5" step="0.0833" value="17"></label>
+          <button class="btn" id="sunPlay" aria-pressed="false">Tagesverlauf abspielen</button>
+          <dl class="readout" id="sunInfo"></dl>
+        </section>
+        <section class="group">
+          <h2>Ebenen</h2>
+          <label class="switch"><input type="checkbox" id="ly-nachbarn" data-layer3d="nachbarn" checked> Nachbarhäuser (Höhe angenommen)</label>
+          <label class="switch"><input type="checkbox" id="ly-baeume" data-layer3d="baeume" checked> Bäume und Wurzelschutzbereiche</label>
+          <label class="switch"><input type="checkbox" id="ly-grenze" data-layer3d="grenze" checked> Grundstücksgrenze</label>
+          <label class="switch"><input type="checkbox" id="ly-baurecht" data-layer3d="baurecht"> Baurecht: Wandhöhe 7,25 m und First 11,12 m</label>
+          <label class="switch"><input type="checkbox" id="ly-tg" data-layer3d="tg"> Tiefgarage und Keller durchsichtig zeigen</label>
+        </section>
+        <section class="group">
+          <h2>Schnitt</h2>
+          <label class="switch"><input type="checkbox" id="optCut"> Haus von Osten aufschneiden</label>
+          <label class="field"><span>Schnittlage ab Westfassade <output id="cutOut">8,00 m</output></span><input type="range" id="cutX" min="0.5" max="15.5" step="0.05" value="8"></label>
+        </section>
+        <button class="btn" id="snap3d">Bild speichern (PNG)</button>
+      </aside>
+    </section>
+
+    <section id="view-ansichten" class="view-wrap" role="tabpanel" aria-labelledby="tab-ansichten" hidden>
+      <div class="stage" id="stageElev">
+        <svg id="elevSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Maßstäbliche Ansicht"></svg>
+        <div class="stage-top">
+          <div class="cap hud-box"><strong id="elevTitle">Ansicht Süd</strong><span id="elevNote"></span></div>
+          <div class="zoom"><button id="elevZoomIn" aria-label="Vergrößern">+</button><button id="elevZoomOut" aria-label="Verkleinern">−</button><button id="elevHome" aria-label="Ganze Zeichnung">⤢</button></div>
+        </div>
+      </div>
+      <aside class="panel" aria-label="Steuerung Ansichten">
+        <section class="group">
+          <h2>Zeichnung</h2>
+          <div class="chips" id="elevChips">
+            <button data-elev="S" aria-pressed="true">Süd · Garten</button>
+            <button data-elev="N">Nord · Eingang</button>
+            <button data-elev="E">Ost</button>
+            <button data-elev="W">West</button>
+            <button data-elev="A">Schnitt A–A</button>
+          </div>
+        </section>
+        <section class="group">
+          <h2>Einblenden</h2>
+          <label class="switch"><input type="checkbox" id="eo-mass" data-elev-opt="mass" checked> Maßketten (Fensterachsen, Breite)</label>
+          <label class="switch"><input type="checkbox" id="eo-koten" data-elev-opt="koten" checked> Höhenkoten</label>
+          <label class="switch"><input type="checkbox" id="eo-recht" data-elev-opt="recht" checked> Baurecht-Grenzen (rot)</label>
+        </section>
+        <section class="group">
+          <h2>So ist die Ansicht entstanden</h2>
+          <p>Breite, Fensterachsen und Anbauten stammen exakt aus dem Konzeptplan im Maßstab 1:100. Wandhöhe 7,25 m und Firsthöhe 11,12 m sind die Grenzen aus der Baurecht-Skizze von Vogel+Partner. Gesimse, Pilaster, Geländer und Gauben folgen dem Rendering.</p>
+          <p>Das Traufgesims sitzt bei 6,83 m, weil die Wandhöhe bis zur Dachhaut an der Außenwand gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach (unten 50°, oben 15°).</p>
+        </section>
+        <button class="btn" id="elevDl">Zeichnung speichern (SVG)</button>
+      </aside>
+    </section>
+
+    <section id="view-lageplan" class="view-wrap" role="tabpanel" aria-labelledby="tab-lageplan" hidden>
+      <div class="stage" id="stageSite">
+        <svg id="siteSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lageplan"></svg>
+        <div class="stage-top">
+          <div class="cap hud-box"><strong>Lageplan</strong><span>Antippen oder darüberfahren zeigt Maße und Flächen</span></div>
+          <div class="zoom"><button id="siteZoomIn" aria-label="Vergrößern">+</button><button id="siteZoomOut" aria-label="Verkleinern">−</button><button id="siteHome" aria-label="Ganzes Grundstück">⤢</button></div>
+        </div>
+        <div class="tip" id="siteTip" hidden></div>
+      </div>
+      <aside class="panel" aria-label="Steuerung Lageplan">
+        <section class="group legend">
+          <h2>Ebenen</h2>
+          <label class="switch"><input type="checkbox" id="sl-konzept" data-site-layer="konzept" checked><i class="sw" style="background:var(--house)"></i> Konzept Chaline Deutsch</label>
+          <label class="switch"><input type="checkbox" id="sl-tg" data-site-layer="tg" checked><i class="sw" style="border-color:var(--tg)"></i> Tiefgarage (unterirdisch)</label>
+          <label class="switch"><input type="checkbox" id="sl-baeume" data-site-layer="baeume" checked><i class="sw" style="background:var(--lawn-2)"></i> Bäume und Wurzelschutzbereiche</label>
+          <label class="switch"><input type="checkbox" id="sl-grenze" data-site-layer="grenze" checked><i class="sw" style="border-color:var(--ink)"></i> Grenze und Grenzlängen</label>
+          <label class="switch"><input type="checkbox" id="sl-masse" data-site-layer="masse" checked><i class="sw" style="border-color:var(--ink);border-style:dashed"></i> Grenzabstände und Maße</label>
+          <label class="switch"><input type="checkbox" id="sl-linie" data-site-layer="linie" checked><i class="sw" style="border-color:var(--vogel)"></i> Linie 5,00 m zur Straße</label>
+          <label class="switch"><input type="checkbox" id="sl-umgebung" data-site-layer="umgebung" checked><i class="sw" style="background:var(--nb)"></i> Nachbarhäuser und Straße</label>
+          <label class="switch"><input type="checkbox" id="sl-abstand" data-site-layer="abstand"><i class="sw" style="background:var(--limit)"></i> Abstandsflächen (überschlägig)</label>
+          <label class="switch"><input type="checkbox" id="sl-vogel" data-site-layer="vogel"><i class="sw" style="border-color:var(--vogel)"></i> Zum Vergleich: Skizze Vogel+Partner</label>
+          <label class="switch"><input type="checkbox" id="sl-bestand" data-site-layer="bestand"><i class="sw" style="border-style:dashed"></i> Bestand (wird abgerissen)</label>
+        </section>
+        <section class="group">
+          <h2>Auffälligkeiten</h2>
+          <ul class="notes">
+            <li class="warn"><span>Westabstand nur <b data-stat="west0"></b>–<b data-stat="west1"></b> m. Mit dem Ansatz der Vogel-Skizze (0,4 H) wären <b data-stat="ew"></b> m nötig.</span></li>
+            <li class="warn"><span>Die Wurzelschutzbereiche der Nachbarbäume im Nordosten und Südosten reichen in Zuwegung und Zufahrt.</span></li>
+            <li class="info"><span>Die Zufahrt endet am Poolhaus (3,50 × 6,00 m). Eine Rampe ist nicht gezeichnet; das Maß passt zu einem Autoaufzug.</span></li>
+          </ul>
+        </section>
+        <section class="group">
+          <h2>Flächenbilanz</h2>
+          <table class="fl"><tbody id="flaechen"></tbody></table>
+          <p>Grundstück laut Plan <span data-stat="plot"></span> m² (amtlich 1.661 m²).</p>
+        </section>
+        <button class="btn" id="siteDl">Lageplan speichern (SVG)</button>
+      </aside>
+    </section>
+
+    <section id="view-daten" role="tabpanel" aria-labelledby="tab-daten" hidden>
+      <div class="doc">
+        <section>
+          <h2>Kurz gesagt</h2>
+          <ul class="notes">
+            <li class="info"><span><b>Die Proportionen des Renderings stimmen weitgehend.</b> Breite 16,00 m und Gesamthöhe 11,12 m passen. Maßstäblich sitzt das Traufgesims aber bei 6,83 m, weil die erlaubte Wandhöhe von 7,25 m bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach und bekommt Licht über Gauben.</span></li>
+            <li class="warn"><span><b>Der Westabstand ist knapp.</b> Zwischen Westfassade und Grenze liegen <span data-stat="west0"></span> m (Nordwestecke) bis <span data-stat="west1"></span> m. Nach dem Ansatz aus Vogels Skizze (0,4 H mit H = <span data-stat="H"></span> m) wären <span data-stat="ew"></span> m nötig. Ob das reicht, hängt von der Dachneigung und dem Ortsrecht ab.</span></li>
+            <li class="warn"><span><b>Schutzbäume der Nachbarn.</b> Der große Baum im Nordosten (Krone etwa 16 m) und der Baum im Südosten haben Wurzelschutzbereiche (Krone plus 1,50 m), die in Zuwegung und Zufahrt reichen. Dort ist wurzelschonendes Bauen nötig.</span></li>
+            <li class="info"><span><b>Zufahrt zur Tiefgarage noch offen.</b> Die Zufahrt endet am Poolhaus mit 3,50 × 6,00 m. Eine Rampe ist nicht gezeichnet; das Maß passt zu einem Autoaufzug.</span></li>
+            <li><span><b>Abweichend von der Vogel-Skizze.</b> Vogel geht von 15,10 × 12,05 m aus und setzt das Haus gut 3,5 m weiter nach Osten. Das Konzept hat 16,00 × 11,65 m: 0,90 m mehr Gartenfassade und 4,4 m² mehr Grundfläche.</span></li>
+          </ul>
+        </section>
+        <section>
+          <h2>Kennzahlen</h2>
+          <div class="facts">
+            <div class="fact"><b>1.661 m²</b><span>Grundstück (amtlich)</span></div>
+            <div class="fact"><b>16,00 × 11,65</b><span>Wohnhaus in m · 186,4 m²</span></div>
+            <div class="fact"><b>372,8 m²</b><span>Geschossfläche EG + OG (Vogel: 363,9)</span></div>
+            <div class="fact"><b>7,25 / 11,12</b><span>Wandhöhe / Firsthöhe in m</span></div>
+            <div class="fact"><b data-stat="grz"></b><span>GRZ nur Wohnhaus</span></div>
+            <div class="fact"><b><span data-stat="versiegelt"></span> %</b><span>überbaut und befestigt</span></div>
+            <div class="fact"><b><span data-stat="tg"></span> m²</b><span>Tiefgarage außerhalb des Hauses</span></div>
+            <div class="fact"><b>10,00 m</b><span>Terrasse bis Pool</span></div>
+          </div>
+        </section>
+        <section>
+          <h2>Was maßstäblich ist und was angenommen</h2>
+          <div class="cols">
+            <div><h3>Aus dem Konzeptplan, M 1:100</h3><ul>
+              <li>Grundstück mit sieben Grenzpunkten</li><li>Haus 16,00 × 11,65 m, Außenwand 36 cm</li><li>Sieben Fensterachsen der Südfassade</li>
+              <li>Terrasse 7,00 × 3,00 m, Freisitz 3,00 × 5,00 m, Podest 5,00 × 1,00 m</li><li>Zuwegung 1,50 m, Zufahrt, Pool 4,00 × 12,00 m, Poolhaus 3,50 × 6,00 m</li><li>Umriss der Tiefgarage</li></ul></div>
+            <div><h3>Aus Baurecht-Skizze und Flurkarte</h3><ul>
+              <li>Wandhöhe 7,25 m, Firsthöhe 11,12 m, Dachknick bei etwa 10,25 m</li><li>Bäume und Wurzelschutzbereiche</li><li>Nachbarhäuser, Grenzen und Straße</li>
+              <li>Linie 5,00 m parallel zur Straße</li><li>Abstandsflächen-Ansatz 0,8 H (Nord/Süd) und 0,4 H (Ost/West)</li></ul></div>
+            <div><h3>Angenommen</h3><ul>
+              <li>Geschosshöhen: EG 3,35 m, OG 3,10 m, Fußboden EG 0,20 m über Gelände</li><li>Dachneigung unten 50°, oben 15°</li><li>Nord-, Ost- und Westfassade, Gauben</li>
+              <li>Untergeschoss unter dem Haus</li><li>Höhen der Nachbarhäuser und Bäume</li><li>Gestaltung nach dem Rendering</li></ul></div>
+          </div>
+        </section>
+        <section>
+          <h2>Bedienung</h2>
+          <p>Im 3D-Modell dreht man mit gedrückter Maus oder einem Finger, verschiebt mit der rechten Maustaste oder zwei Fingern und zoomt mit dem Rad oder zwei Fingern. „Frontal maßstäblich“ zeigt die Südfassade ohne Perspektive, mit Maßstabsbalken. In Ansichten und Lageplan verschiebt man durch Ziehen, zoomt mit Rad oder zwei Fingern und tippt Flächen an, um Maße zu sehen.</p>
+        </section>
+        <section>
+          <h2>Quellen</h2>
+          <p class="src">Konzept EG mit TG, Chaline Deutsch, 28.10.2026, M 1:100 · Skizze Baurecht, Vogel+Partner Architekten, 30.10.2026, M 1:500 · Flurkarte BayernAtlas, © Bayerische Vermessungsverwaltung 2026 · Rendering als Gestaltungsvorlage. Überschlägige Rekonstruktion ohne Gewähr; baurechtliche Fragen klärt der Architekt.</p>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+<script>const BUILD = { downloads: true };
+// Generiert aus: Konzept EG mit TG (Chaline Deutsch, 28.10.2026, M 1:100), Skizze Baurecht (Vogel+Partner, 30.10.2026)
+// und Flurkarte BayernAtlas (© Bayerische Vermessungsverwaltung 2026). Koordinaten in Metern:
+// Ursprung = Nordwestecke Haus, x = Plan-Ost, y = Plan-Nord (Plan ist 7,7° gegen Gitternord gedreht).
+const SITE = {"plot":[[-4.36,-49.318],[6.045,-49.348],[18.771,-50.339],[25.057,-51.397],[25.061,5.893],[1.964,10.846],[-3.15,0.347]],"stones":[[25.057,-51.397],[6.045,-49.348],[18.771,-50.339],[-3.15,0.347],[-4.36,-49.318],[1.964,10.846],[25.061,5.893]],"concept":{"haus":[[0,0],[16.0,0],[16.0,-11.65],[0,-11.65]],"freisitz":[[16.0,-5.825],[19.0,-5.825],[19.0,-10.825],[16.0,-10.825]],"terrasse":[[4.5,-11.65],[11.5,-11.65],[11.5,-14.652],[4.5,-14.652]],"podest":[[5.5,0],[10.5,0],[10.5,1.0],[5.5,1.0]],"zuwegung":[[22.885,0.999],[5.499,0.999],[5.499,2.498],[24.384,2.498],[24.384,-44.471],[22.885,-44.471]],"zufahrt":[[19.732,-50.499],[24.731,-51.342],[24.731,-44.471],[22.53,-44.471],[22.534,-33.651],[19.736,-33.651]],"pool":[[6.0,-24.651],[10.0,-24.651],[10.0,-36.652],[6.0,-36.652]],"poolWasser":[[6.248,-24.9],[9.749,-24.9],[9.749,-36.402],[6.248,-36.402]],"poolhaus":[[19.384,-27.652],[22.885,-27.652],[22.885,-33.651],[19.384,-33.651]],"tg":[[11.498,-11.65],[23.499,-11.65],[23.499,-24.151],[22.885,-24.151],[22.885,-27.652],[19.38,-27.652],[19.38,-24.151],[11.498,-24.151]],"linie5m":[[-4.238,-44.319],[6.248,-44.348],[19.38,-45.369],[25.057,-46.33]]},"trees":[{"c":[26.92,7.03],"r":8.2,"geschuetzt":true},{"c":[1.4,-40.02],"r":5.76},{"c":[-1.02,-49.32],"r":5.28},{"c":[3.52,5.02],"r":4.48},{"c":[6.71,-47.1],"r":4.22},{"c":[12.53,-43.39],"r":4.16},{"c":[26.1,-47.94],"r":3.87,"geschuetzt":true},{"c":[12.93,-49.63],"r":3.84},{"c":[2.38,9.95],"r":3.2}],"schutz":[{"c":[27.17,7.48],"r":9.47},{"c":[26.22,-47.73],"r":5.36}],"vogel":{"haus":[[3.46,-0.19],[18.38,-0.18],[18.38,-12.08],[3.47,-12.09]],"vorbauSued":[[8.46,-12.09],[13.4,-12.09],[13.4,-14.56],[8.46,-14.56]],"vorbauNord":[[8.67,-0.19],[13.17,-0.19],[13.17,1.79],[8.67,1.79]],"abstandInnen":{"W":[0.61,3.46],"E":[18.38,21.24],"S":[-17.82,-12.09],"N":[-0.19,5.54]},"abstandAussen":{"W":[0.09,3.46],"E":[18.38,21.75],"S":[-18.84,-12.09],"N":[-0.19,6.55]},"tg":[[-0.29,-4.39],[21.62,-4.39],[21.62,-21.41],[16.6,-21.41],[16.6,-18.38],[12.79,-18.38],[12.79,-15.21],[-0.29,-15.21]]},"neighbors":[{"pts":[[38.33,43.39],[37.79,43.54],[35.15,47.41],[35.28,47.58],[32.31,51.7],[32.76,52.29],[37.32,55.32],[42.21,55.98],[46.81,49.29],[46.49,48.87]],"h":8.0},{"pts":[[-0.96,18.32],[-2.71,18.99],[-2.84,18.82],[-3.19,19.22],[-6.61,20.5],[-5.38,23.68],[-5.57,23.96],[-4.98,25.77],[-5.3,25.88],[-5.43,25.71],[-5.78,26.11],[-5.91,25.94],[-6.27,26.35],[-6.39,26.18],[-6.75,26.59],[-8.69,27.53],[-9.11,27.32],[-9.01,27.11],[-9.48,26.67],[-9.96,26.91],[-10.09,26.74],[-10.45,27.14],[-11.41,27.61],[-11.73,27.72],[-11.86,27.55],[-12.22,27.96],[-16.7,29.92],[-16.95,30.11],[-16.69,30.97],[-17.33,31.19],[-17.46,31.02],[-17.81,31.42],[-19.24,31.98],[-19.37,31.82],[-19.73,32.22],[-21.96,33.13],[-22.09,32.96],[-22.45,33.36],[-23.56,33.81],[-23.82,33.48],[-24.75,33.65],[-25.0,33.85],[-24.08,35.93],[-27.07,37.41],[-27.73,36.72],[-28.13,36.89],[-25.23,43.32],[-23.62,45.42],[-19.16,43.61],[-18.74,43.29],[-19.17,42.55],[-15.48,40.94],[-14.85,40.72],[-14.39,41.84],[-14.08,41.73],[-2.66,36.49],[-1.76,35.93],[-2.42,34.71],[0.34,33.27],[0.76,33.48],[1.71,33.16],[5.17,31.59],[4.39,29.52],[3.99,29.17],[5.01,28.25],[4.24,26.19],[3.77,25.75],[2.84,25.92],[2.18,25.76],[1.54,23.86],[1.13,23.5],[1.3,23.38],[0.52,21.31],[0.12,20.95],[0.29,20.83],[-0.49,18.76]],"h":8.0},{"pts":[[23.85,25.59],[20.07,26.74],[19.96,25.9],[19.47,25.61],[12.68,27.86],[12.26,28.18],[14.3,34.33],[15.0,34.73],[15.52,36.46],[12.33,37.69],[12.64,38.78],[12.96,39.2],[19.58,37.08],[19.83,36.89],[19.38,35.77],[21.53,34.93],[23.52,35.81],[26.2,34.96],[26.79,34.51]],"h":8.0},{"pts":[[46.7,14.96],[43.88,15.78],[42.94,17.17],[41.04,17.81],[39.62,17.17],[37.87,17.84],[37.97,17.63],[37.61,16.97],[37.78,16.84],[37.24,15.26],[37.42,14.99],[37.23,14.74],[36.77,14.82],[36.2,15.12],[37.21,17.67],[36.94,18.01],[35.34,18.7],[35.21,18.53],[34.27,19.91],[32.37,20.56],[30.95,19.92],[28.76,20.53],[28.34,20.85],[30.22,26.46],[32.64,25.8],[34.5,31.56],[40.98,29.42],[42.12,32.66],[42.44,33.09],[44.66,32.33],[45.08,32.01],[43.37,26.8],[48.45,24.92],[47.67,22.86],[48.54,22.6],[49.12,22.15],[48.22,19.92],[48.39,19.79]],"h":8.0},{"pts":[[-20.63,-16.92],[-22.44,-16.86],[-24.49,-15.7],[-24.86,-15.15],[-24.91,-13.65],[-24.2,-11.14],[-26.01,-10.56],[-26.43,-10.24],[-24.49,-2.28],[-24.06,-1.54],[-21.4,-2.24],[-20.82,-2.69],[-20.92,-3.01],[-20.52,-3.18],[-7.93,-6.0],[-7.02,-6.56],[-7.47,-7.67],[-7.31,-7.8],[-7.39,-8.26],[-7.76,-8.92],[-7.59,-9.05],[-7.68,-9.51],[-8.04,-10.16],[-7.87,-10.29],[-7.96,-10.75],[-8.33,-11.41],[-8.16,-11.54],[-8.25,-12.0],[-8.61,-12.65],[-8.44,-12.78],[-8.53,-13.24],[-9.03,-14.59],[-17.42,-12.71],[-19.32,-12.06],[-20.21,-14.97],[-19.73,-16.27]],"h":8.0},{"pts":[[44.26,-11.61],[30.08,-11.57],[29.79,-11.08],[29.85,-2.63],[30.34,-2.33],[43.91,-2.31],[44.16,-2.5],[44.43,-3.37],[44.17,-3.71],[44.44,-4.57],[44.19,-4.91],[44.43,-5.63],[44.18,-5.97],[44.45,-6.84],[44.19,-7.17],[44.46,-8.04],[44.2,-8.38],[44.45,-9.1],[44.19,-9.43],[44.46,-10.3],[44.21,-10.64],[44.45,-11.36]],"h":8.0},{"pts":[[-8.86,-37.04],[-22.17,-36.73],[-22.89,-36.45],[-22.64,-26.01],[-22.36,-25.29],[-9.34,-25.65],[-8.63,-25.93],[-8.38,-26.65],[-8.63,-26.98],[-8.4,-27.56],[-8.66,-27.89],[-8.43,-28.46],[-8.69,-28.8],[-8.46,-29.37],[-8.72,-29.71],[-8.49,-30.28],[-8.74,-30.62],[-8.52,-31.19],[-8.77,-31.53],[-8.52,-32.25],[-8.78,-32.58],[-8.55,-33.16],[-8.81,-33.49],[-8.58,-34.06],[-8.84,-34.4],[-8.61,-34.97],[-8.86,-35.31],[-8.64,-35.88],[-8.89,-36.22],[-8.66,-36.79]],"h":8.0},{"pts":[[46.07,-41.68],[45.77,-41.72],[43.94,-40.46],[39.32,-41.99],[39.07,-41.8],[39.14,-41.19],[38.8,-40.93],[38.87,-40.32],[38.53,-40.06],[38.6,-39.45],[38.26,-39.19],[38.33,-38.58],[38.0,-38.32],[37.98,-37.65],[33.6,-37.64],[32.77,-38.73],[32.94,-38.86],[32.34,-39.47],[30.23,-39.45],[29.66,-39.15],[29.62,-33.27],[31.37,-31.68],[31.29,-31.09],[29.6,-29.81],[29.86,-29.47],[29.79,-27.82],[30.03,-26.81],[30.94,-26.84],[31.58,-26.0],[32.32,-25.9],[34.51,-26.5],[37.51,-26.4],[38.23,-26.68],[38.6,-27.76],[39.81,-27.75],[40.06,-27.94],[40.14,-29.06],[45.42,-29.1],[46.14,-29.38],[46.34,-29.81],[46.13,-30.44],[46.38,-31.16],[46.12,-31.5],[46.31,-31.77],[46.09,-32.4],[46.34,-33.12],[46.08,-33.46],[46.31,-34.03],[46.08,-34.52],[47.96,-39.54],[47.36,-41.21],[47.19,-41.08]],"h":8.0},{"pts":[[15.81,-73.37],[11.42,-72.16],[9.42,-71.3],[11.42,-64.84],[12.28,-62.84],[17.95,-64.64],[18.54,-65.09],[17.74,-67.0],[17.91,-67.13]],"h":8.0},{"pts":[[-0.72,-87.22],[-0.88,-87.09],[-1.16,-87.28],[-1.58,-86.96],[-1.53,-86.2],[-1.93,-86.03],[-13.36,-85.16],[-13.61,-84.97],[-13.48,-83.74],[-13.64,-83.09],[-14.11,-83.0],[-14.38,-83.19],[-18.84,-82.58],[-20.34,-82.63],[-21.44,-82.33],[-22.18,-82.43],[-22.74,-82.13],[-22.63,-80.76],[-22.39,-80.27],[-22.58,-80.0],[-21.88,-70.7],[-21.58,-70.13],[-12.43,-70.86],[-11.69,-71.28],[-12.02,-72.23],[-11.85,-72.36],[-11.98,-72.53],[-11.58,-72.7],[-10.82,-72.75],[-10.7,-71.91],[-10.38,-71.48],[-7.62,-71.87],[-7.01,-72.46],[-7.35,-73.26],[-7.19,-73.39],[-7.44,-73.73],[-7.27,-73.85],[-7.53,-74.19],[-7.34,-74.47],[-7.77,-75.73],[-7.61,-75.86],[-7.86,-76.2],[-7.74,-76.56],[-5.58,-76.87],[-5.39,-76.62],[-5.17,-74.93],[-4.85,-74.51],[-0.22,-75.24],[0.2,-75.56],[0.4,-75.98],[0.08,-76.93],[0.29,-77.36],[0.03,-77.69],[0.22,-77.97],[-0.1,-78.92],[0.1,-79.34],[-0.22,-80.29],[-0.01,-80.72],[-0.27,-81.05],[-0.1,-81.18],[-0.34,-81.66],[-0.15,-81.94],[-0.34,-82.19],[-0.57,-82.15],[-0.2,-82.7],[-0.45,-83.04],[-0.24,-83.46],[-0.5,-83.8],[-0.29,-84.22],[-0.55,-84.56],[-0.36,-84.83],[-0.62,-85.17],[-0.41,-85.59],[-0.66,-85.93],[-0.46,-86.36],[-0.71,-86.69],[-0.52,-86.97]],"h":8.0},{"pts":[[52.58,-80.92],[42.36,-82.3],[37.0,-80.61],[36.58,-80.29],[37.9,-76.65],[37.65,-76.45],[30.1,-74.16],[27.23,-73.04],[27.02,-73.14],[27.18,-73.27],[26.43,-75.48],[26.24,-75.73],[26.07,-75.61],[25.37,-76.0],[24.05,-76.33],[23.15,-76.3],[22.73,-75.98],[22.85,-75.81],[22.2,-75.45],[22.33,-75.28],[21.68,-74.92],[21.8,-74.75],[21.32,-74.51],[22.19,-71.98],[22.51,-71.56],[27.46,-70.29],[28.22,-70.34],[29.13,-67.58],[29.45,-67.16],[32.93,-68.34],[33.23,-67.78],[33.69,-65.6],[34.23,-64.55],[46.33,-68.19],[47.6,-68.62],[48.18,-69.07],[47.0,-72.55],[51.34,-74.0],[51.93,-74.45],[51.26,-76.2]],"h":8.0}],"secondary":[{"pts":[[-28.04,36.83],[-30.09,37.46],[-30.36,37.8],[-29.11,44.15],[-28.79,44.57],[-24.91,43.21],[-25.25,42.41],[-25.66,42.05],[-25.49,41.92],[-25.83,41.12],[-26.24,40.77],[-26.07,40.64],[-26.41,39.84],[-26.82,39.48],[-26.65,39.35],[-26.99,38.55],[-27.4,38.2],[-27.23,38.07],[-27.58,37.27]],"h":3.0},{"pts":[[19.43,37.06],[14.73,38.39],[12.9,39.12],[15.16,45.23],[20.83,43.44],[21.42,42.99],[20.62,41.07],[20.79,40.94]],"h":3.0},{"pts":[[53.43,38.79],[48.79,39.67],[48.37,39.99],[49.47,45.27],[49.79,45.69],[52.11,45.25],[52.68,44.95]],"h":3.0},{"pts":[[9.69,31.07],[8.88,31.41],[8.76,31.25],[8.4,31.65],[6.33,32.43],[6.06,32.77],[6.3,33.25],[3.73,34.41],[5.19,37.55],[6.29,37.25],[11.36,34.84],[10.15,31.51]],"h":3.0},{"pts":[[32.75,25.59],[27.71,27.17],[27.29,27.49],[29.43,33.97],[29.75,34.39],[35.04,32.61],[34.46,31.33],[34.63,31.2]],"h":3.0},{"pts":[[51.36,24.04],[48.07,24.95],[43.64,26.46],[43.22,26.78],[44.8,31.82],[45.12,32.24],[52.69,29.8],[53.28,29.35]],"h":3.0},{"pts":[[22.16,22.5],[21.21,22.82],[20.45,23.4],[21.61,26.5],[23.2,25.96],[23.78,25.51],[23.35,24.25],[23.16,23.99],[22.93,24.04],[22.77,22.96]],"h":3.0},{"pts":[[36.28,15.06],[35.21,15.22],[34.3,15.77],[34.65,16.57],[34.59,17.02],[35.34,18.7],[36.92,18.16],[37.51,17.71],[36.75,15.5]],"h":3.0},{"pts":[[-20.92,-2.48],[-26.98,-1.18],[-28.18,-0.67],[-27.48,1.99],[-27.05,2.73],[-20.83,1.31],[-19.92,0.75],[-20.29,0.1],[-20.12,-0.03]],"h":3.0},{"pts":[[36.09,-2.46],[30.53,-2.61],[29.81,-2.33],[29.84,4.16],[30.12,4.88],[35.54,3.8],[36.11,3.5],[36.36,2.78],[36.1,2.44],[36.35,1.72],[36.1,1.38],[36.32,0.81],[36.07,0.48],[36.32,-0.24],[36.06,-0.58],[36.31,-1.3],[36.05,-1.64],[36.28,-2.21]],"h":3.0},{"pts":[[-19.8,-16.35],[-20.45,-15.46],[-19.77,-12.65],[-19.47,-12.08],[-18.71,-12.13],[-17.97,-12.56],[-18.16,-14.55]],"h":3.0},{"pts":[[-22.06,-21.94],[-27.96,-21.83],[-28.25,-21.34],[-28.12,-18.91],[-27.78,-18.64],[-22.16,-18.93],[-21.7,-19.55],[-21.96,-19.89],[-21.75,-20.31],[-22.01,-20.65],[-21.8,-21.07],[-22.06,-21.41],[-21.87,-21.68]],"h":3.0},{"pts":[[29.96,-29.68],[25.57,-29.52],[25.16,-29.88],[24.91,-29.69],[25.0,-23.64],[25.28,-22.93],[31.47,-22.99],[32.19,-23.27],[32.44,-23.99],[32.18,-24.33],[32.37,-24.61],[32.15,-25.24],[32.38,-25.81],[32.19,-26.06],[32.02,-25.94],[31.6,-26.14],[31.25,-26.94],[31.09,-26.82],[30.96,-26.98],[29.98,-27.04],[30.21,-27.61],[29.96,-27.95],[30.18,-28.52],[29.93,-28.86],[30.16,-29.43]],"h":3.0},{"pts":[[46.2,-29.3],[40.62,-29.3],[39.9,-29.02],[39.78,-23.61],[40.06,-22.89],[45.34,-22.93],[46.06,-23.21],[46.34,-24.23],[46.09,-24.56],[46.36,-25.43],[46.1,-25.77],[46.37,-26.64],[46.11,-26.97],[46.38,-27.84],[46.12,-28.18],[46.39,-29.05]],"h":3.0},{"pts":[[-1.48,-87.17],[-2.55,-87.02],[-2.98,-87.22],[-3.31,-86.97],[-4.05,-87.07],[-5.3,-86.78],[-5.72,-86.99],[-6.82,-86.69],[-7.43,-86.62],[-7.71,-86.81],[-8.04,-86.55],[-9.55,-86.6],[-10.64,-86.3],[-11.07,-86.51],[-13.24,-86.05],[-14.28,-86.19],[-15.37,-85.88],[-15.65,-86.07],[-17.49,-85.87],[-17.97,-85.63],[-19.01,-85.77],[-20.11,-85.47],[-20.38,-85.66],[-22.68,-85.36],[-23.1,-85.04],[-22.83,-82.59],[-22.36,-82.15],[-19.75,-82.55],[-13.96,-82.98],[-13.2,-83.55],[-13.44,-84.04],[-13.25,-84.31],[-13.51,-84.65],[-13.21,-85.14],[-1.64,-85.99],[-1.2,-86.46]],"h":3.0}],"bestand":[{"kind":"haus","pts":[[21.76,-21.44],[16.79,-21.51],[16.54,-21.32],[16.63,-18.59],[15.93,-18.46],[13.54,-18.63],[12.67,-18.37],[12.63,-15.29],[0.44,-15.43],[-0.28,-15.15],[-0.44,-5.06],[-0.16,-4.35],[20.94,-4.21],[21.66,-4.49],[21.92,-5.36],[21.67,-5.69],[21.94,-6.56],[21.68,-6.9],[21.95,-7.77],[21.69,-8.1],[21.9,-8.53],[21.68,-9.16],[21.95,-10.03],[21.7,-10.36],[21.97,-11.23],[21.71,-11.57],[21.98,-12.44],[21.72,-12.77],[21.93,-13.2],[21.71,-13.83],[21.98,-14.7],[21.73,-15.04],[21.99,-15.9],[21.74,-16.24],[22.01,-17.11],[21.75,-17.45],[22.0,-18.17],[21.81,-18.42],[21.57,-18.37],[21.99,-19.22],[21.63,-19.88],[21.98,-20.28],[21.73,-20.62],[21.95,-21.19]]},{"kind":"garage","pts":[[23.6,-46.23],[16.08,-46.34],[15.07,-46.1],[14.93,-39.48],[15.19,-38.62],[21.06,-38.58],[21.69,-38.79],[22.42,-38.55],[23.32,-38.57],[23.58,-38.77],[23.45,-38.93],[23.78,-39.19],[23.84,-39.63],[23.44,-39.99],[23.78,-40.25],[23.84,-40.69],[23.58,-41.03],[23.83,-41.75],[23.42,-42.1],[23.76,-42.36],[23.82,-42.81],[23.44,-43.31],[23.81,-43.86],[23.56,-44.2],[23.8,-44.92],[23.42,-45.42],[23.76,-45.68]]}],"streets":[[[-33.46,-28.0],[-37.38,0.5],[-37.25,1.72],[-37.6,2.13],[-37.35,2.47],[-37.43,3.06],[-37.74,3.17],[-42.99,41.97],[-42.8,44.48],[-35.1,45.53],[-35.08,31.43],[-35.46,20.82]],[[69.31,-78.66],[59.45,-79.91],[56.11,-47.34],[54.18,-21.96],[54.03,-11.88],[54.58,-0.34],[55.21,8.34],[56.3,17.61]],[[58.02,-68.72],[42.88,-63.83],[30.79,-60.34],[17.68,-58.19],[5.05,-57.33],[-12.12,-57.54],[-19.27,-58.21],[-29.17,-59.7],[-30.3,-51.93],[-22.85,-50.7],[-14.07,-49.81],[-3.88,-49.34],[6.4,-49.46],[17.68,-50.35],[24.75,-51.35],[32.33,-52.74],[43.8,-56.17],[46.84,-56.36],[50.34,-55.43],[53.1,-53.55],[54.96,-51.11],[55.82,-48.58],[55.89,-47.44],[56.46,-51.06]]],"parcelLines":[[48.3,0.92,36.33,3.53],[-4.48,-49.35,-3.34,0.28],[-3.2,0.3,-34.83,7.78],[-35.13,14.53,-35.23,18.59],[-3.62,-18.91,-3.09,0.61],[58.17,-68.78,34.72,-61.54],[54.44,-0.96,56.19,18.43],[24.99,-23.04,25.03,1.25],[55.53,-40.33,54.84,-31.82],[-35.01,31.44,-35.08,44.25],[-33.83,-14.1,-34.98,10.03],[1.2,9.03,9.84,31.02],[58.91,-75.31,57.91,-66.85],[4.11,-87.25,8.42,-57.71],[54.22,32.94,21.48,43.15],[19.5,-50.48,4.27,-49.37],[-1.43,-57.38,-14.79,-57.83],[5.03,37.6,-17.61,47.81],[-17.5,-50.05,-20.02,-50.39],[25.01,-48.83,25.03,-29.97],[54.14,-20.0,53.96,-10.83],[-25.67,-51.0,-27.74,-51.28],[15.36,8.08,2.17,10.82],[29.96,4.93,15.84,7.85],[56.53,-51.05,56.03,-47.35],[33.73,-53.08,19.97,-50.57],[-5.24,-49.3,-8.67,-49.61],[59.36,-79.78,58.78,-75.48],[-33.47,-23.4,-33.78,-18.92],[57.3,-58.94,56.78,-55.09],[55.4,-49.39,55.9,-45.26],[18.92,-58.4,1.59,-57.42],[50.18,-55.38,52.81,-53.67],[-19.26,-58.28,-26.07,-59.2],[32.53,-60.93,19.23,-58.51],[51.87,-66.76,41.47,-63.49],[-3.07,0.46,1.42,9.67],[54.5,-0.35,36.48,3.55],[31.12,-60.52,25.86,-59.57],[-35.32,20.38,-35.06,29.62],[44.7,-56.12,33.12,-53.01],[-18.05,-58.27,-15.98,-57.99],[54.09,-10.66,54.08,-8.4],[-2.51,40.96,-17.76,47.79],[54.63,-29.14,54.45,-26.75],[32.32,-52.67,23.2,-51.03],[-20.32,-50.43,-24.49,-50.84],[18.78,7.34,12.89,8.5],[15.28,45.47,17.82,52.3],[54.44,-25.54,54.14,-23.32],[57.67,-62.81,57.17,-59.11],[-33.25,-29.56,-33.45,-25.81],[-4.13,0.47,-28.12,6.13],[58.04,-66.68,57.54,-62.98],[-8.98,-49.5,-13.02,-49.75],[55.87,-43.9,55.53,-41.38],[-34.97,11.08,-35.07,14.08],[24.97,-3.89,25.03,4.56],[4.12,-49.39,1.42,-49.45],[56.9,-54.92,56.4,-51.22],[54.86,-50.98,56.1,-46.74],[-14.08,-49.74,-17.34,-50.18],[47.43,-56.2,44.85,-56.1],[-27.87,-51.45,-30.09,-51.75],[-0.4,-49.4,-4.18,-49.31],[14.8,-58.05,3.85,-57.42],[54.19,-8.08,54.36,-4.89],[54.16,-6.73,54.49,-2.46],[3.99,-87.41,5.88,-74.64],[25.06,-48.07,25.06,-45.81],[-35.23,26.43,-35.07,31.88],[54.24,-5.06,54.56,-0.79],[54.27,-23.15,54.0,-18.97],[19.82,-50.59,14.94,-50.19],[37.25,-62.41,32.85,-61.04],[25.0,-50.94,25.08,-48.22],[7.23,-66.77,8.48,-58.15],[-35.27,18.88,-35.23,21.91],[47.57,-56.18,49.73,-55.44],[-26.94,-59.47,-29.16,-59.77],[-33.7,-17.25,-33.96,-14.27],[54.89,5.74,55.51,12.3],[24.96,2.9,25.02,5.77],[11.4,35.15,12.3,37.38],[2.05,-57.51,-0.37,-57.39]],"labels":[{"t":"10","p":[-24.26,41.19]},{"t":"55b","p":[23.16,30.7]},{"t":"55a","p":[37.14,24.3]},{"t":"55","p":[45.7,20.18]},{"t":"57","p":[41.19,47.92]},{"t":"8a","p":[-23.84,-6.57]},{"t":"8","p":[-20.98,-31.07]},{"t":"53","p":[42.39,-6.66]},{"t":"12a","p":[35.19,-35.99]},{"t":"51","p":[44.25,-33.86]},{"t":"7a","p":[14.85,-65.13]},{"t":"7","p":[40.61,-68.29]},{"t":"9","p":[-12.11,-74.36]},{"t":"14 (Bestand)","p":[5.77,-13.57]}],"north":{"grid":7.7,"true":9.58},"geo":{"lat":48.0405,"lon":11.5305}};
+
+// Sonnenstand nach dem NOAA-Verfahren (Genauigkeit etwa 0,1°), Ortszeit Europe/Berlin mit Sommerzeit.
+const SUN = (() => {
+  const rad = Math.PI / 180, deg = 180 / Math.PI;
+  const lastSunday = (y, m) => { const d = new Date(Date.UTC(y, m + 1, 0)); return d.getUTCDate() - d.getUTCDay(); };
+  function utcOffset(y, m, d, h) {
+    const start = Date.UTC(y, 2, lastSunday(y, 2), 1), end = Date.UTC(y, 9, lastSunday(y, 9), 1);
+    const t = Date.UTC(y, m, d) + (h - 1) * 3600e3;
+    return t >= start && t < end ? 2 : 1;
+  }
+  function position(y, m, d, h, lat, lon) {
+    const off = utcOffset(y, m, d, h);
+    const ms = Date.UTC(y, m, d) + (h - off) * 3600e3;
+    const T = (ms / 86400000 + 2440587.5 - 2451545) / 36525;
+    const L0 = ((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360 + 360) % 360;
+    const M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
+    const e = 0.016708634 - T * (0.000042037 + 0.0000001267 * T);
+    const C = Math.sin(M * rad) * (1.914602 - T * (0.004817 + 0.000014 * T)) + Math.sin(2 * M * rad) * (0.019993 - 0.000101 * T) + Math.sin(3 * M * rad) * 0.000289;
+    const omega = 125.04 - 1934.136 * T;
+    const lambda = L0 + C - 0.00569 - 0.00478 * Math.sin(omega * rad);
+    const eps0 = 23 + (26 + (21.448 - T * (46.815 + T * (0.00059 - T * 0.001813))) / 60) / 60;
+    const eps = eps0 + 0.00256 * Math.cos(omega * rad);
+    const decl = Math.asin(Math.sin(eps * rad) * Math.sin(lambda * rad));
+    const yv = Math.tan(eps * rad / 2) ** 2;
+    const eot = 4 * deg * (yv * Math.sin(2 * L0 * rad) - 2 * e * Math.sin(M * rad) + 4 * e * yv * Math.sin(M * rad) * Math.cos(2 * L0 * rad)
+      - 0.5 * yv * yv * Math.sin(4 * L0 * rad) - 1.25 * e * e * Math.sin(2 * M * rad));
+    const minUTC = ((ms / 60000) % 1440 + 1440) % 1440;
+    const tst = ((minUTC + eot + 4 * lon) % 1440 + 1440) % 1440;
+    const ha = tst / 4 - 180;
+    const la = lat * rad;
+    const cosZ = Math.max(-1, Math.min(1, Math.sin(la) * Math.sin(decl) + Math.cos(la) * Math.cos(decl) * Math.cos(ha * rad)));
+    const zen = Math.acos(cosZ);
+    const cosA = Math.max(-1, Math.min(1, (Math.sin(la) * Math.cos(zen) - Math.sin(decl)) / (Math.cos(la) * Math.sin(zen) || 1e-9)));
+    const a = Math.acos(cosA) * deg;
+    const az = ha > 0 ? (a + 180) % 360 : (540 - a) % 360;
+    const geo = 90 - zen * deg;
+    const el = geo > -0.575 ? geo + 1.02 / Math.tan((geo + 10.3 / (geo + 5.11)) * rad) / 60 : geo;
+    return { az, el, geo, off };
+  }
+  function riseSet(y, m, d, lat, lon) {
+    let rise = null, set = null, prev = position(y, m, d, 0, lat, lon).geo;
+    for (let min = 2; min <= 1440; min += 2) {
+      const g = position(y, m, d, min / 60, lat, lon).geo;
+      if (prev < -0.833 && g >= -0.833 && rise === null) rise = min / 60;
+      if (prev >= -0.833 && g < -0.833) set = min / 60;
+      prev = g;
+    }
+    return { rise, set };
+  }
+  // Richtung zur Sonne im Plan (x = Plan-Ost, y = Plan-Nord); geographisch Nord liegt um north° gegen den Uhrzeigersinn gedreht.
+  function planDir(az, el, north) {
+    const th = (90 + north - az) * rad, c = Math.cos(el * rad);
+    return { x: Math.cos(th) * c, y: Math.sin(th) * c, z: Math.sin(el * rad) };
+  }
+  const hhmm = h => {
+    if (h == null) return '–';
+    const t = Math.round(h * 60) % 1440;
+    return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  };
+  return { position, riseSet, planDir, hhmm };
+})();
+
+// Parametrisches Hausmodell in Metern.
+// Grundriss, Fensterachsen Süd, Freisitz, Terrasse und Podest: Konzeptplan Chaline Deutsch (M 1:100).
+// Wandhöhe 7,25 m und Firsthöhe 11,12 m: Baurecht-Skizze Vogel+Partner. Gliederung der Fassade: Rendering.
+// Alles andere (Geschosshöhen, Dachneigungen, Nord-/Ost-/Westfassade) ist eine plausible Annahme.
+const HOUSE = (() => {
+  const W = 16.0, D = 11.65, wall = 0.36;
+  const Z = {
+    ffbUG: -3.1, gelaende: 0, sockel: 0.2, ffbEG: 0.2, gurtU: 3.2, gurtO: 3.45, ffbOG: 3.55,
+    sturzOG: 6.05, deckeDG: 6.3, ffbDG: 6.65, gesimsU: 6.55, gesimsO: 6.83, wand: 7.25, knick: 10.25, first: 11.12,
+  };
+  const run1 = 2.52, ueberstand = 0.35;
+  const tan1 = (Z.knick - Z.wand) / run1;              // untere Dachfläche ~50°
+  const run2 = (D - 2 * run1) / 2;                     // 3,305 m bis zum First
+  const tan2 = (Z.first - Z.knick) / run2;             // obere Dachfläche ~15°
+  const roofZ = s => Z.wand + s * tan1;                // Höhe der Dachhaut s Meter hinter der Außenwand
+  const traufe = roofZ(-ueberstand);                   // Traufkante 6,83 m (Oberkante Gesims)
+  const dachwinkel = [Math.atan(tan1) * 180 / Math.PI, Math.atan(tan2) * 180 / Math.PI];
+
+  const ax7 = [[0.9, 1.9], [2.8, 3.8], [5.2, 6.2], [7.0, 9.0], [9.8, 10.8], [12.2, 13.2], [14.1, 15.1]];
+  const pilLang = [[0, 0.5], [4.4, 4.95], [11.05, 11.6], [15.5, 16]];
+  const pilKurz = [[0, 0.5], [11.15, 11.65]];
+  const op = (u0, u1, z0, z1, kind, extra = {}) => ({ u0, u1, z0, z1, kind, leaves: u1 - u0 > 1.5 ? 2 : 1, ...extra });
+  const gaube = (u0, u1, win, extra = {}) => ({ u0, u1, top: 9.4, clad: 'zink', front: 0.2, win, ...extra });
+  const gWin = (c, w = 0.9, z1 = 9.05) => ({ u0: c - w / 2, u1: c + w / 2, z0: 7.65, z1, leaves: w > 1.5 ? 2 : 1 });
+
+  // u läuft von links nach rechts, so wie man vor der jeweiligen Fassade steht.
+  const fas = {
+    S: {
+      name: 'Süd', titel: 'Ansicht Süd · Garten', len: W, pil: pilLang, quelle: 'plan',
+      open: [
+        ...ax7.map(([a, b]) => op(a, b, Z.ffbEG, 2.85, 'tuer')),
+        ...ax7.map(([a, b], i) => op(a, b, Z.ffbOG, Z.sturzOG, 'franz', i >= 2 && i <= 4 ? {} : { rail: 4.5 })),
+      ],
+      rails: [{ u0: 4.95, u1: 11.05, z0: Z.ffbOG, z1: 4.5 }],
+      dormers: [
+        gaube(2.65, 3.95, [gWin(3.3)]),
+        { u0: 4.95, u1: 11.05, top: 9.75, clad: 'putz', front: 0.2, win: [gWin(5.7, 0.8, 9.35), gWin(8.0, 1.8, 9.35), gWin(10.3, 0.8, 9.35)] },
+        gaube(12.05, 13.35, [gWin(12.7)]),
+      ],
+      eaveRail: { u0: 4.95, u1: 11.05, z0: Z.gesimsO, z1: 7.6 }, piers: [[4.45, 4.95], [11.05, 11.55]],
+      lamps: [4.675, 11.325],
+    },
+    N: {
+      name: 'Nord', titel: 'Ansicht Nord · Eingang', len: W, pil: pilLang, quelle: 'annahme',
+      open: [
+        op(7.1, 8.9, Z.ffbEG, 2.85, 'eingang'),
+        ...[0, 1, 5, 6].map(i => op(ax7[i][0], ax7[i][1], 1.1, 2.85, 'fenster')),
+        op(5.4, 6.0, 1.65, 2.85, 'fenster'), op(10.0, 10.6, 1.65, 2.85, 'fenster'),
+        ...[0, 1, 2, 4, 5, 6].map(i => op(ax7[i][0], ax7[i][1], 4.25, Z.sturzOG, 'fenster')),
+        op(7.0, 9.0, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 }),
+      ],
+      dormers: [gaube(2.65, 3.95, [gWin(3.3)]), gaube(7.35, 8.65, [gWin(8.0)]), gaube(12.05, 13.35, [gWin(12.7)])],
+      portal: { u0: 6.85, u1: 9.15, z1: 3.05 }, canopy: { u0: 6.6, u1: 9.4, z0: 3.05, z1: 3.17, depth: 1.2 },
+      lamps: [6.45, 9.55],
+    },
+    E: {
+      name: 'Ost', titel: 'Ansicht Ost · Freisitz', len: D, pil: pilKurz, quelle: 'annahme',
+      open: [
+        op(2.325, 4.325, Z.ffbEG, 2.85, 'tuer'), op(8.825, 9.825, 1.1, 2.85, 'fenster'),
+        op(2.825, 3.825, Z.ffbOG, Z.sturzOG, 'tuer'), op(5.325, 6.325, 4.25, Z.sturzOG, 'fenster'),
+        op(8.825, 9.825, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 }),
+      ],
+      dormers: [gaube(5.175, 6.475, [gWin(5.825)])],
+    },
+    W: {
+      name: 'West', titel: 'Ansicht West', len: D, pil: pilKurz, quelle: 'annahme',
+      open: [
+        ...[2.325, 5.825, 9.325].map(c => op(c - 0.5, c + 0.5, Z.ffbEG, 2.85, 'tuer')),
+        ...[2.325, 5.825, 9.325].map(c => op(c - 0.5, c + 0.5, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 })),
+      ],
+      dormers: [gaube(5.175, 6.475, [gWin(5.825)])],
+    },
+  };
+
+  // Lage der Fassaden im Plan (x = Ost, y = Nord): Ursprung bei u = 0 und Richtung von u.
+  const frame = {
+    S: { o: [0, -D], r: [1, 0], n: [0, -1] },
+    N: { o: [W, 0], r: [-1, 0], n: [0, 1] },
+    E: { o: [W, -D], r: [0, 1], n: [1, 0] },
+    W: { o: [0, 0], r: [0, -1], n: [-1, 0] },
+  };
+
+  const freisitz = { x0: 16, x1: 19, y0: -10.825, y1: -5.825, z: 0.18, slab: [3.0, 3.45], rail: 4.45, col: 0.35 };
+  const terrasse = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, z: 0.18 };
+  const podest = { x0: 5.5, x1: 10.5, y0: 0, y1: 1.0, z: 0.18 };
+
+  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, dachwinkel, fas, frame, freisitz, terrasse, podest };
+})();
+
+// Maßstäbliche Ansichten und Schnitt als SVG. Einheit: Meter; Höhe z wird zu SVG-y = -z.
+const Elev = (() => {
+  const Z = HOUSE.Z, o = HOUSE.ueberstand, r1 = HOUSE.run1, r2 = HOUSE.run2;
+  const f = v => +v.toFixed(3);
+  const num = v => v.toFixed(2).replace('.', ',');
+  const kote = v => (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + num(Math.abs(v));
+  const r = (x0, z0, x1, z1, cls) => `<rect x="${f(Math.min(x0, x1))}" y="${f(-Math.max(z0, z1))}" width="${f(Math.abs(x1 - x0))}" height="${f(Math.abs(z1 - z0))}" class="${cls}"/>`;
+  const poly = (pts, cls) => `<polygon points="${pts.map(p => `${f(p[0])},${f(-p[1])}`).join(' ')}" class="${cls}"/>`;
+  const pline = (pts, cls) => `<polyline points="${pts.map(p => `${f(p[0])},${f(-p[1])}`).join(' ')}" class="${cls}"/>`;
+  const ln = (x0, z0, x1, z1, cls) => `<line x1="${f(x0)}" y1="${f(-z0)}" x2="${f(x1)}" y2="${f(-z1)}" class="${cls}"/>`;
+  const tx = (x, z, s, cls) => `<text x="${f(x)}" y="${f(-z)}" class="${cls}">${s}</text>`;
+
+  const DEFS = `<defs>
+    <pattern id="pSlate" width="0.6" height="0.2" patternUnits="userSpaceOnUse"><rect width="0.6" height="0.2" class="e-roof"/><path d="M0 0.2H0.6M0.3 0V0.1M0 0.1V0.2M0.6 0.1V0.2" class="e-roof-line"/></pattern>
+    <pattern id="pZink" width="0.32" height="1" patternUnits="userSpaceOnUse"><rect width="0.32" height="1" class="e-zink"/><path d="M0 0V1" class="e-roof-line"/></pattern>
+    <pattern id="pEarth" width="0.32" height="0.32" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V0.32" class="e-hatch"/></pattern>
+  </defs>`;
+
+  function rail(u0, u1, z0, z1) {
+    const n = Math.max(2, Math.round((u1 - u0) / 0.11));
+    let s = '';
+    for (let i = 0; i <= n; i++) { const u = u0 + (u1 - u0) * i / n; s += r(u - 0.009, z0, u + 0.009, z1, 'e-bar'); }
+    return s + r(u0 - 0.02, z1 - 0.035, u1 + 0.02, z1, 'e-bar') + r(u0, z0, u1, z0 + 0.03, 'e-bar');
+  }
+  function opening(o) {
+    const w = o.u1 - o.u0, fw = 0.07, g = 0.02, sill = o.kind === 'fenster' ? g : 0;
+    let s = r(o.u0, o.z0, o.u1, o.z1, 'e-reveal');
+    if (o.kind === 'eingang') {
+      s += r(o.u0 + g, o.z0, o.u1 - g, o.z1 - g, 'e-frame');
+      const lw = (w - 2 * g) / 2;
+      for (let i = 0; i < 2; i++) { const a = o.u0 + g + i * lw; s += r(a + 0.16, o.z0 + 1.0, a + lw - 0.16, o.z1 - 0.22, 'e-glass'); }
+      return s;
+    }
+    s += r(o.u0 + g, o.z0 + sill, o.u1 - g, o.z1 - g, 'e-frame');
+    const n = o.leaves || 1, mull = 0.09, lw = (w - 2 * g - 2 * fw - (n - 1) * mull) / n;
+    for (let i = 0; i < n; i++) {
+      const a = o.u0 + g + fw + i * (lw + mull), b = a + lw, z0 = o.z0 + fw + sill, z1 = o.z1 - g - fw, c = Math.min(0.14, lw * 0.22);
+      s += r(a, z0, b, z1, 'e-glass') + r(a, z0, a + c, z1, 'e-curtain') + r(b - c, z0, b, z1, 'e-curtain');
+    }
+    if (o.kind === 'fenster') s += r(o.u0 - 0.05, o.z0 - 0.05, o.u1 + 0.05, o.z0, 'e-sill');
+    if (o.rail) s += rail(o.u0 + 0.03, o.u1 - 0.03, o.z0 + 0.04, o.rail);
+    return s;
+  }
+  function dormer(d) {
+    const zb = HOUSE.roofZ(d.front);
+    let s = r(d.u0, zb, d.u1, d.top, d.clad === 'putz' ? 'e-wall' : 'e-zinkf');
+    if (d.clad === 'putz') {
+      s += r(d.u0, zb, d.u0 + 0.22, d.top - 0.34, 'e-pil') + r(d.u1 - 0.22, zb, d.u1, d.top - 0.34, 'e-pil');
+      s += r(d.u0 - 0.12, d.top - 0.34, d.u1 + 0.12, d.top - 0.12, 'e-pil');
+    }
+    s += r(d.u0 - 0.06, d.top - 0.06, d.u1 + 0.06, d.top + 0.03, 'e-cap');
+    for (const w of d.win) s += opening({ ...w, kind: 'dg' });
+    return s;
+  }
+  function freisitz(side) {
+    const fz = HOUSE.freisitz, W = HOUSE.W, D = HOUSE.D;
+    let ua, ub, cols, shade = null;
+    if (side === 'S') { ua = fz.x0; ub = fz.x1; cols = [[fz.x1 - fz.col, fz.x1]]; shade = [ua, ub - fz.col]; }
+    else if (side === 'N') { ua = W - fz.x1; ub = W - fz.x0; cols = [[ua, ua + fz.col]]; shade = [ua + fz.col, ub]; }
+    else if (side === 'E') { ua = fz.y0 + D; ub = fz.y1 + D; cols = [[ua, ua + fz.col], [ub - fz.col, ub]]; }
+    else return '';
+    let s = shade ? r(shade[0], fz.z, shade[1], fz.slab[0], 'e-shade') : '';
+    s += r(ua, 0, ub, fz.z, 'e-stone');
+    for (const [a, b] of cols) s += r(a, fz.z, b, fz.slab[0], 'e-pil');
+    s += r(ua, fz.slab[0], ub, fz.slab[1], 'e-pil');
+    return s + rail(ua + 0.06, ub - 0.06, fz.slab[1], fz.rail);
+  }
+  function flatwork(side) {
+    const t = HOUSE.terrasse, p = HOUSE.podest, W = HOUSE.W, D = HOUSE.D;
+    const span = { S: [[t.x0, t.x1]], N: [[W - p.x1, W - p.x0]], E: [[t.y0 + D, t.y1 + D], [p.y0 + D, p.y1 + D]], W: [[-p.y1, -p.y0], [-t.y1, -t.y0]] }[side];
+    return span.map(([a, b]) => r(a, 0, b, t.z, 'e-stone')).join('');
+  }
+  function chain(pts, z) {
+    let s = ln(pts[0], z, pts[pts.length - 1], z, 'e-dim');
+    for (const u of pts) s += ln(u - 0.11, z - 0.11, u + 0.11, z + 0.11, 'e-dim') + ln(u, z - 0.22, u, z + 0.22, 'e-dim e-thin');
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      if (b - a > 0.3) s += tx((a + b) / 2, z + 0.1, num(b - a), 'e-dimtxt');
+    }
+    return s;
+  }
+  function koten(levels, u, toU) {
+    let s = '';
+    for (const [z, name] of levels) {
+      s += ln(u - 0.55, z, toU, z, 'e-dim e-thin e-dash');
+      s += poly([[u - 0.16, z + 0.27], [u + 0.16, z + 0.27], [u, z]], 'e-kmark');
+      const tz = Math.abs(z) < 0.01 ? z - 0.42 : z + 0.08;
+      s += tx(u - 0.3, tz, kote(z), 'e-kote') + tx(u + 0.3, tz, name, 'e-kname');
+    }
+    return s;
+  }
+  function limits(u0, u1, wandLabel = true) {
+    return ln(u0, Z.wand, u1, Z.wand, 'e-limit') + ln(u0, Z.first, u1, Z.first, 'e-limit') +
+      tx(u1, Z.wand + 0.12, wandLabel ? 'max. Wandhöhe 7,25 m' : '7,25', 'e-limittxt') + tx(u1, Z.first + 0.12, 'max. Firsthöhe 11,12 m', 'e-limittxt');
+  }
+  const LEVELS = [[0, 'Gelände'], [Z.ffbEG, 'FFB EG'], [Z.ffbOG, 'FFB OG'], [Z.ffbDG, 'FFB DG'], [Z.wand, 'Wandhöhe'], [Z.knick, 'Dachknick'], [Z.first, 'First']];
+
+  function facade(side, opt) {
+    const F = HOUSE.fas[side], L = F.len, x0 = -5.6, x1 = L + (side === 'S' ? 6.2 : 5.4);
+    let s = r(x0 + 0.3, -0.55, x1 - 0.3, 0, 'e-earth');
+    if (side === 'N') s += freisitz('N');
+    s += r(0, Z.sockel, L, Z.gesimsU, 'e-wall');
+    for (let z = 0.5; z < Z.gurtU; z += 0.3) s += ln(0, z, L, z, 'e-rust');
+    for (const op of F.open) s += opening(op);
+    for (const [a, b] of F.pil) s += r(a, Z.sockel, b, Z.gesimsU, 'e-pil');
+    s += r(-0.04, 0, L + 0.04, Z.sockel, 'e-sockel');
+    s += r(-0.1, Z.gurtU, L + 0.1, Z.gurtO, 'e-pil');
+    s += r(-0.18, Z.gesimsU, L + 0.18, 6.69, 'e-pil') + r(-o, 6.69, L + o, Z.gesimsO, 'e-pil');
+    const lower = [[-o, HOUSE.traufe], [L + o, HOUSE.traufe], [L - r1, Z.knick], [r1, Z.knick]];
+    const upper = L > 13 ? [[r1, Z.knick], [L - r1, Z.knick], [L - r1 - r2, Z.first], [r1 + r2, Z.first]] : [[r1, Z.knick], [L - r1, Z.knick], [L / 2, Z.first]];
+    s += poly(lower, 'e-roofo') + poly(upper, 'e-roofo e-roofup');
+    if (L > 13) s += r(r1 + r2 - 0.05, Z.first - 0.03, L - r1 - r2 + 0.05, Z.first + 0.05, 'e-cap');
+    for (const d of F.dormers || []) s += dormer(d);
+    if (F.eaveRail) {
+      const e = F.eaveRail;
+      s += rail(e.u0, e.u1, e.z0, e.z1);
+      for (const [a, b] of F.piers) s += r(a, Z.gesimsO, b, 7.92, 'e-pil') + r(a - 0.05, 7.92, b + 0.05, 8.0, 'e-pil');
+    }
+    for (const c of F.lamps || []) s += r(c - 0.07, 2.0, c + 0.07, 2.34, 'e-frame') + r(c - 0.045, 2.05, c + 0.045, 2.29, 'e-lamp');
+    if (F.portal) {
+      const p = F.portal;
+      s += r(p.u0, Z.ffbEG, p.u0 + 0.25, p.z1, 'e-pil') + r(p.u1 - 0.25, Z.ffbEG, p.u1, p.z1, 'e-pil') + r(p.u0, 2.85, p.u1, p.z1, 'e-pil');
+    }
+    if (F.canopy) { const c = F.canopy; s += r(c.u0, c.z0, c.u1, c.z1, 'e-frame'); }
+    for (const rl of F.rails || []) s += r(rl.u0 - 0.05, rl.z0 - 0.1, rl.u1 + 0.05, rl.z0, 'e-pil') + rail(rl.u0, rl.u1, rl.z0, rl.z1);
+    if (side === 'S' || side === 'E') s += freisitz(side);
+    s += flatwork(side);
+    s += ln(x0 + 0.3, 0, x1 - 0.3, 0, 'e-ground');
+    if (opt.mass) {
+      const eg = F.open.filter(q => q.z0 < 1.5).sort((a, b) => a.u0 - b.u0);
+      s += chain([0, ...eg.flatMap(q => [q.u0, q.u1]), L], -0.85) + chain([0, L], -1.6);
+    }
+    if (opt.koten) s += koten(LEVELS, -4.2, -0.4);
+    if (opt.recht) s += limits(-4.9, x1 - 0.4);
+    return { svg: s, vb: [x0, -12.6, x1 - x0, 15.0] };
+  }
+
+  function offsetPolyline(pts, d) {
+    const seg = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [a, b] = pts[i], [c, e] = pts[i + 1], len = Math.hypot(c - a, e - b), nx = (e - b) / len, ny = -(c - a) / len;
+      seg.push([[a + nx * d, b + ny * d], [c + nx * d, e + ny * d]]);
+    }
+    const isect = ([[x1, y1], [x2, y2]], [[x3, y3], [x4, y4]]) => {
+      const den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+      if (Math.abs(den) < 1e-9) return null;
+      const p = x1 * y2 - y1 * x2, q = x3 * y4 - y3 * x4;
+      return [(p * (x3 - x4) - (x1 - x2) * q) / den, (p * (y3 - y4) - (y1 - y2) * q) / den];
+    };
+    const out = [seg[0][0]];
+    for (let i = 0; i < seg.length - 1; i++) out.push(isect(seg[i], seg[i + 1]) || seg[i][1]);
+    out.push(seg[seg.length - 1][1]);
+    return out;
+  }
+  // Schnitt A–A durch die Hausmitte (x = 8,00), Blick nach Westen: links Süden, rechts Norden.
+  function section(opt) {
+    const D = HOUSE.D, t = HOUSE.wall, tan1 = HOUSE.tan1;
+    const S1 = HOUSE.fas.S.dormers[1], N1 = HOUSE.fas.N.dormers[1];
+    const sB = (S1.top - Z.wand) / tan1, nB = (N1.top - Z.wand) / tan1;
+    const prof = [[-o, HOUSE.traufe], [S1.front, HOUSE.roofZ(S1.front)], [S1.front, S1.top], [sB, S1.top], [r1, Z.knick], [D / 2, Z.first],
+      [D - r1, Z.knick], [D - nB, N1.top], [D - N1.front, N1.top], [D - N1.front, HOUSE.roofZ(N1.front)], [D + o, HOUSE.traufe]];
+    const inner = offsetPolyline(prof, 0.3);
+    const x0 = -6.4, x1 = D + 6.8;
+    let s = r(x0 + 0.3, -4.1, x1 - 0.3, 0, 'e-earth');
+    s += r(t, Z.ffbUG, D - t, -0.15, 'e-room') + r(-3.0, 0, 0, HOUSE.terrasse.z, 'e-stone') + r(D, 0, D + 1.0, HOUSE.podest.z, 'e-stone');
+    s += r(0, -3.4, D, Z.ffbUG, 'e-cut');
+    for (const [z0, z1] of [[-0.15, Z.ffbEG], [Z.gurtU, Z.ffbOG], [Z.deckeDG, Z.ffbDG]]) s += r(t, z0, D - t, z1, 'e-cut');
+    for (const [a, b] of [[0, t], [D - t, D]]) for (const [z0, z1] of [[-3.4, Z.ffbEG], [2.85, Z.ffbOG], [Z.sturzOG, 7.0]]) s += r(a, z0, b, z1, 'e-cut');
+    for (const [a, b] of [[0, t], [D - t, D]]) for (const [z0, z1] of [[Z.ffbEG, 2.85], [Z.ffbOG, Z.sturzOG]]) s += r(a, z0, b, z1, 'e-beyond') + ln((a + b) / 2, z0, (a + b) / 2, z1, 'e-glassline');
+    s += poly([[-0.18, Z.gesimsU], [0, Z.gesimsU], [0, Z.gesimsO], [-o, Z.gesimsO], [-o, 6.69], [-0.18, 6.69]], 'e-cut');
+    s += poly([[D + 0.18, Z.gesimsU], [D, Z.gesimsU], [D, Z.gesimsO], [D + o, Z.gesimsO], [D + o, 6.69], [D + 0.18, 6.69]], 'e-cut');
+    s += poly([...prof, ...inner.slice().reverse()], 'e-cutroof');
+    s += r(S1.front, 7.65, S1.front + 0.3, 9.35, 'e-beyond') + ln(S1.front + 0.12, 7.65, S1.front + 0.12, 9.35, 'e-glassline');
+    s += r(D - N1.front - 0.3, 7.65, D - N1.front, 9.05, 'e-beyond') + ln(D - N1.front - 0.12, 7.65, D - N1.front - 0.12, 9.05, 'e-glassline');
+    // 2,30 m lichte Höhe im DG
+    const zc = Z.ffbDG + 2.3, xs = [];
+    for (let i = 0; i < inner.length - 1; i++) {
+      const [a, b] = inner[i], [c, e] = inner[i + 1];
+      if ((b - zc) * (e - zc) < 0) xs.push(a + (c - a) * (zc - b) / (e - b));
+    }
+    if (xs.length >= 2) s += ln(Math.min(...xs), zc, Math.max(...xs), zc, 'e-dim e-dash e-h230') + tx(D / 2, zc + 0.12, 'lichte Höhe 2,30 m', 'e-dimtxt');
+    s += tx(D / 2, -1.75, 'UG · Annahme', 'e-label') + tx(D / 2, 1.5, 'EG · lichte Höhe ≈ 3,00 m', 'e-label') +
+      tx(D / 2, 4.85, 'OG · lichte Höhe ≈ 2,75 m', 'e-label') + tx(D / 2, 7.7, 'DG', 'e-label');
+    s += ln(x0 + 0.3, 0, x1 - 0.3, 0, 'e-ground');
+    if (opt.mass) s += chain([0, D], -4.8 + 0.4);
+    if (opt.koten) s += koten([[Z.ffbUG, 'FFB UG'], ...LEVELS], -4.6, -0.4);
+    if (opt.recht) {
+      s += limits(-5.3, x1 - 0.4, false);
+      s += `<circle cx="0" cy="${-Z.wand}" r="0.09" class="e-limitdot"/><circle cx="${D}" cy="${-Z.wand}" r="0.09" class="e-limitdot"/>`;
+    }
+    return { svg: s, vb: [x0, -12.6, x1 - x0, 17.9] };
+  }
+  function render(view, opt) {
+    const res = view === 'A' ? section(opt) : facade(view, opt);
+    return { ...res, svg: DEFS + res.svg };
+  }
+  const TITLES = {
+    S: ['Ansicht Süd · Garten', 'Grundriss und Fensterachsen aus dem Konzeptplan, Gliederung aus dem Rendering'],
+    N: ['Ansicht Nord · Eingang', 'Im Konzept noch nicht gezeichnet: Fenster und Eingang als Annahme im gleichen Stil'],
+    E: ['Ansicht Ost · Freisitz', 'Freisitz 3,00 × 5,00 m aus dem Konzeptplan, Öffnungen angenommen'],
+    W: ['Ansicht West', 'Öffnungen angenommen'],
+    A: ['Schnitt A–A · Hausmitte, Blick nach Westen', 'Geschosshöhen, Untergeschoss und Dachaufbau sind Annahmen'],
+  };
+  return { render, TITLES };
+})();
+
+// Lageplan als SVG: Umgebung aus der Flurkarte, Konzept, Bäume, Maße, Abstandsflächen, Vogel-Skizze.
+// Einheit Meter; Plan-y nach Norden wird zu SVG-y = -y.
+const Site = (() => {
+  const C = SITE.concept;
+  const f = v => +v.toFixed(2);
+  const num = (v, d = 2) => v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const pts = P => P.map(p => `${f(p[0])},${f(-p[1])}`).join(' ');
+  const area = P => Math.abs(P.reduce((s, p, i) => { const q = P[(i + 1) % P.length]; return s + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
+  const tipAttr = tip => tip ? ` data-tip="${tip}"` : '';
+  const poly = (P, cls, tip) => `<polygon points="${pts(P)}" class="${cls}"${tipAttr(tip)}/>`;
+  const pline = (P, cls) => `<polyline points="${pts(P)}" class="${cls}"/>`;
+  const circ = (c, r, cls, tip) => `<circle cx="${f(c[0])}" cy="${f(-c[1])}" r="${f(r)}" class="${cls}"${tipAttr(tip)}/>`;
+  const line = (a, b, cls) => `<line x1="${f(a[0])}" y1="${f(-a[1])}" x2="${f(b[0])}" y2="${f(-b[1])}" class="${cls}"/>`;
+  const text = (p, s, cls, rot = 0) => `<text x="${f(p[0])}" y="${f(-p[1])}" class="${cls}"${rot ? ` transform="rotate(${f(rot)} ${f(p[0])} ${f(-p[1])})"` : ''}>${s}</text>`;
+  const rect = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+  const upright = a => (a > 90 ? a - 180 : a < -90 ? a + 180 : a);
+
+  // Schnittpunkte einer waagrechten bzw. senkrechten Linie mit der Grundstücksgrenze
+  function hits(v, axis) {
+    const P = SITE.plot, out = [], k = axis === 'y' ? 1 : 0, j = 1 - k;
+    for (let i = 0; i < P.length; i++) {
+      const a = P[i], b = P[(i + 1) % P.length];
+      if ((a[k] - v) * (b[k] - v) <= 0 && a[k] !== b[k]) out.push(a[j] + (b[j] - a[j]) * (v - a[k]) / (b[k] - a[k]));
+    }
+    return out;
+  }
+  const westX = y => Math.min(...hits(y, 'y')), eastX = y => Math.max(...hits(y, 'y'));
+  const northY = x => Math.max(...hits(x, 'x')), southY = x => Math.min(...hits(x, 'x'));
+
+  function dim(a, b, label, cls = 's-dim', off = 0.5) {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+    const t = [(ux - uy) * 0.32, (ux + uy) * 0.32];
+    let s = line(a, b, cls);
+    for (const p of [a, b]) s += line([p[0] - t[0], p[1] - t[1]], [p[0] + t[0], p[1] + t[1]], cls);
+    const m = [(a[0] + b[0]) / 2 - uy * off, (a[1] + b[1]) / 2 + ux * off];
+    return s + text(m, label ?? num(L), 's-dimtxt', upright(Math.atan2(-dy, dx) * 180 / Math.PI));
+  }
+
+  const H = HOUSE.Z.wand + (HOUSE.Z.first - HOUSE.Z.wand) / 3;
+  const AB = { H, ns: 0.8 * H, ew: 0.4 * H };
+  const plotArea = area(SITE.plot);
+  const tgUnterZuwegung = (23.499 - 22.885) * (24.151 - 11.65);
+  const FL = [
+    ['Wohnhaus', area(C.haus)], ['Freisitz', area(C.freisitz)], ['Terrasse', area(C.terrasse)], ['Podest', area(C.podest)],
+    ['Poolhaus', area(C.poolhaus)], ['Pool', area(C.pool)], ['Zuwegung', area(C.zuwegung)], ['Zufahrt', area(C.zufahrt)],
+  ];
+  const befestigt = FL.reduce((s, [, a]) => s + a, 0);
+  const tgGarten = area(C.tg) - tgUnterZuwegung;
+  const STATS = { plotArea, befestigt, tgGarten, tg: area(C.tg), gruen: plotArea - befestigt, gruenOhneTG: plotArea - befestigt - tgGarten, FL, AB,
+    west: [westX(0), westX(-HOUSE.D)].map(x => -x), north: [northY(0.01), northY(HOUSE.W)], east: eastX(-HOUSE.D / 2) - HOUSE.W };
+
+  function northArrow(c, rot) {
+    const R = p => { const a = rot * Math.PI / 180; return [c[0] + p[0] * Math.cos(a) - p[1] * Math.sin(a), c[1] + p[0] * Math.sin(a) + p[1] * Math.cos(a)]; };
+    return poly([[0, 2.4], [0.7, -1.3], [0, -0.6]].map(R), 's-na-dark') + poly([[0, 2.4], [-0.7, -1.3], [0, -0.6]].map(R), 's-na-light') +
+      text(R([0, 3.0]), 'N', 's-na-txt', -rot);
+  }
+  function scaleBar(p) {
+    let s = '';
+    [[0, 5, 's-sb-a'], [5, 10, 's-sb-b'], [10, 20, 's-sb-a']].forEach(([a, b, cls]) => { s += poly(rect(p[0] + a, p[1], p[0] + b, p[1] + 0.6), cls); });
+    for (const v of [0, 5, 10, 20]) s += text([p[0] + v, p[1] + 1.1], String(v), 's-sbtxt');
+    return s + text([p[0] + 21.2, p[1] + 1.1], 'm', 's-sbtxt');
+  }
+
+  function build() {
+    const s = [];
+    s.push(`<defs>
+      <pattern id="pBestand" width="0.9" height="0.9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V0.9" class="s-hatchline"/></pattern>
+      <pattern id="pAbstand" width="0.7" height="0.7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><path d="M0 0V0.7" class="s-abline"/></pattern>
+      <mask id="mOutside" maskUnits="userSpaceOnUse" x="-400" y="-400" width="800" height="800"><rect x="-400" y="-400" width="800" height="800" fill="#fff"/><polygon points="${pts(SITE.plot)}" fill="#000"/></mask>
+    </defs>`);
+    // Umgebung
+    s.push('<g data-layer="umgebung">');
+    for (const st of SITE.streets) s.push(poly(st, 's-street', 'Öffentliche Straße'));
+    for (const [a, b, c, d] of SITE.parcelLines) s.push(line([a, b], [c, d], 's-parcel'));
+    for (const b of SITE.secondary) s.push(poly(b.pts, 's-nb2', 'Nebengebäude Nachbar (Flurkarte)'));
+    for (const b of SITE.neighbors) s.push(poly(b.pts, 's-nb', 'Nachbarhaus (Flurkarte)'));
+    for (const l of SITE.labels) if (!l.t.startsWith('14')) s.push(text(l.p, l.t, 's-hnr'));
+    s.push(text([7.5, -56.2], 'Ebertstraße', 's-streetname', 4.0));
+    s.push('</g>');
+    // Konzept
+    s.push('<g data-layer="konzept">');
+    s.push(poly(SITE.plot, 's-lawn', `Garten · ${num(STATS.gruen, 0)} m² unversiegelt`));
+    s.push(poly(C.zuwegung, 's-pave', `Zuwegung · 1,50 m breit · ${num(area(C.zuwegung), 1)} m²`));
+    s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · endet am Poolhaus`));
+    s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m'));
+    s.push(poly(C.podest, 's-stone', 'Podest am Eingang · 5,00 × 1,00 m'));
+    s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · überdacht, darüber Dachterrasse'));
+    s.push(poly(C.pool, 's-coping', 'Pool · 4,00 × 12,00 m'));
+    s.push(poly(C.poolWasser, 's-water', 'Pool · Wasserfläche ca. 3,50 × 11,50 m'));
+    s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m'));
+    s.push(poly(C.haus, 's-house', 'Wohnhaus · 16,00 × 11,65 m · 186,4 m² · Wandhöhe 7,25 m · First 11,12 m'));
+    for (const o of HOUSE.fas.S.open.filter(q => q.z0 < 1)) s.push(poly(rect(o.u0, -HOUSE.D, o.u1, -HOUSE.D + 0.2), 's-win'));
+    s.push(text([8, -4.6], 'Wohnhaus', 's-houselabel') + text([8, -6.0], '16,00 × 11,65', 's-houselabel s-small') + text([8, -7.2], '186,4 m²', 's-houselabel s-small'));
+    s.push(text([8, -13.4], 'Terrasse', 's-lbl s-small') + text([17.5, -8.6], 'Freisitz', 's-lbl s-small', -90) + text([8, 0.35], 'Podest', 's-lbl s-tiny'));
+    s.push(poly([[8, 1.1], [7.55, 2.05], [8.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));
+    s.push(text([8, -30.65], 'Pool 4,00 × 12,00', 's-lbl s-small', -90) + text([21.13, -30.65], 'Poolhaus 3,50 × 6,00', 's-lbl s-tiny', -90));
+    s.push(text([23.63, -21], 'Zuwegung 1,50', 's-lbl s-tiny', -90) + text([22.2, -48.6], 'Zufahrt', 's-lbl s-small'));
+    s.push('</g>');
+    s.push(`<g data-layer="bestand">${SITE.bestand.map(b => poly(b.pts, 's-bestand', b.kind === 'haus' ? 'Bestandshaus Nr. 14 · Abriss' : 'Bestandsgarage · Abriss')).join('')}</g>`);
+    s.push(`<g data-layer="tg">${poly(C.tg, 's-tg', `Tiefgarage (unterirdisch) · ${num(STATS.tg, 1)} m² außerhalb des Hauses`)}${text([17.6, -18.2], 'Tiefgarage (unterirdisch)', 's-tglabel')}</g>`);
+    // Vogel
+    const V = SITE.vogel, vb = (o, side) => {
+      const [a, b] = o[side];
+      return side === 'W' || side === 'E' ? rect(a, -12.09, b, -0.19) : rect(3.46, a, 18.38, b);
+    };
+    s.push('<g data-layer="vogel">');
+    for (const side of ['N', 'S', 'E', 'W']) s.push(poly(vb(V.abstandAussen, side), 's-vab', 'Vogel: Abstandsfläche inkl. ⅓ Dachhöhe') + poly(vb(V.abstandInnen, side), 's-vab s-vab-in', 'Vogel: Abstandsfläche nur Wandhöhe'));
+    s.push(poly(V.tg, 's-vtg', 'Vogel: Tiefgarage') + poly(V.haus, 's-vhaus', 'Vogel: Haus 15,10 × 12,05 m') + poly(V.vorbauSued, 's-vhaus', 'Vogel: Vorbau Süd 2,50 m') + poly(V.vorbauNord, 's-vhaus', 'Vogel: Vorbau Nord 2,00 m'));
+    s.push(text([10.9, 4.2], 'Vogel+Partner 30.10.', 's-vlabel'));
+    s.push('</g>');
+    // Abstandsflächen für das Konzept
+    const abs = [rect(0, 0, HOUSE.W, AB.ns), rect(0, -HOUSE.D - AB.ns, HOUSE.W, -HOUSE.D), rect(-AB.ew, -HOUSE.D, 0, 0), rect(HOUSE.W, -HOUSE.D, HOUSE.W + AB.ew, 0)];
+    s.push('<g data-layer="abstand">' + abs.map((P, i) => poly(P, 's-ab', `Abstandsfläche ${i < 2 ? '0,8' : '0,4'} H = ${num(i < 2 ? AB.ns : AB.ew)} m (überschlägig)`)).join('') +
+      `<g mask="url(#mOutside)">${abs.map(P => poly(P, 's-ab-over')).join('')}</g>` + text([-1.7, -5.8], `0,4 H = ${num(AB.ew)}`, 's-ablabel', -90) + text([8, 5.7], `0,8 H = ${num(AB.ns)}`, 's-ablabel') + '</g>');
+    // Bäume
+    s.push('<g data-layer="baeume">');
+    for (const z of SITE.schutz) s.push(circ(z.c, z.r, 's-schutz', `Wurzelschutzbereich (Krone + 1,50 m) · Radius ${num(z.r, 1)} m`));
+    for (const t of SITE.trees) s.push(circ(t.c, t.r, t.geschuetzt ? 's-tree s-tree-p' : 's-tree', `${t.geschuetzt ? 'Geschützter Baum (Nachbar)' : 'Baum'} · Kronendurchmesser ca. ${num(2 * t.r, 1)} m`) + circ(t.c, 0.28, 's-trunk'));
+    s.push(text([27.2, -1.0], 'Schutzbaum', 's-schutzlabel') + text([27.0, -53.8], 'Schutzbaum', 's-schutzlabel'));
+    s.push('</g>');
+    // 5-m-Linie
+    s.push(`<g data-layer="linie">${pline(C.linie5m, 's-linie')}${text([-1.5, -43.5], '5,00 m zur Straße', 's-linielabel', 0.2)}</g>`);
+    // Grenze
+    const P = SITE.plot;
+    s.push('<g data-layer="grenze">' + poly(P, 's-grenze', `Grundstück · ${num(1661, 0)} m² (amtlich) · gezeichnet ${num(plotArea, 1)} m²`));
+    for (const st of SITE.stones) s.push(circ(st, 0.35, 's-stone-mark'));
+    for (let i = 0; i < P.length; i++) {
+      const a = P[i], b = P[(i + 1) % P.length], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+      const m = [(a[0] + b[0]) / 2 + dy / L * 1.1, (a[1] + b[1]) / 2 - dx / L * 1.1];
+      s.push(text(m, num(L), 's-edge', upright(Math.atan2(-dy, dx) * 180 / Math.PI)));
+    }
+    s.push(text([-10.2, -23], 'Fl. 1.661 m²', 's-plotarea', -90) + '</g>');
+    // Maße
+    const W = HOUSE.W, D = HOUSE.D;
+    s.push('<g data-layer="masse">' +
+      dim([westX(-0.6), -0.6], [0, -0.6]) + dim([westX(-D + 0.6), -D + 0.6], [0, -D + 0.6]) +
+      dim([0.8, 0], [0.8, northY(0.8)], null, 's-dim', -0.5) + dim([W - 0.8, 0], [W - 0.8, northY(W - 0.8)], null, 's-dim', -0.5) +
+      dim([W, -1.4], [eastX(-1.4), -1.4]) + dim([19, -9.6], [eastX(-9.6), -9.6]) +
+      dim([3, -D], [3, southY(3)], null, 's-dim', -0.5) + dim([8, -14.652], [8, -24.651], null, 's-dim', -0.5) +
+      dim([22.885, -30.6], [eastX(-30.6), -30.6]) +
+      dim([0, 2.9], [W, 2.9], '16,00') + dim([-0.9, 0], [-0.9, -D], '11,65', 's-dim', 0.5) + '</g>');
+    s.push(northArrow([-10.5, 9], SITE.north.grid) + scaleBar([-9, -60]));
+    return s.join('');
+  }
+
+  let svg, pz, tip, stage;
+  function init(stageEl, svgEl, tipEl) {
+    stage = stageEl; svg = svgEl; tip = tipEl;
+    svg.innerHTML = build();
+    pz = PanZoom(svg, () => [-16, -17, 52, 80]);
+    pz.home();
+    let downAt = null;
+    svg.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+    svg.addEventListener('pointermove', e => {
+      if (e.buttons) { tip.hidden = true; return; }
+      showTip(e);
+    });
+    svg.addEventListener('pointerup', e => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) showTip(e); });
+    svg.addEventListener('pointerleave', () => { tip.hidden = true; });
+  }
+  function showTip(e) {
+    const el = e.target.closest && e.target.closest('[data-tip]');
+    if (!el) { tip.hidden = true; return; }
+    const r = stage.getBoundingClientRect();
+    tip.textContent = el.dataset.tip; tip.hidden = false;
+    const x = Math.min(e.clientX - r.left + 14, r.width - tip.offsetWidth - 8), y = Math.max(8, e.clientY - r.top - tip.offsetHeight - 12);
+    tip.style.left = `${Math.max(8, x)}px`; tip.style.top = `${y}px`;
+  }
+  function setLayer(name, on) { const g = svg.querySelector(`[data-layer="${name}"]`); if (g) g.style.display = on ? '' : 'none'; }
+  return { init, setLayer, STATS, num, home: () => pz.home(), zoom: k => pz.zoom(k), svgText: () => svg.outerHTML };
+})();
+
+// Zoomen und Verschieben für SVG-Zeichnungen (Maus, Rad, Touch mit zwei Fingern).
+function PanZoom(svg, getHome) {
+  let vb = null, pinch = null;
+  const ptr = new Map();
+  const set = v => { vb = v; svg.setAttribute('viewBox', v.map(n => +n.toFixed(3)).join(' ')); };
+  const toSvg = (x, y) => { const p = new DOMPoint(x, y).matrixTransform(svg.getScreenCTM().inverse()); return [p.x, p.y]; };
+  function zoomAt(cx, cy, k) {
+    const [x, y] = toSvg(cx, cy), w = vb[2] * k;
+    if (w < 3 || w > 700) return;
+    set([x - (x - vb[0]) * k, y - (y - vb[1]) * k, w, vb[3] * k]);
+  }
+  svg.style.touchAction = 'none';
+  svg.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Math.exp(e.deltaY * 0.0015)); }, { passive: false });
+  svg.addEventListener('pointerdown', e => { svg.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); pinch = null; });
+  svg.addEventListener('pointermove', e => {
+    if (!ptr.has(e.pointerId)) return;
+    const prev = ptr.get(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptr.size === 1) {
+      const a = toSvg(prev[0], prev[1]), b = toSvg(e.clientX, e.clientY);
+      set([vb[0] - (b[0] - a[0]), vb[1] - (b[1] - a[1]), vb[2], vb[3]]);
+    } else if (ptr.size === 2) {
+      const [p, q] = [...ptr.values()], d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+      if (pinch) zoomAt((p[0] + q[0]) / 2, (p[1] + q[1]) / 2, pinch / d);
+      pinch = d;
+    }
+  });
+  const up = e => { ptr.delete(e.pointerId); pinch = null; };
+  svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+  return {
+    home() { set(getHome().slice()); },
+    zoom(k) { const r = svg.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, k); },
+  };
+}
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+// 3D-Modell (three.js): Haus aus HOUSE, Grundstück und Umgebung aus SITE, Sonnenstand mit Schatten.
+// Weltkoordinaten: X = Plan-Ost, Y = Höhe, Z = -Plan-Nord. Das Haus liegt in X 0..16, Z 0..11,65.
+const View3D = (() => {
+  const Zh = HOUSE.Z;
+  let renderer, scene, camP, camO, cam, controls, sun, moon, hemi, sky, skyScene, pmrem, envRT;
+  let canvas, stage, raf = 0, last = 0, tween = null, envDue = 0, ready = false, active = false;
+  const st = { y: 2026, m: 5, d: 21, h: 17, play: false, ortho: false, cut: false, cutX: 8, rotate: false };
+  const L = {}, M = {}, houseMats = new Set(), batches = new Map();
+  const cutPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 8);
+  const ui = {};
+  const ORTHO_H = 15.5;
+
+  // ---------- Hilfsfunktionen ----------
+  const P = (x, yPlan, z = 0) => new THREE.Vector3(x, z, -yPlan);
+  const smooth = (v, a, b) => THREE.MathUtils.smoothstep(v, a, b);
+  function canvasTex(w, h, draw, repeat = [1, 1]) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    draw(c.getContext('2d'), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat);
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    return t;
+  }
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+  function makeMaterials() {
+    const std = (color, r = 0.9, m = 0, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: r, metalness: m, ...extra });
+    const rust = canvasTex(64, 1024, (g, w, h) => {
+      g.fillStyle = '#ece5d5'; g.fillRect(0, 0, w, h);
+      const k = h / 6.6;
+      for (let z = 0.5; z < 3.2; z += 0.3) {
+        const y = h - z * k;
+        g.fillStyle = '#cfc5b2'; g.fillRect(0, y - 2, w, 3);
+        g.fillStyle = '#f6f1e6'; g.fillRect(0, y + 1, w, 1);
+      }
+    }, [1, 1 / 6.6]);
+    const slate = canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = '#353a40'; g.fillRect(0, 0, w, h);
+      const rows = 5, rh = h / rows;
+      for (let r = 0; r < rows; r++) {
+        const y = h - (r + 1) * rh, off = (r % 2) * 0.5;
+        for (let c = -1; c < 4; c++) {
+          const x = (c + off) * (w / 3.3);
+          const v = 46 + Math.floor(rnd() * 14);
+          g.fillStyle = `rgb(${v},${v + 4},${v + 9})`; g.fillRect(x + 1, y + 1, w / 3.3 - 2, rh - 2);
+        }
+        g.fillStyle = '#23272b'; g.fillRect(0, y, w, 2);
+      }
+    });
+    const lawn = canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = '#6d8c4b'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 5000; i++) {
+        const v = rnd();
+        g.fillStyle = v < 0.5 ? 'rgba(92,122,58,0.55)' : 'rgba(132,160,92,0.5)';
+        g.fillRect(rnd() * w, rnd() * h, 2, 2);
+      }
+    }, [0.25, 0.25]);
+    const pave = canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = '#c3beb3'; g.fillRect(0, 0, w, h);
+      const sx = w / 2, sy = h / 4;
+      g.strokeStyle = '#a49f94'; g.lineWidth = 2;
+      for (let r = 0; r < 4; r++) for (let c = -1; c < 3; c++) g.strokeRect(c * sx + (r % 2) * sx / 2, r * sy, sx, sy);
+    }, [1 / 1.2, 1 / 1.2]);
+    Object.assign(M, {
+      putz: std(0xebe4d4), putzRust: std(0xffffff, 0.92, 0, { map: rust }), putzHell: std(0xf2ede3, 0.85),
+      sockel: std(0xc6bdab, 0.85), roof: std(0xffffff, 0.72, 0.08, { map: slate, side: THREE.DoubleSide }),
+      zink: std(0x4b5259, 0.5, 0.35), frame: std(0x1c2024, 0.45, 0.25), metal: std(0x16191c, 0.4, 0.55),
+      glass: std(0x1a252d, 0.06, 0.85, { emissive: 0xffc47c, emissiveIntensity: 0 }),
+      lamp: std(0x2a2a2a, 0.4, 0.2, { emissive: 0xffd49c, emissiveIntensity: 0 }),
+      slab: std(0xb9b2a4, 0.9),
+      stone: std(0xd7d0c2, 0.8), pave: std(0xffffff, 0.9, 0, { map: pave }), lawn: std(0xffffff, 1, 0, { map: lawn }),
+      ground: std(0x8d9a7e, 1), street: std(0x6b6f74, 0.95), coping: std(0xe6e1d6, 0.7),
+      tile: std(0x8fcbe0, 0.35, 0, { side: THREE.BackSide }),
+      water: std(0x2f86ad, 0.05, 0.1, { transparent: true, opacity: 0.8 }),
+      site: std(0xebe4d4), siteHell: std(0xf2ede3, 0.85),
+      siteGlass: std(0x1a252d, 0.06, 0.85, { emissive: 0xffc47c, emissiveIntensity: 0 }),
+      nb: std(0xcdc8bf, 0.95), nbRoof: std(0x9e998f, 0.95), nb2: std(0xbfbaaf, 0.95),
+      trunk: std(0x5c4938, 0.95), crowns: [0x5a7c3f, 0x4d7037, 0x678846].map(c => std(c, 0.95)),
+      tg: new THREE.MeshStandardMaterial({ color: 0xe0892c, transparent: true, opacity: 0.3, depthWrite: false, roughness: 1 }),
+      ug: new THREE.MeshStandardMaterial({ color: 0x5c80a0, transparent: true, opacity: 0.25, depthWrite: false, roughness: 1 }),
+    });
+    for (const k of ['putz', 'putzRust', 'putzHell', 'sockel', 'roof', 'zink', 'frame', 'metal', 'glass', 'lamp', 'slab']) {
+      houseMats.add(M[k]); M[k].clipShadows = true;
+    }
+  }
+
+  // Geometrien sammeln und je Material zusammenführen (wenige Draw-Calls).
+  function addGeo(mat, geo, matrix) {
+    if (matrix) geo.applyMatrix4(matrix);
+    const g = geo.index ? geo.toNonIndexed() : geo;
+    if (!batches.has(mat)) batches.set(mat, []);
+    batches.get(mat).push(g);
+  }
+  function addBox(mat, mx, x0, x1, y0, y1, z0, z1) {
+    const g = new THREE.BoxGeometry(Math.max(x1 - x0, 0.004), Math.max(y1 - y0, 0.004), Math.max(z1 - z0, 0.004));
+    g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    addGeo(mat, g, mx);
+  }
+  // Quader in Plan-Koordinaten (x, yPlan) und Höhe z
+  const boxPlan = (mat, x0, x1, y0, y1, z0, z1) => addBox(mat, null, x0, x1, z0, z1, -Math.max(y0, y1), -Math.min(y0, y1));
+  function flushBatches(parent) {
+    for (const [mat, geos] of batches) {
+      const mesh = new THREE.Mesh(mergeGeometries(geos, false), mat);
+      mesh.castShadow = mat !== M.glass && mat !== M.siteGlass && mat !== M.water;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+    }
+    batches.clear();
+  }
+  function facadeMatrix(side) {
+    const f = HOUSE.frame[side], m = new THREE.Matrix4();
+    m.makeBasis(new THREE.Vector3(f.r[0], 0, -f.r[1]), new THREE.Vector3(0, 1, 0), new THREE.Vector3(f.n[0], 0, -f.n[1]));
+    m.setPosition(f.o[0], 0, -f.o[1]);
+    return m;
+  }
+  const v2 = (x, y) => new THREE.Vector2(x, y);
+  const rectPts = (x0, y0, x1, y1) => [v2(x0, y0), v2(x1, y0), v2(x1, y1), v2(x0, y1)];
+  function shapeFrom(pts, holes = []) {
+    const s = new THREE.Shape(pts.map(p => v2(p[0], p[1])));
+    for (const h of holes) s.holes.push(new THREE.Path(h.map(p => v2(p[0], p[1]))));
+    return s;
+  }
+  function flat(pts, mat, y, holes) {
+    const g = new THREE.ShapeGeometry(shapeFrom(pts, holes)); g.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(g, mat); m.position.y = y; m.receiveShadow = true; return m;
+  }
+  function extrude(pts, mat, y0, h, holes) {
+    const g = new THREE.ExtrudeGeometry(shapeFrom(pts, holes), { depth: h, bevelEnabled: false });
+    g.rotateX(-Math.PI / 2); g.translate(0, y0, 0);
+    const m = new THREE.Mesh(g, mat); m.castShadow = m.receiveShadow = true; return m;
+  }
+  function wallWithHoles(len, z0, z1, holes, depth, mats, mx) {
+    const sh = new THREE.Shape(rectPts(0, z0, len, z1));
+    for (const o of holes) sh.holes.push(new THREE.Path(rectPts(o.u0, o.z0, o.u1, o.z1)));
+    const g = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: false });
+    g.translate(0, 0, -depth); g.applyMatrix4(mx);
+    const m = new THREE.Mesh(g, mats); m.castShadow = m.receiveShadow = true; return m;
+  }
+
+  // ---------- Bauteile ----------
+  function railing(mat, mx, u0, u1, z0, z1, out) {
+    const n = Math.max(2, Math.round((u1 - u0) / 0.11));
+    for (let i = 0; i <= n; i++) {
+      const u = u0 + (u1 - u0) * i / n;
+      addBox(mat, mx, u - 0.009, u + 0.009, z0, z1, out - 0.009, out + 0.009);
+    }
+    addBox(mat, mx, u0 - 0.02, u1 + 0.02, z1 - 0.035, z1, out - 0.025, out + 0.025);
+    addBox(mat, mx, u0, u1, z0, z0 + 0.03, out - 0.015, out + 0.015);
+  }
+  function windowUnit(mx, o, face, depth) {
+    const w = o.u1 - o.u0, fw = 0.07, gl = Math.min(0.15, depth * 0.55);
+    if (o.kind === 'eingang') {
+      addBox(M.frame, mx, o.u0, o.u1, o.z0, o.z1, face - gl - 0.06, face - gl);
+      const lw = w / 2;
+      for (let i = 0; i < 2; i++) {
+        const a = o.u0 + i * lw;
+        addBox(M.glass, mx, a + 0.16, a + lw - 0.16, o.z0 + 1.0, o.z1 - 0.22, face - gl + 0.005, face - gl + 0.012);
+      }
+      addBox(M.metal, mx, o.u0 + w / 2 - 0.2, o.u0 + w / 2 - 0.17, o.z0 + 0.9, o.z0 + 1.3, face - gl, face - gl + 0.06);
+      return;
+    }
+    addBox(M.glass, mx, o.u0 + 0.02, o.u1 - 0.02, o.z0 + 0.02, o.z1 - 0.02, face - gl - 0.012, face - gl);
+    const f0 = face - gl - 0.04, f1 = face - gl + 0.03;
+    addBox(M.frame, mx, o.u0, o.u0 + fw, o.z0, o.z1, f0, f1);
+    addBox(M.frame, mx, o.u1 - fw, o.u1, o.z0, o.z1, f0, f1);
+    addBox(M.frame, mx, o.u0, o.u1, o.z1 - fw, o.z1, f0, f1);
+    addBox(M.frame, mx, o.u0, o.u1, o.z0, o.z0 + fw, f0, f1);
+    if (o.leaves === 2) { const c = (o.u0 + o.u1) / 2; addBox(M.frame, mx, c - 0.045, c + 0.045, o.z0, o.z1, f0, f1); }
+    if (o.kind === 'fenster') addBox(M.sockel, mx, o.u0 - 0.05, o.u1 + 0.05, o.z0 - 0.05, o.z0, face - gl, face + 0.05);
+    if (o.rail) railing(M.metal, mx, o.u0 + 0.04, o.u1 - 0.04, o.z0 + 0.05, o.rail, face + 0.02);
+  }
+  function buildFacade(side, parent) {
+    const F = HOUSE.fas[side], mx = facadeMatrix(side), len = F.len;
+    parent.add(wallWithHoles(len, 0, Zh.gesimsU, F.open, HOUSE.wall, [M.putzRust, M.putz], mx));
+    for (const o of F.open) windowUnit(mx, o, 0, HOUSE.wall);
+    for (const r of F.rails || []) {
+      addBox(M.putzHell, mx, r.u0 - 0.05, r.u1 + 0.05, r.z0 - 0.1, r.z0, 0, 0.16);
+      railing(M.metal, mx, r.u0, r.u1, r.z0, r.z1, 0.12);
+    }
+    for (const [a, b] of F.pil) addBox(M.putzHell, mx, a, b, Zh.sockel, Zh.gesimsU, 0, 0.08);
+    addBox(M.sockel, mx, -0.04, len + 0.04, 0, Zh.sockel, 0, 0.04);
+    addBox(M.putzHell, mx, -0.1, len + 0.1, Zh.gurtU, Zh.gurtO, 0, 0.1);
+    addBox(M.putzHell, mx, -0.18, len + 0.18, Zh.gesimsU, 6.69, 0, 0.18);
+    addBox(M.putzHell, mx, -0.35, len + 0.35, 6.69, Zh.gesimsO, 0, 0.35);
+    for (const c of F.lamps || []) {
+      addBox(M.metal, mx, c - 0.09, c + 0.09, 1.98, 2.36, 0.08, 0.1);
+      addBox(M.lamp, mx, c - 0.06, c + 0.06, 2.02, 2.32, 0.1, 0.22);
+    }
+    if (F.portal) {
+      const p = F.portal;
+      addBox(M.putzHell, mx, p.u0, p.u0 + 0.25, Zh.ffbEG, p.z1, 0, 0.06);
+      addBox(M.putzHell, mx, p.u1 - 0.25, p.u1, Zh.ffbEG, p.z1, 0, 0.06);
+      addBox(M.putzHell, mx, p.u0, p.u1, 2.85, p.z1, 0, 0.06);
+    }
+    if (F.canopy) { const c = F.canopy; addBox(M.metal, mx, c.u0, c.u1, c.z0, c.z1, 0, c.depth); }
+    if (F.eaveRail) {
+      const e = F.eaveRail;
+      railing(M.metal, mx, e.u0, e.u1, e.z0, e.z1, 0.13);
+      for (const [a, b] of F.piers) {
+        addBox(M.putzHell, mx, a, b, Zh.gesimsO, 7.92, -0.05, 0.3);
+        addBox(M.putzHell, mx, a - 0.05, b + 0.05, 7.92, 8.0, -0.1, 0.35);
+      }
+    }
+    for (const d of F.dormers || []) {
+      const zb = 7.3, face = -d.front, frontMat = d.clad === 'putz' ? M.putz : M.zink;
+      parent.add(wallWithHoles(d.u1 - d.u0, zb, d.top, d.win.map(w => ({ ...w, u0: w.u0 - d.u0, u1: w.u1 - d.u0 })), 0.12,
+        frontMat, mx.clone().multiply(new THREE.Matrix4().makeTranslation(d.u0, 0, face))));
+      addBox(M.zink, mx, d.u0, d.u1, zb, d.top, -2.7, face - 0.12);
+      addBox(M.zink, mx, d.u0 - 0.06, d.u1 + 0.06, d.top - 0.06, d.top + 0.03, -2.7, face + 0.06);
+      if (d.clad === 'putz') {
+        addBox(M.putzHell, mx, d.u0 - 0.12, d.u1 + 0.12, d.top - 0.34, d.top - 0.12, face - 0.02, face + 0.14);
+        addBox(M.putzHell, mx, d.u0, d.u0 + 0.22, zb, d.top - 0.34, face, face + 0.06);
+        addBox(M.putzHell, mx, d.u1 - 0.22, d.u1, zb, d.top - 0.34, face, face + 0.06);
+      }
+      for (const w of d.win) windowUnit(mx, w, face, 0.12);
+    }
+  }
+  function roofGeometry() {
+    const o = HOUSE.ueberstand, ze = HOUSE.traufe, W = HOUSE.W, D = HOUSE.D, r1 = HOUSE.run1, r2 = HOUSE.run2, zk = Zh.knick, zf = Zh.first;
+    const E = { x0: -o, x1: W + o, y0: -D - o, y1: o }, K = { x0: r1, x1: W - r1, y0: -D + r1, y1: -r1 }, R = { x0: r1 + r2, x1: W - r1 - r2, y: -D / 2 };
+    const faces = [
+      [P(E.x0, E.y0, ze), P(E.x1, E.y0, ze), P(K.x1, K.y0, zk), P(K.x0, K.y0, zk)],
+      [P(E.x1, E.y1, ze), P(E.x0, E.y1, ze), P(K.x0, K.y1, zk), P(K.x1, K.y1, zk)],
+      [P(E.x1, E.y0, ze), P(E.x1, E.y1, ze), P(K.x1, K.y1, zk), P(K.x1, K.y0, zk)],
+      [P(E.x0, E.y1, ze), P(E.x0, E.y0, ze), P(K.x0, K.y0, zk), P(K.x0, K.y1, zk)],
+      [P(K.x0, K.y0, zk), P(K.x1, K.y0, zk), P(R.x1, R.y, zf), P(R.x0, R.y, zf)],
+      [P(K.x1, K.y1, zk), P(K.x0, K.y1, zk), P(R.x0, R.y, zf), P(R.x1, R.y, zf)],
+      [P(K.x1, K.y0, zk), P(K.x1, K.y1, zk), P(R.x1, R.y, zf)],
+      [P(K.x0, K.y1, zk), P(K.x0, K.y0, zk), P(R.x0, R.y, zf)],
+    ];
+    const pos = [], uv = [];
+    for (const f of faces) {
+      const a = f[0], e1 = f[1].clone().sub(a).normalize();
+      const n = f[1].clone().sub(a).cross(f[f.length - 1].clone().sub(a)).normalize();
+      const e2 = new THREE.Vector3().crossVectors(n, e1);
+      for (let i = 1; i < f.length - 1; i++) for (const p of [a, f[i], f[i + 1]]) {
+        pos.push(p.x, p.y, p.z); const d = p.clone().sub(a); uv.push(d.dot(e1), d.dot(e2));
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.computeVertexNormals();
+    return g;
+  }
+  function buildHouse() {
+    const g = new THREE.Group();
+    for (const s of ['S', 'N', 'E', 'W']) buildFacade(s, g);
+    const roof = new THREE.Mesh(roofGeometry(), M.roof); roof.castShadow = roof.receiveShadow = true; g.add(roof);
+    const r1 = HOUSE.run1 + HOUSE.run2;
+    boxPlan(M.zink, r1 - 0.05, HOUSE.W - r1 + 0.05, -HOUSE.D / 2 - 0.08, -HOUSE.D / 2 + 0.08, Zh.first - 0.03, Zh.first + 0.05);
+    for (const [z0, z1] of [[-0.15, Zh.ffbEG], [Zh.gurtU, Zh.ffbOG], [Zh.deckeDG, Zh.ffbDG]]) boxPlan(M.slab, 0.36, 15.64, -11.29, -0.36, z0, z1);
+    // Freisitz mit Dachterrasse
+    const f = HOUSE.freisitz;
+    boxPlan(M.stone, f.x0, f.x1, f.y0, f.y1, 0, f.z);
+    for (const [a, b] of [[f.y0, f.y0 + f.col], [f.y1 - f.col, f.y1]]) boxPlan(M.putzHell, f.x1 - f.col, f.x1, a, b, f.z, f.slab[0]);
+    boxPlan(M.putzHell, f.x0, f.x1 + 0.05, f.y0 - 0.05, f.y1, f.slab[0], f.slab[1]);
+    const mxS = new THREE.Matrix4().makeTranslation(0, 0, -f.y0 - 0.06);
+    railing(M.metal, mxS, f.x0 + 0.1, f.x1 - 0.06, f.slab[1], f.rail, 0);
+    const mxE = new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(f.x1 - 0.06, 0, 0));
+    railing(M.metal, mxE, f.y0 + 0.06, f.y1 - 0.06, f.slab[1], f.rail, 0);
+    const mxN = new THREE.Matrix4().makeTranslation(0, 0, -f.y1 + 0.06);
+    railing(M.metal, mxN, f.x0 + 0.1, f.x1 - 0.06, f.slab[1], f.rail, 0);
+    const t = HOUSE.terrasse, p = HOUSE.podest;
+    flushBatches(g);
+    boxPlan(M.stone, t.x0, t.x1, t.y0, t.y1, 0, t.z);
+    boxPlan(M.stone, p.x0, p.x1, p.y0, p.y1, 0, p.z);
+    return g;
+  }
+  function buildSite() {
+    const g = new THREE.Group(), C = SITE.concept;
+    const poolOuter = C.pool;
+    const ground = new THREE.Shape(rectPts(-260, -260, 280, 260));
+    ground.holes.push(new THREE.Path(poolOuter.map(q => v2(q[0], q[1]))));
+    const gg = new THREE.ShapeGeometry(ground); gg.rotateX(-Math.PI / 2);
+    const gm = new THREE.Mesh(gg, M.ground); gm.position.y = -0.03; gm.receiveShadow = true; g.add(gm);
+    L.grund = [gm];
+    for (const s of SITE.streets) { const m = flat(s, M.street, -0.01); g.add(m); L.grund.push(m); }
+    const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter]); g.add(lawn); L.grund.push(lawn);
+    for (const k of ['zuwegung', 'zufahrt']) { const m = flat(C[k], M.pave, 0.016); g.add(m); L.grund.push(m); }
+    // Pool
+    g.add(extrude(poolOuter, M.coping, 0, 0.06, [C.poolWasser]));
+    const pw = C.poolWasser, w = pw[1][0] - pw[0][0], d = pw[0][1] - pw[2][1];
+    const basin = new THREE.Mesh(new THREE.BoxGeometry(w, 1.5, d), M.tile);
+    basin.position.set(pw[0][0] + w / 2, -0.75, -(pw[0][1] - d / 2)); basin.receiveShadow = true; g.add(basin);
+    g.add(flat(pw, M.water, -0.12));
+    // Poolhaus
+    const ph = C.poolhaus;
+    g.add(extrude(ph, M.site, 0, 3.0));
+    const [px0, py1] = ph[0], [px1, py0] = ph[2];
+    const roofPH = extrude([[px0 - 0.15, py1 + 0.15], [px1 + 0.15, py1 + 0.15], [px1 + 0.15, py0 - 0.15], [px0 - 0.15, py0 - 0.15]], M.siteHell, 3.0, 0.22);
+    g.add(roofPH);
+    const pg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.45, 5.0), M.siteGlass);
+    pg.position.set(px0 - 0.01, 0.25 + 1.225, -(py0 + py1) / 2); g.add(pg);
+    const door = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.55, 0.05), M.frame);
+    door.position.set((px0 + px1) / 2, 1.3, -py0 + 0.02); g.add(door);
+    // Grenze
+    const pts = [...SITE.plot, SITE.plot[0]].map(q => P(q[0], q[1], 0.05));
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0x24292e, dashSize: 0.9, gapSize: 0.45 }));
+    line.computeLineDistances();
+    const grenze = new THREE.Group(); grenze.add(line);
+    for (const s of SITE.stones) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.22), M.coping); m.position.copy(P(s[0], s[1], 0.06)); grenze.add(m); }
+    g.add(grenze); L.grenze = grenze;
+    // Bäume und Schutzbereiche
+    const baeume = new THREE.Group(), ico = new THREE.IcosahedronGeometry(1, 3);
+    ico.deleteAttribute('normal'); ico.deleteAttribute('uv');
+    SITE.trees.forEach((t, i) => {
+      const H = Math.min(24, 4 + 2.0 * t.r);
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14 + 0.02 * t.r, 0.2 + 0.03 * t.r, H * 0.55, 8), M.trunk);
+      trunk.position.copy(P(t.c[0], t.c[1], H * 0.275)); trunk.castShadow = true; baeume.add(trunk);
+      const cg = mergeVertices(ico.clone()), pa = cg.attributes.position;
+      for (let k = 0; k < pa.count; k++) {
+        const x = pa.getX(k), y = pa.getY(k), z = pa.getZ(k);
+        const h = Math.sin(Math.round(x * 997) * 12.9898 + Math.round(y * 991) * 78.233 + Math.round(z * 983) * 37.719 + i * 4.1) * 43758.5453;
+        const f = 0.86 + 0.26 * (h - Math.floor(h));
+        pa.setXYZ(k, x * f, y * f, z * f);
+      }
+      cg.computeVertexNormals();
+      const crown = new THREE.Mesh(cg, M.crowns[i % 3]);
+      crown.scale.set(t.r, t.r * 0.92, t.r); crown.position.copy(P(t.c[0], t.c[1], H - t.r * 0.92));
+      crown.castShadow = true; crown.receiveShadow = true; baeume.add(crown);
+    });
+    const red = new THREE.MeshBasicMaterial({ color: 0xc23a2b, transparent: true, opacity: 0.85 });
+    const redFill = new THREE.MeshBasicMaterial({ color: 0xc23a2b, transparent: true, opacity: 0.08, depthWrite: false });
+    for (const z of SITE.schutz) {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(z.r - 0.07, z.r + 0.07, 128), red);
+      ring.rotation.x = -Math.PI / 2; ring.position.copy(P(z.c[0], z.c[1], 0.04)); baeume.add(ring);
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(z.r, 96), redFill);
+      disc.rotation.x = -Math.PI / 2; disc.position.copy(P(z.c[0], z.c[1], 0.035)); baeume.add(disc);
+    }
+    g.add(baeume); L.baeume = baeume;
+    // Nachbarschaft
+    const nb = new THREE.Group();
+    for (const b of SITE.neighbors) nb.add(extrudeMulti(b.pts, [M.nbRoof, M.nb], b.h));
+    for (const b of SITE.secondary) nb.add(extrudeMulti(b.pts, [M.nbRoof, M.nb2], b.h));
+    const seg = []; for (const [a, b, c, e] of SITE.parcelLines) seg.push(P(a, b, 0.03), P(c, e, 0.03));
+    nb.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), new THREE.LineBasicMaterial({ color: 0x5b6168 })));
+    g.add(nb); L.nachbarn = nb;
+    // Tiefgarage und Untergeschoss (unterirdisch, nur als Hülle)
+    const tg = new THREE.Group();
+    const tgm = extrude(C.tg, M.tg, -3.4, 2.8); tgm.castShadow = false; tg.add(tgm);
+    tg.add(new THREE.LineSegments(new THREE.EdgesGeometry(tgm.geometry), new THREE.LineBasicMaterial({ color: 0xc8711c })));
+    const ugm = extrude(C.haus, M.ug, -3.4, 3.4); ugm.castShadow = false; tg.add(ugm);
+    tg.add(new THREE.LineSegments(new THREE.EdgesGeometry(ugm.geometry), new THREE.LineBasicMaterial({ color: 0x4f6f8c })));
+    tg.visible = false; g.add(tg); L.tg = tg;
+    // Baurecht: Wandhöhe 7,25 m und Firsthöhe 11,12 m als gestrichelte Höhenlinien
+    const br = new THREE.Group();
+    for (const [z, o] of [[Zh.wand, 0], [Zh.first, 0]]) {
+      const q = [P(-o, 0, z), P(16 + o, 0, z), P(16 + o, -11.65, z), P(-o, -11.65, z), P(-o, 0, z)];
+      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(q), new THREE.LineDashedMaterial({ color: 0xd2382a, dashSize: 0.5, gapSize: 0.3 }));
+      l.computeLineDistances(); br.add(l);
+    }
+    for (const z of [Zh.wand, Zh.first]) {
+      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([P(-3, -11.65 - 0.5, z), P(22, -11.65 - 0.5, z)]),
+        new THREE.LineDashedMaterial({ color: 0xd2382a, dashSize: 0.5, gapSize: 0.3 }));
+      l.computeLineDistances(); br.add(l);
+    }
+    br.visible = false; g.add(br); L.baurecht = br;
+    flushBatches(g);
+    return g;
+  }
+  function extrudeMulti(pts, mats, h) {
+    const g = new THREE.ExtrudeGeometry(shapeFrom(pts), { depth: h, bevelEnabled: false });
+    g.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(g, mats); m.castShadow = m.receiveShadow = true; return m;
+  }
+
+  // ---------- Licht, Himmel, Sonne ----------
+  function setupLights(big) {
+    hemi = new THREE.HemisphereLight(0xdde8f4, 0x6d6551, 0.4); scene.add(hemi);
+    sun = new THREE.DirectionalLight(0xfff0d8, 3); sun.castShadow = true;
+    sun.shadow.mapSize.set(big ? 4096 : 2048, big ? 4096 : 2048);
+    Object.assign(sun.shadow.camera, { left: -58, right: 58, top: 58, bottom: -58, near: 1, far: 420 }); sun.shadow.camera.updateProjectionMatrix();
+    sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04;
+    sun.target.position.set(10, 0, 20); scene.add(sun, sun.target);
+    moon = new THREE.DirectionalLight(0x9db2ff, 0); moon.position.set(-60, 80, -30); scene.add(moon);
+    sky = new Sky(); sky.scale.setScalar(4000);
+    const u = sky.material.uniforms;
+    u.turbidity.value = 5.5; u.rayleigh.value = 1.3; u.mieCoefficient.value = 0.004; u.mieDirectionalG.value = 0.86;
+    scene.add(sky);
+    skyScene = new THREE.Scene(); const sky2 = new Sky(); sky2.material = sky.material; sky2.scale.setScalar(4000); skyScene.add(sky2);
+    pmrem = new THREE.PMREMGenerator(renderer);
+  }
+  function updateSun() {
+    const p = SUN.position(st.y, st.m, st.d, st.h, SITE.geo.lat, SITE.geo.lon);
+    const v = SUN.planDir(p.az, p.el, SITE.north.true);
+    const dir = new THREE.Vector3(v.x, v.z, -v.y).normalize();
+    sky.material.uniforms.sunPosition.value.copy(dir);
+    const day = smooth(p.el, -5, 8);
+    sun.position.copy(sun.target.position).addScaledVector(dir, 180);
+    sun.intensity = 3.2 * smooth(p.el, -0.5, 10);
+    sun.color.setHSL(0.09, 0.75, 0.62 + 0.3 * smooth(p.el, 2, 35));
+    hemi.intensity = 0.12 + 0.36 * day;
+    moon.intensity = 0.55 * (1 - day);
+    const night = 1 - smooth(p.el, -3, 6);
+    M.glass.emissiveIntensity = M.siteGlass.emissiveIntensity = 0.85 * night;
+    M.lamp.emissiveIntensity = 2.4 * night;
+    renderer.toneMappingExposure = 0.52 + 0.25 * (1 - day);
+    envDue = performance.now() + 120;
+    const rs = SUN.riseSet(st.y, st.m, st.d, SITE.geo.lat, SITE.geo.lon);
+    if (ui.info) ui.info.innerHTML =
+      `<div><dt>Azimut</dt><dd>${Math.round(p.az)}°</dd></div><div><dt>Höhe</dt><dd>${p.el.toFixed(1).replace('.', ',')}°</dd></div>` +
+      `<div><dt>Aufgang</dt><dd>${SUN.hhmm(rs.rise)}</dd></div><div><dt>Untergang</dt><dd>${SUN.hhmm(rs.set)}</dd></div>`;
+    if (ui.hudSun) ui.hudSun.textContent = `${String(st.d).padStart(2, '0')}.${String(st.m + 1).padStart(2, '0')}.${st.y} · ${SUN.hhmm(st.h)} Uhr · Sonne ${p.el > 0 ? `${Math.round(p.az)}° / ${Math.round(p.el)}° hoch` : 'unter dem Horizont'}`;
+  }
+  function updateEnv() {
+    const old = envRT; envRT = pmrem.fromScene(skyScene, 0, 0.1, 6000);
+    scene.environment = envRT.texture; if (old) old.dispose();
+  }
+
+  // ---------- Kamera ----------
+  const PRESETS = {
+    garten: { pos: [8.6, 1.7, 38.5], tgt: [9.2, 5.0, 5.8] },
+    eingang: { pos: [14.5, 2.2, -21], tgt: [8, 4.8, 5.8] },
+    ost: { pos: [45, 3, 1], tgt: [12, 4.6, 5.8] },
+    west: { pos: [-27, 2.5, 13], tgt: [8, 4.8, 5.8] },
+    vogel: { pos: [-31, 37, 60], tgt: [10, 0, 18] },
+    oben: { pos: [10.4, 98, 20.32], tgt: [10.4, 0, 20.3] },
+    schnitt: { pos: [40, 7.5, 7], tgt: [8, 5, 5.8] },
+  };
+  function goTo(name) {
+    if (name === 'front') { setOrtho(true); return; }
+    setOrtho(false);
+    const p = PRESETS[name];
+    tween = { t0: performance.now(), dur: 1100, fp: camP.position.clone(), ft: controls.target.clone(), tp: new THREE.Vector3(...p.pos), tt: new THREE.Vector3(...p.tgt) };
+  }
+  function setOrtho(on) {
+    st.ortho = on; cam = on ? camO : camP; controls.object = cam; tween = null;
+    if (on) { camO.position.set(9.5, 5.7, 90); controls.target.set(9.5, 5.7, 0); camO.zoom = 1; }
+    camO.near = on ? 90 - 16 : 0.1; camO.updateProjectionMatrix();
+    controls.update();
+    ui.scale.hidden = !on;
+    if (on) setLayer('baurecht', true, true);
+  }
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camP.aspect = w / h;
+    camP.fov = w / h < 1.25 ? Math.min(68, 2 * Math.atan(Math.tan(19 * Math.PI / 180) * 1.25 / (w / h)) * 180 / Math.PI) : 38;
+    camP.updateProjectionMatrix();
+    const a = w / h, oh = Math.max(ORTHO_H, 24 / a);
+    camO.left = -oh * a / 2; camO.right = oh * a / 2; camO.top = oh / 2; camO.bottom = -oh / 2; camO.updateProjectionMatrix();
+  }
+  function updateScale() {
+    if (!st.ortho) return;
+    const ppm = stage.clientHeight / ((camO.top - camO.bottom) / camO.zoom);
+    const len = ppm * 5 > 220 ? 2 : ppm * 5 < 60 ? 10 : 5;
+    ui.scaleBar.style.width = `${Math.round(ppm * len)}px`;
+    ui.scaleTxt.textContent = `${len} m`;
+  }
+  function setLayer(name, on, syncUi) {
+    if (!L[name]) return;
+    const list = Array.isArray(L[name]) ? L[name] : [L[name]];
+    for (const o of list) o.visible = on;
+    if (name === 'tg') {
+      for (const m of [M.lawn, M.ground, M.street, M.pave]) { m.transparent = on; m.opacity = on ? 0.32 : 1; m.depthWrite = !on; m.needsUpdate = true; }
+      controls.maxPolarAngle = on ? Math.PI * 0.9 : Math.PI * 0.495;
+    }
+    if (syncUi) { const el = document.getElementById(`ly-${name}`); if (el) el.checked = on; }
+  }
+  function setCut(on, x = st.cutX) {
+    st.cut = on; st.cutX = x; cutPlane.constant = x;
+    for (const m of houseMats) { m.clippingPlanes = on ? [cutPlane] : []; m.needsUpdate = true; }
+  }
+
+  // ---------- Schleife ----------
+  function loop(t) {
+    raf = active ? requestAnimationFrame(loop) : 0;
+    const dt = Math.min(0.1, (t - last) / 1000 || 0); last = t;
+    if (tween) {
+      const k = Math.min(1, (t - tween.t0) / tween.dur), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      camP.position.lerpVectors(tween.fp, tween.tp, e); controls.target.lerpVectors(tween.ft, tween.tt, e);
+      if (k >= 1) tween = null;
+    }
+    if (st.play) {
+      st.h += dt * 0.9; if (st.h > 22.5) st.h = 4;
+      updateSun(); if (ui.time) { ui.time.value = st.h; ui.timeOut.textContent = SUN.hhmm(st.h); }
+    }
+    if (envDue && t > envDue) { envDue = 0; updateEnv(); }
+    controls.autoRotate = st.rotate && !st.ortho;
+    controls.update();
+    renderer.render(scene, cam);
+  }
+
+  function init(stageEl) {
+    stage = stageEl; canvas = stage.querySelector('canvas');
+    Object.assign(ui, {
+      scale: stage.querySelector('.scalebar'), scaleBar: stage.querySelector('.scalebar i'), scaleTxt: stage.querySelector('.scalebar span'),
+      hudSun: stage.querySelector('.hud-sun'), info: document.getElementById('sunInfo'),
+      time: document.getElementById('sunTime'), timeOut: document.getElementById('sunTimeOut'),
+    });
+    const big = Math.min(window.innerWidth, window.innerHeight) > 700;
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.55;
+    renderer.localClippingEnabled = true;
+    scene = new THREE.Scene();
+    scene.environmentIntensity = 0.75;
+    camP = new THREE.PerspectiveCamera(38, 1.6, 0.3, 10000);
+    camO = new THREE.OrthographicCamera(-12, 12, 7.75, -7.75, 0.1, 600);
+    cam = camP;
+    camP.position.set(...PRESETS.garten.pos);
+    controls = new OrbitControls(camP, canvas);
+    controls.target.set(...PRESETS.garten.tgt);
+    controls.enableDamping = true; controls.dampingFactor = 0.08; controls.maxPolarAngle = Math.PI * 0.495;
+    controls.minDistance = 4; controls.maxDistance = 260; controls.autoRotateSpeed = 0.6;
+    controls.addEventListener('change', updateScale);
+    controls.addEventListener('start', () => { tween = null; });
+    makeMaterials();
+    setupLights(big);
+    scene.add(buildHouse());
+    scene.add(buildSite());
+    updateSun(); updateEnv();
+    new ResizeObserver(() => { resize(); updateScale(); }).observe(stage);
+    resize();
+    ready = true;
+  }
+  function show(on) {
+    active = on;
+    if (on && !raf) { last = performance.now(); raf = requestAnimationFrame(loop); }
+  }
+  function setDate(y, m, d) { st.y = y; st.m = m; st.d = d; updateSun(); }
+  function setTime(h) { st.h = h; updateSun(); }
+  function snapshot() { renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); }
+  return {
+    init, show, goTo, setLayer, setCut, setDate, setTime, snapshot,
+    get ready() { return ready; }, state: st,
+    play(on) { st.play = on; }, rotate(on) { st.rotate = on; },
+  };
+})();
+
+window.View3D = View3D;</script>
+<script type="module">// Bedienung: Tabs, 3D-Steuerung, Ansichten, Lageplan-Ebenen, Kennzahlen.
+(() => {
+  const noop = () => {};
+  const View3D = window.View3D || { ready: false, init() { throw new Error("three.js konnte nicht geladen werden"); }, show: noop, goTo: noop, rotate: noop, setDate: noop, setTime: noop, play: noop, setLayer: noop, setCut: noop, snapshot: () => "" };
+  const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const VIEWS = ['modell', 'ansichten', 'lageplan', 'daten'];
+  const ELEV = { sued: 'S', nord: 'N', ost: 'E', west: 'W', schnitt: 'A' };
+  const elevOpt = { mass: true, koten: true, recht: true };
+  let elevView = 'S', elevHome = [0, 0, 10, 10], elevPZ = null, siteReady = false;
+  const num = Site.num;
+
+  function show(name, push = true) {
+    if (!VIEWS.includes(name)) name = 'modell';
+    for (const v of VIEWS) {
+      const on = v === name, tab = $(`#tab-${v}`);
+      $(`#view-${v}`).hidden = !on;
+      tab.setAttribute('aria-selected', String(on)); tab.tabIndex = on ? 0 : -1;
+    }
+    if (name === 'modell') {
+      if (!View3D.ready) {
+        try { View3D.init($('#stage3d')); } catch (err) { $('#stage3d .fallback').hidden = false; console.error(err); }
+      }
+      if (View3D.ready) View3D.show(true);
+    } else if (View3D.ready) View3D.show(false);
+    if (name === 'ansichten') renderElev();
+    if (name === 'lageplan' && !siteReady) {
+      Site.init($('#stageSite'), $('#siteSvg'), $('#siteTip'));
+      siteReady = true;
+      for (const cb of $$('[data-site-layer]')) Site.setLayer(cb.dataset.siteLayer, cb.checked);
+    }
+    if (push) try { history.replaceState(null, '', `#${name === 'ansichten' ? Object.keys(ELEV).find(k => ELEV[k] === elevView) : name}`); } catch (e) { /* eingebettete Ansicht */ }
+  }
+  $$('[role="tab"]').forEach((t, i, all) => {
+    t.addEventListener('click', () => show(t.dataset.view));
+    t.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      const n = all[(i + d + all.length) % all.length]; n.focus(); show(n.dataset.view);
+    });
+  });
+  const press = (group, btn) => { for (const b of $$('button', group)) b.setAttribute('aria-pressed', String(b === btn)); };
+
+  // ---- 3D ----
+  $('#camChips').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    press($('#camChips'), b); View3D.goTo(b.dataset.cam);
+    $('#stage3d .hud-view').textContent = b.dataset.label || b.textContent;
+  });
+  $('#optRotate').addEventListener('change', e => View3D.rotate(e.target.checked));
+  const dateIn = $('#sunDate'), timeIn = $('#sunTime'), timeOut = $('#sunTimeOut');
+  function applyDate() {
+    const [y, m, d] = dateIn.value.split('-').map(Number);
+    if (y && m && d) View3D.setDate(y, m - 1, d);
+  }
+  dateIn.addEventListener('change', () => { applyDate(); press($('#dateChips'), null); });
+  $('#dateChips').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const now = new Date();
+    dateIn.value = b.dataset.date === 'heute' ? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}` : `2026-${b.dataset.date}`;
+    press($('#dateChips'), b); applyDate();
+  });
+  timeIn.addEventListener('input', () => { View3D.setTime(+timeIn.value); timeOut.textContent = SUN.hhmm(+timeIn.value); });
+  $('#sunPlay').addEventListener('click', e => {
+    const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+    e.currentTarget.setAttribute('aria-pressed', String(on));
+    e.currentTarget.textContent = on ? 'Tagesverlauf anhalten' : 'Tagesverlauf abspielen';
+    View3D.play(on);
+  });
+  for (const cb of $$('[data-layer3d]')) cb.addEventListener('change', () => View3D.setLayer(cb.dataset.layer3d, cb.checked));
+  const cutX = $('#cutX'), cutOut = $('#cutOut');
+  $('#optCut').addEventListener('change', e => {
+    View3D.setCut(e.target.checked, +cutX.value);
+    if (e.target.checked) { View3D.goTo('schnitt'); press($('#camChips'), null); $('#stage3d .hud-view').textContent = 'Schnitt'; }
+  });
+  cutX.addEventListener('input', () => {
+    cutOut.textContent = `${num(+cutX.value)} m`;
+    if ($('#optCut').checked) View3D.setCut(true, +cutX.value);
+  });
+  const snap = $('#snap3d');
+  if (BUILD.downloads) snap.addEventListener('click', () => download(View3D.snapshot(), 'forever-home-3d.png'));
+  else snap.hidden = true;
+
+  // ---- Ansichten ----
+  const elevSvg = $('#elevSvg');
+  elevPZ = PanZoom(elevSvg, () => elevHome);
+  function renderElev() {
+    const res = Elev.render(elevView, elevOpt);
+    elevSvg.innerHTML = res.svg; elevHome = res.vb; elevPZ.home();
+    const [t, note] = Elev.TITLES[elevView];
+    $('#elevTitle').textContent = t; $('#elevNote').textContent = note;
+  }
+  $('#elevChips').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    press($('#elevChips'), b); elevView = b.dataset.elev; show('ansichten');
+  });
+  for (const cb of $$('[data-elev-opt]')) cb.addEventListener('change', () => { elevOpt[cb.dataset.elevOpt] = cb.checked; renderElev(); });
+  $('#elevZoomIn').addEventListener('click', () => elevPZ.zoom(0.7));
+  $('#elevZoomOut').addEventListener('click', () => elevPZ.zoom(1.4));
+  $('#elevHome').addEventListener('click', () => elevPZ.home());
+  const svgDl = (svg, name) => download(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgFile(svg))}`, name);
+  if (BUILD.downloads) $('#elevDl').addEventListener('click', () => svgDl(elevSvg, `ansicht-${elevView}.svg`));
+  else $('#elevDl').hidden = true;
+
+  // ---- Lageplan ----
+  for (const cb of $$('[data-site-layer]')) cb.addEventListener('change', () => { if (siteReady) Site.setLayer(cb.dataset.siteLayer, cb.checked); });
+  $('#siteZoomIn').addEventListener('click', () => Site.zoom(0.7));
+  $('#siteZoomOut').addEventListener('click', () => Site.zoom(1.4));
+  $('#siteHome').addEventListener('click', () => Site.home());
+  if (BUILD.downloads) $('#siteDl').addEventListener('click', () => svgDl($('#siteSvg'), 'lageplan.svg'));
+  else $('#siteDl').hidden = true;
+
+  // ---- Kennzahlen ----
+  const S = Site.STATS, pct = v => `${num(100 * v / 1661, 1)} %`;
+  $('#flaechen').innerHTML = S.FL.map(([n, a]) => `<tr><th scope="row">${n}</th><td>${num(a, 1)} m²</td></tr>`).join('') +
+    `<tr class="sum"><th scope="row">Überbaut und befestigt</th><td>${num(S.befestigt, 1)} m² · ${pct(S.befestigt)}</td></tr>` +
+    `<tr><th scope="row">Tiefgarage unter dem Garten</th><td>${num(S.tgGarten, 1)} m²</td></tr>` +
+    `<tr class="sum"><th scope="row">Garten ohne Unterbauung</th><td>${num(S.gruenOhneTG, 1)} m² · ${pct(S.gruenOhneTG)}</td></tr>`;
+  for (const el of $$('[data-stat]')) {
+    const v = { west0: S.west[0], west1: S.west[1], north0: S.north[0], north1: S.north[1], east: S.east, ew: S.AB.ew, ns: S.AB.ns, H: S.AB.H,
+      grz: 186.4 / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG }[el.dataset.stat];
+    el.textContent = num(v, { grz: 3, versiegelt: 1, tg: 1, plot: 1 }[el.dataset.stat] ?? 2);
+  }
+
+  function svgFile(svg) {
+    const css = $('style').textContent;
+    const c = svg.cloneNode(true);
+    c.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    c.insertAdjacentHTML('afterbegin', `<style>${css}</style>`);
+    return c.outerHTML;
+  }
+  function download(href, name) { const a = document.createElement('a'); a.href = href; a.download = name; document.body.append(a); a.click(); a.remove(); }
+
+  function fromHash() {
+    const k = (location.hash || '').slice(1);
+    if (ELEV[k]) { elevView = ELEV[k]; press($('#elevChips'), $(`#elevChips [data-elev="${elevView}"]`)); show('ansichten', false); }
+    else if (VIEWS.includes(k)) show(k, false);
+  }
+  window.addEventListener('hashchange', fromHash);
+  const h = (location.hash || '').slice(1);
+  if (ELEV[h]) {
+    elevView = ELEV[h];
+    press($('#elevChips'), $(`#elevChips [data-elev="${elevView}"]`));
+    show('ansichten', false);
+  } else show(h || 'modell', false);
+})();
+</script>
+</body>
+</html>

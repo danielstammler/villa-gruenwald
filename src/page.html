@@ -1,0 +1,210 @@
+<title>Forever Home Grünwald</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Maßstäbliches 3D-Modell, Ansichten und Lageplan zum Neubau an der Ebertstraße in Grünwald">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>/*CSS*/</style>
+<!--BODY-->
+<div class="app">
+  <header class="plankopf">
+    <div class="pk-title">
+      <h1>Forever Home Grünwald</h1>
+      <p class="pk-sub">Ebertstraße 14 · Neubau Einfamilienhaus mit Tiefgarage · maßstäbliche Konzeptstudie</p>
+    </div>
+    <dl class="pk-meta">
+      <div><dt>Konzept</dt><dd>Chaline Deutsch · 28.10.2026</dd></div>
+      <div><dt>Baurecht</dt><dd>Vogel+Partner · 30.10.2026</dd></div>
+      <div><dt>Stand</dt><dd>03.11.2026</dd></div>
+    </dl>
+    <nav class="tabs" role="tablist" aria-label="Ansichten">
+      <button role="tab" id="tab-modell" aria-controls="view-modell" data-view="modell">3D-Modell</button>
+      <button role="tab" id="tab-ansichten" aria-controls="view-ansichten" data-view="ansichten">Ansichten &amp; Schnitt</button>
+      <button role="tab" id="tab-lageplan" aria-controls="view-lageplan" data-view="lageplan">Lageplan</button>
+      <button role="tab" id="tab-daten" aria-controls="view-daten" data-view="daten">Kennzahlen &amp; Hinweise</button>
+    </nav>
+  </header>
+  <main>
+    <section id="view-modell" class="view-wrap" role="tabpanel" aria-labelledby="tab-modell">
+      <div class="stage" id="stage3d">
+        <canvas aria-label="3D-Modell des Hauses mit Grundstück"></canvas>
+        <div class="fallback" hidden>Das 3D-Modell braucht WebGL. Die Ansichten und der Lageplan funktionieren auch ohne.</div>
+        <div class="hint hud-box">Ziehen: drehen · Rechts ziehen: verschieben · Rad: zoomen</div>
+        <div class="hud">
+          <div class="hud-box"><div class="hud-view">Garten</div><div class="hud-sun"></div></div>
+          <div class="hud-box scalebar" hidden><i></i><span>5 m</span></div>
+        </div>
+      </div>
+      <aside class="panel" aria-label="Steuerung 3D-Modell">
+        <section class="group">
+          <h2>Blick</h2>
+          <div class="chips" id="camChips">
+            <button data-cam="garten" aria-pressed="true">Garten</button>
+            <button data-cam="eingang">Eingang</button>
+            <button data-cam="ost">Ost</button>
+            <button data-cam="west">West</button>
+            <button data-cam="vogel" data-label="Vogelperspektive">Vogel</button>
+            <button data-cam="oben" data-label="Draufsicht">Draufsicht</button>
+            <button data-cam="front" data-label="Frontansicht Süd, orthogonal">Frontal maßstäblich</button>
+          </div>
+          <label class="switch"><input type="checkbox" id="optRotate"> Langsam ums Haus fahren</label>
+        </section>
+        <section class="group">
+          <h2>Sonnenstand Grünwald</h2>
+          <div class="chips" id="dateChips">
+            <button data-date="06-21" aria-pressed="true">21. Juni</button>
+            <button data-date="03-20">20. März</button>
+            <button data-date="12-21">21. Dez.</button>
+            <button data-date="heute">Heute</button>
+          </div>
+          <label class="field"><span>Datum</span><input type="date" id="sunDate" value="2026-06-21"></label>
+          <label class="field"><span>Uhrzeit <output id="sunTimeOut">17:00</output></span><input type="range" id="sunTime" min="4" max="22.5" step="0.0833" value="17"></label>
+          <button class="btn" id="sunPlay" aria-pressed="false">Tagesverlauf abspielen</button>
+          <dl class="readout" id="sunInfo"></dl>
+        </section>
+        <section class="group">
+          <h2>Ebenen</h2>
+          <label class="switch"><input type="checkbox" id="ly-nachbarn" data-layer3d="nachbarn" checked> Nachbarhäuser (Höhe angenommen)</label>
+          <label class="switch"><input type="checkbox" id="ly-baeume" data-layer3d="baeume" checked> Bäume und Wurzelschutzbereiche</label>
+          <label class="switch"><input type="checkbox" id="ly-grenze" data-layer3d="grenze" checked> Grundstücksgrenze</label>
+          <label class="switch"><input type="checkbox" id="ly-baurecht" data-layer3d="baurecht"> Baurecht: Wandhöhe 7,25 m und First 11,12 m</label>
+          <label class="switch"><input type="checkbox" id="ly-tg" data-layer3d="tg"> Tiefgarage und Keller durchsichtig zeigen</label>
+        </section>
+        <section class="group">
+          <h2>Schnitt</h2>
+          <label class="switch"><input type="checkbox" id="optCut"> Haus von Osten aufschneiden</label>
+          <label class="field"><span>Schnittlage ab Westfassade <output id="cutOut">8,00 m</output></span><input type="range" id="cutX" min="0.5" max="15.5" step="0.05" value="8"></label>
+        </section>
+        <button class="btn" id="snap3d">Bild speichern (PNG)</button>
+      </aside>
+    </section>
+
+    <section id="view-ansichten" class="view-wrap" role="tabpanel" aria-labelledby="tab-ansichten" hidden>
+      <div class="stage" id="stageElev">
+        <svg id="elevSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Maßstäbliche Ansicht"></svg>
+        <div class="stage-top">
+          <div class="cap hud-box"><strong id="elevTitle">Ansicht Süd</strong><span id="elevNote"></span></div>
+          <div class="zoom"><button id="elevZoomIn" aria-label="Vergrößern">+</button><button id="elevZoomOut" aria-label="Verkleinern">−</button><button id="elevHome" aria-label="Ganze Zeichnung">⤢</button></div>
+        </div>
+      </div>
+      <aside class="panel" aria-label="Steuerung Ansichten">
+        <section class="group">
+          <h2>Zeichnung</h2>
+          <div class="chips" id="elevChips">
+            <button data-elev="S" aria-pressed="true">Süd · Garten</button>
+            <button data-elev="N">Nord · Eingang</button>
+            <button data-elev="E">Ost</button>
+            <button data-elev="W">West</button>
+            <button data-elev="A">Schnitt A–A</button>
+          </div>
+        </section>
+        <section class="group">
+          <h2>Einblenden</h2>
+          <label class="switch"><input type="checkbox" id="eo-mass" data-elev-opt="mass" checked> Maßketten (Fensterachsen, Breite)</label>
+          <label class="switch"><input type="checkbox" id="eo-koten" data-elev-opt="koten" checked> Höhenkoten</label>
+          <label class="switch"><input type="checkbox" id="eo-recht" data-elev-opt="recht" checked> Baurecht-Grenzen (rot)</label>
+        </section>
+        <section class="group">
+          <h2>So ist die Ansicht entstanden</h2>
+          <p>Breite, Fensterachsen und Anbauten stammen exakt aus dem Konzeptplan im Maßstab 1:100. Wandhöhe 7,25 m und Firsthöhe 11,12 m sind die Grenzen aus der Baurecht-Skizze von Vogel+Partner. Gesimse, Pilaster, Geländer und Gauben folgen dem Rendering.</p>
+          <p>Das Traufgesims sitzt bei 6,83 m, weil die Wandhöhe bis zur Dachhaut an der Außenwand gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach (unten 50°, oben 15°).</p>
+        </section>
+        <button class="btn" id="elevDl">Zeichnung speichern (SVG)</button>
+      </aside>
+    </section>
+
+    <section id="view-lageplan" class="view-wrap" role="tabpanel" aria-labelledby="tab-lageplan" hidden>
+      <div class="stage" id="stageSite">
+        <svg id="siteSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lageplan"></svg>
+        <div class="stage-top">
+          <div class="cap hud-box"><strong>Lageplan</strong><span>Antippen oder darüberfahren zeigt Maße und Flächen</span></div>
+          <div class="zoom"><button id="siteZoomIn" aria-label="Vergrößern">+</button><button id="siteZoomOut" aria-label="Verkleinern">−</button><button id="siteHome" aria-label="Ganzes Grundstück">⤢</button></div>
+        </div>
+        <div class="tip" id="siteTip" hidden></div>
+      </div>
+      <aside class="panel" aria-label="Steuerung Lageplan">
+        <section class="group legend">
+          <h2>Ebenen</h2>
+          <label class="switch"><input type="checkbox" id="sl-konzept" data-site-layer="konzept" checked><i class="sw" style="background:var(--house)"></i> Konzept Chaline Deutsch</label>
+          <label class="switch"><input type="checkbox" id="sl-tg" data-site-layer="tg" checked><i class="sw" style="border-color:var(--tg)"></i> Tiefgarage (unterirdisch)</label>
+          <label class="switch"><input type="checkbox" id="sl-baeume" data-site-layer="baeume" checked><i class="sw" style="background:var(--lawn-2)"></i> Bäume und Wurzelschutzbereiche</label>
+          <label class="switch"><input type="checkbox" id="sl-grenze" data-site-layer="grenze" checked><i class="sw" style="border-color:var(--ink)"></i> Grenze und Grenzlängen</label>
+          <label class="switch"><input type="checkbox" id="sl-masse" data-site-layer="masse" checked><i class="sw" style="border-color:var(--ink);border-style:dashed"></i> Grenzabstände und Maße</label>
+          <label class="switch"><input type="checkbox" id="sl-linie" data-site-layer="linie" checked><i class="sw" style="border-color:var(--vogel)"></i> Linie 5,00 m zur Straße</label>
+          <label class="switch"><input type="checkbox" id="sl-umgebung" data-site-layer="umgebung" checked><i class="sw" style="background:var(--nb)"></i> Nachbarhäuser und Straße</label>
+          <label class="switch"><input type="checkbox" id="sl-abstand" data-site-layer="abstand"><i class="sw" style="background:var(--limit)"></i> Abstandsflächen (überschlägig)</label>
+          <label class="switch"><input type="checkbox" id="sl-vogel" data-site-layer="vogel"><i class="sw" style="border-color:var(--vogel)"></i> Zum Vergleich: Skizze Vogel+Partner</label>
+          <label class="switch"><input type="checkbox" id="sl-bestand" data-site-layer="bestand"><i class="sw" style="border-style:dashed"></i> Bestand (wird abgerissen)</label>
+        </section>
+        <section class="group">
+          <h2>Auffälligkeiten</h2>
+          <ul class="notes">
+            <li class="warn"><span>Westabstand nur <b data-stat="west0"></b>–<b data-stat="west1"></b> m. Mit dem Ansatz der Vogel-Skizze (0,4 H) wären <b data-stat="ew"></b> m nötig.</span></li>
+            <li class="warn"><span>Die Wurzelschutzbereiche der Nachbarbäume im Nordosten und Südosten reichen in Zuwegung und Zufahrt.</span></li>
+            <li class="info"><span>Die Zufahrt endet am Poolhaus (3,50 × 6,00 m). Eine Rampe ist nicht gezeichnet; das Maß passt zu einem Autoaufzug.</span></li>
+          </ul>
+        </section>
+        <section class="group">
+          <h2>Flächenbilanz</h2>
+          <table class="fl"><tbody id="flaechen"></tbody></table>
+          <p>Grundstück laut Plan <span data-stat="plot"></span> m² (amtlich 1.661 m²).</p>
+        </section>
+        <button class="btn" id="siteDl">Lageplan speichern (SVG)</button>
+      </aside>
+    </section>
+
+    <section id="view-daten" role="tabpanel" aria-labelledby="tab-daten" hidden>
+      <div class="doc">
+        <section>
+          <h2>Kurz gesagt</h2>
+          <ul class="notes">
+            <li class="info"><span><b>Die Proportionen des Renderings stimmen weitgehend.</b> Breite 16,00 m und Gesamthöhe 11,12 m passen. Maßstäblich sitzt das Traufgesims aber bei 6,83 m, weil die erlaubte Wandhöhe von 7,25 m bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach und bekommt Licht über Gauben.</span></li>
+            <li class="warn"><span><b>Der Westabstand ist knapp.</b> Zwischen Westfassade und Grenze liegen <span data-stat="west0"></span> m (Nordwestecke) bis <span data-stat="west1"></span> m. Nach dem Ansatz aus Vogels Skizze (0,4 H mit H = <span data-stat="H"></span> m) wären <span data-stat="ew"></span> m nötig. Ob das reicht, hängt von der Dachneigung und dem Ortsrecht ab.</span></li>
+            <li class="warn"><span><b>Schutzbäume der Nachbarn.</b> Der große Baum im Nordosten (Krone etwa 16 m) und der Baum im Südosten haben Wurzelschutzbereiche (Krone plus 1,50 m), die in Zuwegung und Zufahrt reichen. Dort ist wurzelschonendes Bauen nötig.</span></li>
+            <li class="info"><span><b>Zufahrt zur Tiefgarage noch offen.</b> Die Zufahrt endet am Poolhaus mit 3,50 × 6,00 m. Eine Rampe ist nicht gezeichnet; das Maß passt zu einem Autoaufzug.</span></li>
+            <li><span><b>Abweichend von der Vogel-Skizze.</b> Vogel geht von 15,10 × 12,05 m aus und setzt das Haus gut 3,5 m weiter nach Osten. Das Konzept hat 16,00 × 11,65 m: 0,90 m mehr Gartenfassade und 4,4 m² mehr Grundfläche.</span></li>
+          </ul>
+        </section>
+        <section>
+          <h2>Kennzahlen</h2>
+          <div class="facts">
+            <div class="fact"><b>1.661 m²</b><span>Grundstück (amtlich)</span></div>
+            <div class="fact"><b>16,00 × 11,65</b><span>Wohnhaus in m · 186,4 m²</span></div>
+            <div class="fact"><b>372,8 m²</b><span>Geschossfläche EG + OG (Vogel: 363,9)</span></div>
+            <div class="fact"><b>7,25 / 11,12</b><span>Wandhöhe / Firsthöhe in m</span></div>
+            <div class="fact"><b data-stat="grz"></b><span>GRZ nur Wohnhaus</span></div>
+            <div class="fact"><b><span data-stat="versiegelt"></span> %</b><span>überbaut und befestigt</span></div>
+            <div class="fact"><b><span data-stat="tg"></span> m²</b><span>Tiefgarage außerhalb des Hauses</span></div>
+            <div class="fact"><b>10,00 m</b><span>Terrasse bis Pool</span></div>
+          </div>
+        </section>
+        <section>
+          <h2>Was maßstäblich ist und was angenommen</h2>
+          <div class="cols">
+            <div><h3>Aus dem Konzeptplan, M 1:100</h3><ul>
+              <li>Grundstück mit sieben Grenzpunkten</li><li>Haus 16,00 × 11,65 m, Außenwand 36 cm</li><li>Sieben Fensterachsen der Südfassade</li>
+              <li>Terrasse 7,00 × 3,00 m, Freisitz 3,00 × 5,00 m, Podest 5,00 × 1,00 m</li><li>Zuwegung 1,50 m, Zufahrt, Pool 4,00 × 12,00 m, Poolhaus 3,50 × 6,00 m</li><li>Umriss der Tiefgarage</li></ul></div>
+            <div><h3>Aus Baurecht-Skizze und Flurkarte</h3><ul>
+              <li>Wandhöhe 7,25 m, Firsthöhe 11,12 m, Dachknick bei etwa 10,25 m</li><li>Bäume und Wurzelschutzbereiche</li><li>Nachbarhäuser, Grenzen und Straße</li>
+              <li>Linie 5,00 m parallel zur Straße</li><li>Abstandsflächen-Ansatz 0,8 H (Nord/Süd) und 0,4 H (Ost/West)</li></ul></div>
+            <div><h3>Angenommen</h3><ul>
+              <li>Geschosshöhen: EG 3,35 m, OG 3,10 m, Fußboden EG 0,20 m über Gelände</li><li>Dachneigung unten 50°, oben 15°</li><li>Nord-, Ost- und Westfassade, Gauben</li>
+              <li>Untergeschoss unter dem Haus</li><li>Höhen der Nachbarhäuser und Bäume</li><li>Gestaltung nach dem Rendering</li></ul></div>
+          </div>
+        </section>
+        <section>
+          <h2>Bedienung</h2>
+          <p>Im 3D-Modell dreht man mit gedrückter Maus oder einem Finger, verschiebt mit der rechten Maustaste oder zwei Fingern und zoomt mit dem Rad oder zwei Fingern. „Frontal maßstäblich“ zeigt die Südfassade ohne Perspektive, mit Maßstabsbalken. In Ansichten und Lageplan verschiebt man durch Ziehen, zoomt mit Rad oder zwei Fingern und tippt Flächen an, um Maße zu sehen.</p>
+        </section>
+        <section>
+          <h2>Quellen</h2>
+          <p class="src">Konzept EG mit TG, Chaline Deutsch, 28.10.2026, M 1:100 · Skizze Baurecht, Vogel+Partner Architekten, 30.10.2026, M 1:500 · Flurkarte BayernAtlas, © Bayerische Vermessungsverwaltung 2026 · Rendering als Gestaltungsvorlage. Überschlägige Rekonstruktion ohne Gewähr; baurechtliche Fragen klärt der Architekt.</p>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+<script>/*JSBASE*/</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">/*JS3D*/</script>
+<script type="module">/*JSMAIN*/</script>

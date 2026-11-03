@@ -29,6 +29,7 @@ Die Pläne selbst liegen nicht im Repo, nur die daraus gemessenen Koordinaten (`
 
 - `src/` – Quelltext: `data.js` (Geometrie in Metern), `house.js` (parametrisches Haus und Rampe), `view3d.js` (three.js), `elevation.js` (Ansichten und Schnitte), `floorplan.js` (Grundrisse), `siteplan.js` (Lageplan), `sun.js` (Sonnenstand nach NOAA), `main.js`, `style.css`, `page.html`.
 - `build.py` – baut daraus `docs/index.html` (eine Datei, alles eingebettet).
+- `tools/check.js` – rendert alle Ansichten, Grundrisse und den Lageplan ohne Browser und meldet fehlerhafte Werte (`node tools/check.js`).
 
 ```bash
 python3 build.py

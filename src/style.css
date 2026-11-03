@@ -1,7 +1,7 @@
 :root {
   /* Layout: ein Zeichenblatt – Plankopf oben, links die Zeichen- bzw. Modellfläche, rechts die Bedienleiste (mobil darunter). */
   --paper: #f1f2ee; --surface: #fbfbf9; --ink: #1d242a; --ink-2: #58636d; --rule: #cad0d3; --rule-2: #e1e5e7;
-  --accent: #295a83; --accent-ink: #ffffff; --limit: #c0392b; --vogel: #2c5fc6; --tg: #cf7a23;
+  --accent: #295a83; --accent-ink: #ffffff; --limit: #c0392b; --linie: #2c5fc6; --tg: #cf7a23;
   --lawn: #bcd3a1; --lawn-2: #7f9f62; --water: #9ccbe3; --stone: #dfd8cb; --pave: #e3e0d8; --street: #e2e2df;
   --nb: #c6c3bc; --nb-2: #dcd9d3; --house: #39414a; --house-ink: #ffffff;
   --m-putz: #ecdfc4; --m-putz-hell: #f5ebd8; --m-putz-2: #d2bf9c; --m-reveal: #c9b693; --m-sockel: #dfd1b4;
@@ -14,7 +14,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #11161a; --surface: #172027; --ink: #e3e8eb; --ink-2: #9ba7b1; --rule: #2c3841; --rule-2: #222c33;
-    --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --vogel: #7ea6ff; --tg: #f0a04f;
+    --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --linie: #7ea6ff; --tg: #f0a04f;
     --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
     --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
     --m-putz: #d8cbb0; --m-putz-hell: #e3d8c3; --m-putz-2: #bba984; --m-reveal: #a8977a; --m-sockel: #c3b597;
@@ -24,7 +24,7 @@
 }
 :root[data-theme="dark"] {
   --paper: #11161a; --surface: #172027; --ink: #e3e8eb; --ink-2: #9ba7b1; --rule: #2c3841; --rule-2: #222c33;
-  --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --vogel: #7ea6ff; --tg: #f0a04f;
+  --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --linie: #7ea6ff; --tg: #f0a04f;
   --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
   --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
   --m-putz: #d8cbb0; --m-putz-hell: #e3d8c3; --m-putz-2: #bba984; --m-reveal: #a8977a; --m-sockel: #c3b597;
@@ -169,9 +169,6 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .e-kname { font: 400 0.24px var(--font-ui); fill: var(--ink-2); text-anchor: start; }
 .e-beyond { fill: var(--m-reveal); opacity: 0.6; }
 .e-kmark { fill: var(--ink); }
-.e-limit { stroke: var(--limit); stroke-width: 1.4px; stroke-dasharray: 7 4; vector-effect: non-scaling-stroke; }
-.e-limittxt { font: 600 0.3px var(--font-ui); fill: var(--limit); text-anchor: end; }
-.e-limitdot { fill: var(--limit); }
 .e-cut { fill: var(--ink); }
 .e-cutroof { fill: var(--ink-2); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 .e-room { fill: var(--surface); }
@@ -203,24 +200,13 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .s-entry { fill: var(--accent); }
 .s-tg { fill: none; stroke: var(--tg); stroke-width: 1.6px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
 .s-tglabel { font: 600 0.62px var(--font-ui); fill: var(--tg); text-anchor: middle; }
-.s-bestand { fill: url(#pBestand); stroke: var(--ink-2); stroke-width: 1px; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
-.s-hatchline { stroke: var(--ink-2); stroke-width: 0.08; }
-.s-vab { fill: none; stroke: var(--vogel); stroke-width: 0.9px; vector-effect: non-scaling-stroke; }
-.s-vab-in { stroke-dasharray: 3 3; }
-.s-vtg { fill: none; stroke: var(--tg); stroke-width: 1px; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
-.s-vhaus { fill: color-mix(in srgb, var(--vogel) 12%, transparent); stroke: var(--vogel); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
-.s-vlabel { font: 600 0.75px var(--font-ui); fill: var(--vogel); text-anchor: middle; }
-.s-ab { fill: url(#pAbstand); stroke: var(--limit); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
-.s-abline { stroke: var(--limit); stroke-width: 0.06; opacity: 0.7; }
-.s-ab-over { fill: var(--limit); opacity: 0.55; }
-.s-ablabel { font: 600 0.62px var(--font-data); fill: var(--limit); text-anchor: middle; }
 .s-tree { fill: color-mix(in srgb, var(--lawn-2) 32%, transparent); stroke: var(--lawn-2); stroke-width: 0.9px; vector-effect: non-scaling-stroke; }
 .s-tree-p { stroke-width: 1.3px; }
 .s-trunk { fill: var(--lawn-2); }
 .s-schutz { fill: color-mix(in srgb, var(--limit) 7%, transparent); stroke: var(--limit); stroke-width: 1.2px; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
 .s-schutzlabel { font: 600 0.7px var(--font-ui); fill: var(--limit); text-anchor: middle; }
-.s-linie { fill: none; stroke: var(--vogel); stroke-width: 1.2px; stroke-dasharray: 10 3 2 3; vector-effect: non-scaling-stroke; }
-.s-linielabel { font: 500 0.62px var(--font-ui); fill: var(--vogel); }
+.s-linie { fill: none; stroke: var(--linie); stroke-width: 1.2px; stroke-dasharray: 10 3 2 3; vector-effect: non-scaling-stroke; }
+.s-linielabel { font: 500 0.62px var(--font-ui); fill: var(--linie); }
 .s-grenze { fill: none; stroke: var(--ink); stroke-width: 2px; stroke-dasharray: 14 4 2 4; vector-effect: non-scaling-stroke; }
 .s-stone-mark { fill: var(--surface); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 .s-edge { font: 500 0.78px var(--font-data); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
@@ -312,7 +298,7 @@ body.noscroll { overflow: hidden; }
   .hud-sun { font-size: 10.5px; }
   .cap { max-width: 62%; }
   .cap span { display: none; }
-  .e-dimtxt { font-size: 0.42px; } .e-kote { font-size: 0.44px; } .e-kname { font-size: 0.32px; } .e-limittxt { font-size: 0.42px; } .e-label { font-size: 0.48px; }
+  .e-dimtxt { font-size: 0.42px; } .e-kote { font-size: 0.44px; } .e-kname { font-size: 0.32px; } .e-mark { font-size: 0.4px; } .e-label { font-size: 0.48px; }
   .s-edge { font-size: 1.05px; } .s-dimtxt { font-size: 0.9px; } .s-lbl { font-size: 1.0px; } .s-hnr { font-size: 1.3px; } .s-houselabel { font-size: 1.3px; }
   .g-roomtxt { font-size: 0.5px; } .g-areatxt { font-size: 0.38px; } .g-ftxt { font-size: 0.28px; } .g-dimtxt { font-size: 0.45px; }
 }
@@ -323,4 +309,11 @@ body.noscroll { overflow: hidden; }
 .g-above { fill: none; stroke: var(--ink-2); stroke-width: 0.9px; stroke-dasharray: 6 3; vector-effect: non-scaling-stroke; }
 .s-ramp { fill: none; stroke: var(--tg); stroke-width: 1.2px; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
 .g-gate { fill: var(--ink-2); }
+.s-rampopen { fill: color-mix(in srgb, var(--ink-2) 22%, var(--pave)); stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.s-rampline { stroke: var(--ink-2); stroke-width: 0.5px; vector-effect: non-scaling-stroke; opacity: 0.8; }
+.s-rampwall { fill: var(--ink-2); }
+.s-ramparrow { fill: var(--ink); }
+.e-mark { font: 500 0.28px var(--font-data); fill: var(--ink); }
+.e-railx { fill: var(--ink-2); }
+.g-grenze { fill: none; stroke: var(--ink); stroke-width: 1.4px; stroke-dasharray: 10 3 2 3; vector-effect: non-scaling-stroke; }
 .s-hedge { fill: none; stroke: var(--lawn-2); stroke-width: 0.6; stroke-linejoin: round; opacity: 0.9; }

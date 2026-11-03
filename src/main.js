@@ -4,9 +4,9 @@
   const View3D = window.View3D || { ready: false, init() { throw new Error("three.js konnte nicht geladen werden"); }, show: noop, goTo: noop, rotate: noop, setDate: noop, setTime: noop, play: noop, setLayer: noop, setCut: noop, snapshot: () => "" };
   const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const VIEWS = ['modell', 'ansichten', 'grundrisse', 'lageplan', 'daten'];
-  const ELEV = { sued: 'S', nord: 'N', ost: 'E', west: 'W', schnitt: 'A' };
+  const ELEV = { sued: 'S', nord: 'N', ost: 'E', west: 'W', schnitt: 'A', rampe: 'B' };
   const PLAN = { ug: 'UG', eg: 'EG', og: 'OG', dg: 'DG' };
-  const elevOpt = { mass: true, koten: true, recht: true }, planOpt = { moebel: true, flaechen: true };
+  const elevOpt = { mass: true, koten: true }, planOpt = { moebel: true, flaechen: true };
   let elevView = 'S', elevHome = [0, 0, 10, 10], planFloor = 'EG', planHome = [0, 0, 10, 10], siteReady = false;
   const num = Site.num;
 
@@ -172,8 +172,7 @@
     `<tr><th scope="row">Tiefgarage unter dem Garten</th><td>${num(S.tgGarten, 1)} m²</td></tr>` +
     `<tr class="sum"><th scope="row">Garten ohne Unterbauung</th><td>${num(S.gruenOhneTG, 1)} m² · ${pct(S.gruenOhneTG)}</td></tr>`;
   for (const el of $$('[data-stat]')) {
-    const v = { west0: S.west[0], west1: S.west[1], north0: S.north[0], north1: S.north[1], east: S.east, ew: S.AB.ew, ns: S.AB.ns, H: S.AB.H,
-      grz: 186.4 / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG, wohnfl: wf.sum }[el.dataset.stat];
+    const v = { grz: 186.4 / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG, wohnfl: wf.sum }[el.dataset.stat];
     el.textContent = num(v, { grz: 3, versiegelt: 1, tg: 1, plot: 1, wohnfl: 0 }[el.dataset.stat] ?? 2);
   }
 

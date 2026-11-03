@@ -1,4 +1,4 @@
-// Lageplan als SVG: Umgebung aus der Flurkarte, Konzept, Bäume, Maße, Abstandsflächen, Vogel-Skizze.
+// Lageplan als SVG: Umgebung aus der Flurkarte, Konzept mit offener Rampe, Tiefgarage, Bäume, Maße.
 // Einheit Meter; Plan-y nach Norden wird zu SVG-y = -y.
 const Site = (() => {
   const C = SITE.concept;
@@ -36,8 +36,6 @@ const Site = (() => {
     return s + text(m, label ?? num(L), 's-dimtxt', upright(Math.atan2(-dy, dx) * 180 / Math.PI));
   }
 
-  const H = HOUSE.Z.wand + (HOUSE.Z.first - HOUSE.Z.wand) / 3;
-  const AB = { H, ns: 0.8 * H, ew: 0.4 * H };
   const plotArea = area(SITE.plot);
   const tgUnterZuwegung = (23.499 - 22.885) * (24.151 - 11.65);
   const FL = [
@@ -46,8 +44,7 @@ const Site = (() => {
   ];
   const befestigt = FL.reduce((s, [, a]) => s + a, 0);
   const tgGarten = area(C.tg) - tgUnterZuwegung - area(C.terrasse);
-  const STATS = { plotArea, befestigt, tgGarten, tg: area(C.tg), gruen: plotArea - befestigt, gruenOhneTG: plotArea - befestigt - tgGarten, FL, AB,
-    west: [westX(0), westX(-HOUSE.D)].map(x => -x), north: [northY(0.01), northY(HOUSE.W)], east: eastX(-HOUSE.D / 2) - HOUSE.W };
+  const STATS = { plotArea, befestigt, tgGarten, tg: area(C.tg), gruen: plotArea - befestigt, gruenOhneTG: plotArea - befestigt - tgGarten, FL };
 
   function northArrow(c, rot) {
     const R = p => { const a = rot * Math.PI / 180; return [c[0] + p[0] * Math.cos(a) - p[1] * Math.sin(a), c[1] + p[0] * Math.sin(a) + p[1] * Math.cos(a)]; };
@@ -63,25 +60,26 @@ const Site = (() => {
 
   function build() {
     const s = [];
-    s.push(`<defs>
-      <pattern id="pBestand" width="0.9" height="0.9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V0.9" class="s-hatchline"/></pattern>
-      <pattern id="pAbstand" width="0.7" height="0.7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><path d="M0 0V0.7" class="s-abline"/></pattern>
-      <mask id="mOutside" maskUnits="userSpaceOnUse" x="-400" y="-400" width="800" height="800"><rect x="-400" y="-400" width="800" height="800" fill="#fff"/><polygon points="${pts(SITE.plot)}" fill="#000"/></mask>
-    </defs>`);
     // Umgebung
     s.push('<g data-layer="umgebung">');
     for (const st of SITE.streets) s.push(poly(st, 's-street', 'Öffentliche Straße'));
     for (const [a, b, c, d] of SITE.parcelLines) s.push(line([a, b], [c, d], 's-parcel'));
     for (const b of SITE.secondary) s.push(poly(b.pts, 's-nb2', 'Nebengebäude Nachbar (Flurkarte)'));
     for (const b of SITE.neighbors) s.push(poly(b.pts, 's-nb', 'Nachbarhaus (Flurkarte) · Erdgeschoss + Dachgeschoss'));
-    for (const l of SITE.labels) if (!l.t.startsWith('14')) s.push(text(l.p, l.t, 's-hnr'));
+    for (const l of SITE.labels) s.push(text(l.p, l.t, 's-hnr'));
     s.push(text([7.5, -56.2], 'Ebertstraße', 's-streetname', 4.0));
     s.push('</g>');
     // Konzept
     s.push('<g data-layer="konzept">');
     s.push(poly(SITE.plot, 's-lawn', `Garten · ${num(STATS.gruen, 0)} m² unversiegelt`));
     s.push(poly(C.zuwegung, 's-pave', `Zuwegung · 1,50 m breit · ${num(area(C.zuwegung), 1)} m²`));
-    s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · eben bis zum Poolhaus`));
+    s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · darin die offene Rampe zur Tiefgarage`));
+    // Offene Rampe zwischen Betonwänden: Querlinien im Meterabstand, Pfeil zeigt bergab
+    const rp = HOUSE.rampe, rx0 = rp.x0 - rp.wand, rx1 = rp.x1 + rp.wand, rc = (rp.x0 + rp.x1) / 2;
+    s.push(poly(rect(rp.x0, rp.y0, rp.x1, rp.yPortal), 's-rampopen', `Offene Rampe zur Tiefgarage · 2,80 m breit · oben und unten ${num(rp.s0 * 100, 0)} %, dazwischen ${num(rp.s * 100, 0)} % · am Poolhaus ${num(-rp.z(rp.yPortal))} m tief`));
+    for (let y = rp.y0 + 1; y < rp.yPortal - 0.4; y += 1) s.push(line([rp.x0, y], [rp.x1, y], 's-rampline'));
+    s.push(poly(rect(rx0, rp.y0, rp.x0, rp.yPortal), 's-rampwall', 'Rampenwand mit Geländer') + poly(rect(rp.x1, rp.y0, rx1, rp.yPortal), 's-rampwall', 'Rampenwand mit Geländer'));
+    s.push(poly([[rc - 0.5, -38.2], [rc + 0.5, -38.2], [rc, -36.9]], 's-ramparrow') + text([rc + 0.25, -43.4], `Rampe ${num(rp.s * 100, 0)} %`, 's-lbl s-tiny', -90));
     const PL = SITE.plot, hk = [[25.059, -44.0], PL[4], PL[5], PL[6], PL[0]];
     s.push(`<polyline points="${pts(hk.map(([x, y], i) => [x + (i === 0 || i === 1 ? -0.45 : 0), y]))}" class="s-hedge" data-tip="Hecke · ca. 1,30 m hoch · West-, Nord- und Ostgrenze"/>`);
     s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m · darüber Balkon auf vier Säulen'));
@@ -89,7 +87,7 @@ const Site = (() => {
     s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · überdacht, darüber Dachterrasse'));
     s.push(poly(C.pool, 's-coping', 'Pool · 4,00 × 12,00 m'));
     s.push(poly(C.poolWasser, 's-water', 'Pool · Wasserfläche ca. 3,50 × 11,50 m'));
-    s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m'));
+    s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m · darunter führt die Rampe in die Tiefgarage'));
     s.push(poly(C.haus, 's-house', 'Wohnhaus · 16,00 × 11,65 m · 186,4 m² · Wandhöhe 7,25 m · First 11,12 m'));
     for (const o of HOUSE.fas.S.open.filter(q => q.z0 < 1)) s.push(poly(rect(o.u0, -HOUSE.D, o.u1, -HOUSE.D + 0.2), 's-win'));
     const bk = HOUSE.balkon;
@@ -98,26 +96,10 @@ const Site = (() => {
     s.push(text([8, -13.4], 'Terrasse', 's-lbl s-small') + text([17.5, -8.6], 'Freisitz', 's-lbl s-small', -90) + text([8, 0.35], 'Podest', 's-lbl s-tiny'));
     s.push(poly([[8, 1.1], [7.55, 2.05], [8.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));
     s.push(text([8, -30.65], 'Pool 4,00 × 12,00', 's-lbl s-small', -90) + text([21.13, -30.65], 'Poolhaus 3,50 × 6,00', 's-lbl s-tiny', -90));
-    s.push(text([23.63, -21], 'Zuwegung 1,50', 's-lbl s-tiny', -90) + text([22.2, -48.6], 'Zufahrt', 's-lbl s-small'));
+    s.push(text([23.63, -21], 'Zuwegung 1,50', 's-lbl s-tiny', -90) + text([22.6, -49.75], 'Zufahrt', 's-lbl s-small'));
     s.push('</g>');
-    s.push(`<g data-layer="bestand">${SITE.bestand.map(b => poly(b.pts, 's-bestand', b.kind === 'haus' ? 'Bestandshaus Nr. 14 · Abriss' : 'Bestandsgarage · Abriss')).join('')}</g>`);
-    const rp = HOUSE.rampe;
     s.push(`<g data-layer="tg">${poly(C.tg, 's-tg', `Tiefgarage (unterirdisch) · ${num(STATS.tg, 1)} m² außerhalb des Hauses`)}${text([17.6, -18.2], 'Tiefgarage (unterirdisch)', 's-tglabel')}` +
-      `${poly(rect(rp.x0, rp.y0, rp.x1, rp.y1), 's-ramp', 'Rampe zur Tiefgarage · beginnt im Poolhaus · ca. 14,5 % · unterirdisch')}${text([21.13, -22.5], 'Rampe', 's-tglabel', -90)}</g>`);
-    // Vogel
-    const V = SITE.vogel, vb = (o, side) => {
-      const [a, b] = o[side];
-      return side === 'W' || side === 'E' ? rect(a, -12.09, b, -0.19) : rect(3.46, a, 18.38, b);
-    };
-    s.push('<g data-layer="vogel">');
-    for (const side of ['N', 'S', 'E', 'W']) s.push(poly(vb(V.abstandAussen, side), 's-vab', 'Vogel: Abstandsfläche inkl. ⅓ Dachhöhe') + poly(vb(V.abstandInnen, side), 's-vab s-vab-in', 'Vogel: Abstandsfläche nur Wandhöhe'));
-    s.push(poly(V.tg, 's-vtg', 'Vogel: Tiefgarage') + poly(V.haus, 's-vhaus', 'Vogel: Haus 15,10 × 12,05 m') + poly(V.vorbauSued, 's-vhaus', 'Vogel: Vorbau Süd 2,50 m') + poly(V.vorbauNord, 's-vhaus', 'Vogel: Vorbau Nord 2,00 m'));
-    s.push(text([10.9, 4.2], 'Vogel+Partner 30.10.', 's-vlabel'));
-    s.push('</g>');
-    // Abstandsflächen für das Konzept
-    const abs = [rect(0, 0, HOUSE.W, AB.ns), rect(0, -HOUSE.D - AB.ns, HOUSE.W, -HOUSE.D), rect(-AB.ew, -HOUSE.D, 0, 0), rect(HOUSE.W, -HOUSE.D, HOUSE.W + AB.ew, 0)];
-    s.push('<g data-layer="abstand">' + abs.map((P, i) => poly(P, 's-ab', `Abstandsfläche ${i < 2 ? '0,8' : '0,4'} H = ${num(i < 2 ? AB.ns : AB.ew)} m (überschlägig)`)).join('') +
-      `<g mask="url(#mOutside)">${abs.map(P => poly(P, 's-ab-over')).join('')}</g>` + text([-1.7, -5.8], `0,4 H = ${num(AB.ew)}`, 's-ablabel', -90) + text([8, 5.7], `0,8 H = ${num(AB.ns)}`, 's-ablabel') + '</g>');
+      `${poly(rect(rp.x0, rp.yPortal, rp.x1, rp.yTor), 's-ramp', `Rampe unter dem Poolhaus · lichte Höhe ca. ${num(rp.lichte)} m · unten das Tor zur Tiefgarage`)}</g>`);
     // Bäume
     s.push('<g data-layer="baeume">');
     for (const z of SITE.schutz) s.push(circ(z.c, z.r, 's-schutz', `Wurzelschutzbereich (Krone + 1,50 m) · Radius ${num(z.r, 1)} m`));

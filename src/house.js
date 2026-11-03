@@ -1,6 +1,6 @@
 // Parametrisches Hausmodell in Metern.
 // Grundriss, Fensterachsen Süd, Freisitz, Terrasse und Podest: Konzeptplan Chaline Deutsch (M 1:100).
-// Wandhöhe 7,25 m und Firsthöhe 11,12 m: Baurecht-Skizze Vogel+Partner. Gliederung der Fassade: Rendering.
+// Wandhöhe 7,25 m und Firsthöhe 11,12 m: Proportionen des Renderings (Hausbreite 16,00 m als Maßstab). Gliederung der Fassade: Rendering.
 // Alles andere (Geschosshöhen, Dachneigungen, Nord-/Ost-/Westfassade) ist eine plausible Annahme.
 const HOUSE = (() => {
   const W = 16.0, D = 11.65, wall = 0.36;
@@ -87,8 +87,17 @@ const HOUSE = (() => {
   // Balkon über der Terrasse, getragen von vier Säulen in den Achsen der Fensterpfeiler
   const balkon = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, slab: [3.1, 3.5], rail: 4.5, cols: [4.75, 6.6, 9.4, 11.25], colY: -14.35, colR: 0.17 };
 
-  // Zufahrt bleibt eben bis zum Poolhaus; dort beginnt die Rampe (ca. 14,5 %) und führt unterirdisch nach Norden in die Tiefgarage
-  const rampe = { x0: 19.73, x1: 22.53, y0: -33.65, y1: -12.95, wandEnde: -17.65, gefaelle: 0.145 };
+  // Offene Rampe in der Zufahrt, so wie Zufahrt, Poolhaus und Tiefgarage im Konzept aneinanderstoßen: beginnt knapp 2 m hinter der Grenze,
+  // läuft zwischen Betonwänden nach Norden, unter dem Poolhaus hindurch und erreicht im Anschluss der Tiefgarage deren Boden.
+  // Oben und unten je 3 m Übergang mit 8 %, dazwischen 16 %. Unter dem Poolhaus (Decke −0,15) bleiben gut 2 m lichte Höhe.
+  const rampe = { x0: 19.73, x1: 22.53, wand: 0.35, y0: -48.8, yPortal: -33.651, yPH: -27.652, yTor: -24.151, s: 0.16, s0: 0.08, lu: 3.0, zTG: Z.ffbUG, decke: -0.15 };
+  rampe.lm = (-rampe.zTG - 2 * rampe.lu * rampe.s0) / rampe.s;
+  rampe.y1 = rampe.y0 + 2 * rampe.lu + rampe.lm;
+  rampe.z = y => {
+    const t = Math.min(Math.max(y - rampe.y0, 0), rampe.y1 - rampe.y0), { lu, lm, s, s0 } = rampe;
+    return -(Math.min(t, lu) * s0 + Math.min(Math.max(t - lu, 0), lm) * s + Math.max(t - lu - lm, 0) * s0);
+  };
+  rampe.lichte = rampe.decke - rampe.z(rampe.yPortal);
 
   return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, rampe };
 })();

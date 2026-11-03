@@ -90,7 +90,8 @@ const View3D = (() => {
       glass: glass(), lamp: std(0x1c1c1c, 0.4, 0.2, { emissive: 0xffd49c, emissiveIntensity: 0 }),
       slab: std(0xb9b2a4, 0.9), beton: std(0xb7b3ab, 0.92),
       inWall: std(0xd9c7a8, 0.95, 0, { emissive: 0xffc27e, emissiveIntensity: 0 }), floorOak: std(0xa98457, 0.7, 0, { emissive: 0xffc98a, emissiveIntensity: 0 }),
-      floorTile: std(0xd6d2ca, 0.5), stairMat: std(0xcfc6b6, 0.8), garageDoor: std(0x3b3e42, 0.5, 0.4),
+      floorTile: std(0xd6d2ca, 0.5), stairMat: std(0xcfc6b6, 0.8), tor: std(0x3b3e42, 0.5, 0.4),
+      rampe: std(0xa5a198, 0.92, 0, { side: THREE.DoubleSide }), phInnen: std(0x655d52, 0.9),
       hedge: std(0xffffff, 1, 0, { map: leaves }), crown: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }),
       stone: std(0xdfd4c0, 0.8), pave: std(0xffffff, 0.9, 0, { map: pave }), lawn: std(0xffffff, 1, 0, { map: lawn }),
       ground: std(0xffffff, 1, 0, { map: garden }), street: std(0xffffff, 0.95, 0, { map: asphalt }), coping: std(0xe9e2d4, 0.7),
@@ -403,34 +404,62 @@ const View3D = (() => {
     im.castShadow = im.receiveShadow = true;
     return im;
   }
+  // Offene Rampe zur Tiefgarage: Fahrbahn nach dem Längsprofil, Betonwände mit Geländer, Durchfahrt unter dem Poolhaus bis zum Tor
+  function buildRamp(g) {
+    const R0 = HOUSE.rampe, wx0 = R0.x0 - R0.wand, wx1 = R0.x1 + R0.wand, n = 90, pos = [], idx = [];
+    for (let i = 0; i <= n; i++) {
+      const y = R0.y0 + (R0.yTor - R0.y0) * i / n, z = R0.z(y);
+      pos.push(R0.x0, z, -y, R0.x1, z, -y);
+      if (i) { const a = 2 * i - 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+    const road = new THREE.Mesh(geo, M.rampe); road.receiveShadow = true; g.add(road);
+    // Wände: im offenen Teil 15 cm über Gelände, unter dem Poolhaus und im Anschluss der Tiefgarage unter der Decke
+    for (const [a, b] of [[wx0, R0.x0], [R0.x1, wx1]]) {
+      boxPlan(M.beton, a, b, R0.y0, R0.yPortal + 0.02, R0.zTG - 0.3, 0.15);
+      boxPlan(M.beton, a, b, R0.yPortal + 0.02, R0.yTor, R0.zTG - 0.3, R0.decke);
+    }
+    // Decke unter dem Poolhaus (Sturz der Durchfahrt), dahinter die Decke der Tiefgarage; am Ende das Tor
+    boxPlan(M.beton, wx0 + 0.01, wx1 - 0.01, R0.yPortal, R0.yPH, R0.decke, 0);
+    boxPlan(M.beton, wx0 + 0.01, wx1 - 0.01, R0.yPH, R0.yTor, -0.9, -0.06);
+    boxPlan(M.tor, R0.x0, R0.x1, R0.yTor - 0.06, R0.yTor, R0.zTG, -0.9);
+    for (const xr of [R0.x0 - R0.wand / 2, R0.x1 + R0.wand / 2]) {
+      railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(xr, 0, 0)), R0.y0 + 0.3, R0.yPortal - 0.06, 0.15, 1.05, 0);
+    }
+  }
   function buildSite() {
-    const g = new THREE.Group(), C = SITE.concept;
-    const poolOuter = C.pool;
+    const g = new THREE.Group(), C = SITE.concept, R0 = HOUSE.rampe;
+    const poolOuter = C.pool, trench = [[R0.x0, R0.y0], [R0.x1, R0.y0], [R0.x1, R0.yPortal], [R0.x0, R0.yPortal]];
     const ground = new THREE.Shape(rectPts(-260, -260, 280, 260));
-    ground.holes.push(new THREE.Path(poolOuter.map(q => v2(q[0], q[1]))));
+    for (const h of [poolOuter, trench]) ground.holes.push(new THREE.Path(h.map(q => v2(q[0], q[1]))));
     const gg = new THREE.ShapeGeometry(ground); gg.rotateX(-Math.PI / 2);
     const gm = new THREE.Mesh(gg, M.ground); gm.position.y = -0.03; gm.receiveShadow = true; g.add(gm);
     L.grund = [gm];
     for (const s of SITE.streets) { const m = flat(s, M.street, -0.01); g.add(m); L.grund.push(m); }
-    const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter]); g.add(lawn); L.grund.push(lawn);
-    // Zufahrt bleibt eben bis zum Poolhaus, dort beginnt die Rampe in die Tiefgarage
-    for (const P0 of [C.zuwegung, C.zufahrt]) { const m = flat(P0, M.pave, 0.016); g.add(m); L.grund.push(m); }
+    const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter, trench]); g.add(lawn); L.grund.push(lawn);
+    // Zufahrt: vorne eben, dahinter die offene Rampe in die Tiefgarage
+    const zufahrtEben = [[19.732, -50.499], [24.731, -51.342], [24.731, -44.471], [R0.x1 + R0.wand, -44.471], [R0.x1 + R0.wand, R0.y0], [19.732, R0.y0]];
+    for (const P0 of [C.zuwegung, zufahrtEben]) { const m = flat(P0, M.pave, 0.016); g.add(m); L.grund.push(m); }
+    buildRamp(g);
     // Pool
     g.add(extrude(poolOuter, M.coping, 0, 0.06, [C.poolWasser]));
     const pw = C.poolWasser, w = pw[1][0] - pw[0][0], d = pw[0][1] - pw[2][1];
     const basin = new THREE.Mesh(new THREE.BoxGeometry(w, 1.5, d), M.tile);
     basin.position.set(pw[0][0] + w / 2, -0.75, -(pw[0][1] - d / 2)); basin.receiveShadow = true; g.add(basin);
     g.add(flat(pw, M.water, -0.12));
-    // Poolhaus
+    // Poolhaus mit Glasfront zum Pool; darunter führt die Rampe in die Tiefgarage
     const ph = C.poolhaus;
     g.add(extrude(ph, M.site, 0, 3.0));
     const [px0, py1] = ph[0], [px1, py0] = ph[2];
     const roofPH = extrude([[px0 - 0.15, py1 + 0.15], [px1 + 0.15, py1 + 0.15], [px1 + 0.15, py0 - 0.15], [px0 - 0.15, py0 - 0.15]], M.siteHell, 3.0, 0.22);
     g.add(roofPH);
-    const pg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.3, 2.2), M.siteGlass);
-    pg.position.set(px0 - 0.01, 1.75, -(py0 + py1) / 2); g.add(pg);
-    const gate = new THREE.Mesh(new THREE.BoxGeometry(2.7, 2.3, 0.08), M.garageDoor);
-    gate.position.set((px0 + px1) / 2, 1.15, -py0 + 0.04); gate.castShadow = true; g.add(gate);
+    const ga = py0 + 0.5, gb = py1 - 0.5;
+    boxPlan(M.phInnen, px0 - 0.012, px0 - 0.002, ga, gb, 0.25, 2.7);
+    boxPlan(M.siteGlass, px0 - 0.034, px0 - 0.026, ga, gb, 0.25, 2.7);
+    for (const y of [ga, ga + 1.25, (ga + gb) / 2, gb - 1.25, gb]) boxPlan(M.frame, px0 - 0.06, px0, y - 0.03, y + 0.03, 0.25, 2.7);
+    boxPlan(M.frame, px0 - 0.06, px0, ga - 0.03, gb + 0.03, 2.7, 2.76);
+    boxPlan(M.frame, px0 - 0.06, px0, ga - 0.03, gb + 0.03, 0.2, 0.25);
     g.add(hedges());
     // Grenze
     const pts = [...SITE.plot, SITE.plot[0]].map(q => P(q[0], q[1], 0.05));
@@ -515,20 +544,10 @@ const View3D = (() => {
     tg.add(new THREE.LineSegments(new THREE.EdgesGeometry(tgm.geometry), new THREE.LineBasicMaterial({ color: 0xc8711c })));
     const ugm = extrude(C.haus, M.ug, -3.4, 3.4); ugm.castShadow = false; tg.add(ugm);
     tg.add(new THREE.LineSegments(new THREE.EdgesGeometry(ugm.geometry), new THREE.LineBasicMaterial({ color: 0x4f6f8c })));
+    // Durchfahrt unter dem Poolhaus
+    const dfm = extrude(C.poolhaus, M.tg, -3.4, 3.4 + R0.decke); dfm.castShadow = false; tg.add(dfm);
+    tg.add(new THREE.LineSegments(new THREE.EdgesGeometry(dfm.geometry), new THREE.LineBasicMaterial({ color: 0xc8711c })));
     tg.visible = false; g.add(tg); L.tg = tg;
-    // Baurecht: Wandhöhe 7,25 m und Firsthöhe 11,12 m als gestrichelte Höhenlinien
-    const br = new THREE.Group();
-    for (const [z, o] of [[Zh.wand, 0], [Zh.first, 0]]) {
-      const q = [P(-o, 0, z), P(16 + o, 0, z), P(16 + o, -11.65, z), P(-o, -11.65, z), P(-o, 0, z)];
-      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(q), new THREE.LineDashedMaterial({ color: 0xd2382a, dashSize: 0.5, gapSize: 0.3 }));
-      l.computeLineDistances(); br.add(l);
-    }
-    for (const z of [Zh.wand, Zh.first]) {
-      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([P(-3, -11.65 - 0.5, z), P(22, -11.65 - 0.5, z)]),
-        new THREE.LineDashedMaterial({ color: 0xd2382a, dashSize: 0.5, gapSize: 0.3 }));
-      l.computeLineDistances(); br.add(l);
-    }
-    br.visible = false; g.add(br); L.baurecht = br;
     flushBatches(g);
     return g;
   }
@@ -674,7 +693,8 @@ const View3D = (() => {
     eingang: { pos: [14.5, 2.2, -21], tgt: [8, 4.8, 5.8] },
     ost: { pos: [45, 3, 1], tgt: [12, 4.6, 5.8] },
     west: { pos: [-27, 2.5, 13], tgt: [8, 4.8, 5.8] },
-    vogel: { pos: [-31, 37, 60], tgt: [10, 0, 18] },
+    ueberblick: { pos: [-31, 37, 60], tgt: [10, 0, 18] },
+    zufahrt: { pos: [24.2, 4.4, 58.5], tgt: [20.6, -0.6, 35.5] },
     oben: { pos: [10.4, 98, 20.32], tgt: [10.4, 0, 20.3] },
     schnitt: { pos: [40, 7.5, 7], tgt: [8, 5, 5.8] },
   };
@@ -690,7 +710,6 @@ const View3D = (() => {
     camO.near = on ? 90 - 16 : 0.1; camO.updateProjectionMatrix();
     controls.update();
     ui.scale.hidden = !on;
-    if (on) setLayer('baurecht', true, true);
   }
   function resize() {
     const w = stage.clientWidth, h = stage.clientHeight;

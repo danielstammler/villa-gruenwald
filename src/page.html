@@ -14,7 +14,7 @@
     </div>
     <dl class="pk-meta">
       <div><dt>Konzept</dt><dd>Chaline Deutsch · 28.10.2026</dd></div>
-      <div><dt>Baurecht</dt><dd>Vogel+Partner · 30.10.2026</dd></div>
+      <div><dt>Grundstück</dt><dd>Vogel+Partner · Flurkarte</dd></div>
       <div><dt>Stand</dt><dd>03.11.2026</dd></div>
     </dl>
     <nav class="tabs" role="tablist" aria-label="Ansichten">
@@ -45,7 +45,8 @@
             <button data-cam="eingang">Eingang</button>
             <button data-cam="ost">Ost</button>
             <button data-cam="west">West</button>
-            <button data-cam="vogel" data-label="Vogelperspektive">Vogel</button>
+            <button data-cam="ueberblick" data-label="Überblick von Südwesten">Überblick</button>
+            <button data-cam="zufahrt" data-label="Zufahrt mit Rampe zur Tiefgarage">Zufahrt</button>
             <button data-cam="oben" data-label="Draufsicht">Draufsicht</button>
             <button data-cam="front" data-label="Frontansicht Süd, orthogonal">Frontal maßstäblich</button>
           </div>
@@ -69,7 +70,6 @@
           <label class="switch"><input type="checkbox" id="ly-nachbarn" data-layer3d="nachbarn" checked> Nachbarhäuser (amtliches 3D-Modell)</label>
           <label class="switch"><input type="checkbox" id="ly-baeume" data-layer3d="baeume" checked> Bäume und Wurzelschutzbereiche</label>
           <label class="switch"><input type="checkbox" id="ly-grenze" data-layer3d="grenze" checked> Grundstücksgrenze</label>
-          <label class="switch"><input type="checkbox" id="ly-baurecht" data-layer3d="baurecht"> Baurecht: Wandhöhe 7,25 m und First 11,12 m</label>
           <label class="switch"><input type="checkbox" id="ly-tg" data-layer3d="tg"> Tiefgarage und Keller durchsichtig zeigen</label>
         </section>
         <section class="group">
@@ -98,18 +98,19 @@
             <button data-elev="E">Ost</button>
             <button data-elev="W">West</button>
             <button data-elev="A">Schnitt A–A</button>
+            <button data-elev="B">Schnitt Rampe</button>
           </div>
         </section>
         <section class="group">
           <h2>Einblenden</h2>
           <label class="switch"><input type="checkbox" id="eo-mass" data-elev-opt="mass" checked> Maßketten (Fensterachsen, Breite)</label>
           <label class="switch"><input type="checkbox" id="eo-koten" data-elev-opt="koten" checked> Höhenkoten</label>
-          <label class="switch"><input type="checkbox" id="eo-recht" data-elev-opt="recht" checked> Baurecht-Grenzen (rot)</label>
         </section>
         <section class="group">
           <h2>So ist die Ansicht entstanden</h2>
-          <p>Breite, Fensterachsen und Anbauten stammen exakt aus dem Konzeptplan im Maßstab 1:100. Wandhöhe 7,25 m und Firsthöhe 11,12 m sind die Grenzen aus der Baurecht-Skizze von Vogel+Partner. Gesimse, Pilaster, Geländer und Gauben folgen dem Rendering.</p>
+          <p>Breite, Fensterachsen und Anbauten stammen exakt aus Chalines Konzeptplan im Maßstab 1:100. Die Höhen folgen aus den Proportionen des Renderings, mit der Hausbreite von 16,00 m als Maßstab: Wandhöhe 7,25 m, First 11,12 m. Gesimse, Pilaster, Geländer und Gauben folgen ebenfalls dem Rendering.</p>
           <p>Das Traufgesims sitzt bei 6,83 m, weil die Wandhöhe bis zur Dachhaut an der Außenwand gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach (unten 50°, oben 15°).</p>
+          <p>„Schnitt Rampe“ zeigt die Zufahrt von der Straße bis in die Tiefgarage, mit Neigungen und der Durchfahrtshöhe unter dem Poolhaus.</p>
         </section>
         <button class="btn" id="elevDl">Zeichnung speichern (SVG)</button>
       </aside>
@@ -151,7 +152,7 @@
         <section class="group">
           <h2>So ist der Vorschlag aufgebaut</h2>
           <p>Der Vorschlag stammt von mir, nicht vom Architekten. Er passt zu Fensterachsen, Eingang, Terrasse, Balkon und Freisitz des Konzepts: unten Wohnen, Essen und Küche zum Garten, hinter der Küche die Backkitchen, oben die Elternsuite mit Balkon.</p>
-          <p>Treppe und Aufzug liegen im Kern hinter dem Eingang. Der Aufzug (Kabine 1,10 × 1,40 m, rollstuhlgerecht) fährt vom UG bis ins DG. Er sitzt so weit innen, dass der Schachtkopf unter das Mansarddach passt. Eine Schleuse verbindet das UG mit der Tiefgarage. Autos fahren durch das Garagentor im Poolhaus und über die Rampe nach unten. Im DG liegt vor dem Gastzimmer ein zurückversetzter Balkon.</p>
+          <p>Treppe und Aufzug liegen im Kern hinter dem Eingang. Der Aufzug (Kabine 1,10 × 1,40 m, rollstuhlgerecht) fährt vom UG bis ins DG. Er sitzt so weit innen, dass der Schachtkopf unter das Mansarddach passt. Eine Schleuse verbindet das UG mit der Tiefgarage. Autos fahren über die offene Rampe in der Zufahrt nach unten; das letzte Stück liegt unter dem Poolhaus, am Fuß der Rampe schließt ein Tor die Tiefgarage. Im DG liegt vor dem Gastzimmer ein zurückversetzter Balkon.</p>
         </section>
         <button class="btn" id="planDl">Grundriss speichern (SVG)</button>
       </aside>
@@ -174,18 +175,14 @@
           <label class="switch"><input type="checkbox" id="sl-baeume" data-site-layer="baeume" checked><i class="sw" style="background:var(--lawn-2)"></i> Bäume und Wurzelschutzbereiche</label>
           <label class="switch"><input type="checkbox" id="sl-grenze" data-site-layer="grenze" checked><i class="sw" style="border-color:var(--ink)"></i> Grenze und Grenzlängen</label>
           <label class="switch"><input type="checkbox" id="sl-masse" data-site-layer="masse" checked><i class="sw" style="border-color:var(--ink);border-style:dashed"></i> Grenzabstände und Maße</label>
-          <label class="switch"><input type="checkbox" id="sl-linie" data-site-layer="linie" checked><i class="sw" style="border-color:var(--vogel)"></i> Linie 5,00 m zur Straße</label>
+          <label class="switch"><input type="checkbox" id="sl-linie" data-site-layer="linie" checked><i class="sw" style="border-color:var(--linie)"></i> Linie 5,00 m zur Straße</label>
           <label class="switch"><input type="checkbox" id="sl-umgebung" data-site-layer="umgebung" checked><i class="sw" style="background:var(--nb)"></i> Nachbarhäuser und Straße</label>
-          <label class="switch"><input type="checkbox" id="sl-abstand" data-site-layer="abstand"><i class="sw" style="background:var(--limit)"></i> Abstandsflächen (überschlägig)</label>
-          <label class="switch"><input type="checkbox" id="sl-vogel" data-site-layer="vogel"><i class="sw" style="border-color:var(--vogel)"></i> Zum Vergleich: Skizze Vogel+Partner</label>
-          <label class="switch"><input type="checkbox" id="sl-bestand" data-site-layer="bestand"><i class="sw" style="border-style:dashed"></i> Bestand (wird abgerissen)</label>
         </section>
         <section class="group">
           <h2>Auffälligkeiten</h2>
           <ul class="notes">
-            <li class="warn"><span>Westabstand nur <b data-stat="west0"></b>–<b data-stat="west1"></b> m. Mit dem Ansatz der Vogel-Skizze (0,4 H) wären <b data-stat="ew"></b> m nötig.</span></li>
-            <li class="warn"><span>Die Wurzelschutzbereiche der Nachbarbäume im Nordosten und Südosten reichen in Zuwegung und Zufahrt.</span></li>
-            <li class="info"><span>Die Zufahrt bleibt bis zum Poolhaus eben. Dort beginnt hinter dem Garagentor die Rampe (ca. 14,5 %) und führt unterirdisch in die Tiefgarage.</span></li>
+            <li class="info"><span>Die Rampe zur Tiefgarage beginnt knapp 2 m hinter der Grenze und liegt offen in der Zufahrt (oben und unten 8 %, dazwischen 16 %). Das letzte Stück führt unter dem Poolhaus hindurch in die Tiefgarage.</span></li>
+            <li class="warn"><span>Die Wurzelschutzbereiche der Nachbarbäume im Nordosten und Südosten reichen in Zuwegung und Zufahrt. Der Schutzbereich im Südosten erfasst auch den Anfang der Rampe.</span></li>
           </ul>
         </section>
         <section class="group">
@@ -202,11 +199,9 @@
         <section>
           <h2>Kurz gesagt</h2>
           <ul class="notes">
-            <li class="info"><span><b>Die Proportionen des Renderings stimmen weitgehend.</b> Breite 16,00 m und Gesamthöhe 11,12 m passen. Maßstäblich sitzt das Traufgesims aber bei 6,83 m, weil die erlaubte Wandhöhe von 7,25 m bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach und bekommt Licht über Gauben.</span></li>
-            <li class="warn"><span><b>Der Westabstand ist knapp.</b> Zwischen Westfassade und Grenze liegen <span data-stat="west0"></span> m (Nordwestecke) bis <span data-stat="west1"></span> m. Nach dem Ansatz aus Vogels Skizze (0,4 H mit H = <span data-stat="H"></span> m) wären <span data-stat="ew"></span> m nötig. Ob das reicht, hängt von der Dachneigung und dem Ortsrecht ab.</span></li>
-            <li class="warn"><span><b>Schutzbäume der Nachbarn.</b> Der große Baum im Nordosten (Krone etwa 16 m) und der Baum im Südosten haben Wurzelschutzbereiche (Krone plus 1,50 m), die in Zuwegung und Zufahrt reichen. Dort ist wurzelschonendes Bauen nötig.</span></li>
-            <li class="info"><span><b>Einfahrt im Poolhaus.</b> Die Zufahrt bleibt eben bis zum Poolhaus. Dort beginnt hinter dem Garagentor die Rampe (2,80 m breit, gut 20 m lang, ca. 14,5 %) und führt unterirdisch in die Tiefgarage. Die Tiefgarage reicht bis unter die Terrasse; darin haben vier Autos Platz, eines davon längs unter der Terrasse. Der Personenaufzug im Haus verbindet Tiefgarage und alle Geschosse.</span></li>
-            <li><span><b>Abweichend von der Vogel-Skizze.</b> Vogel geht von 15,10 × 12,05 m aus und setzt das Haus gut 3,5 m weiter nach Osten. Das Konzept hat 16,00 × 11,65 m: 0,90 m mehr Gartenfassade und 4,4 m² mehr Grundfläche.</span></li>
+            <li class="info"><span><b>Haus, Außenanlagen und Zufahrt kommen aus Chalines Konzept.</b> Von Vogel+Partner stammen nur Grundstück, Bäume und die Nachbarbebauung. Breite 16,00 m und Gesamthöhe 11,12 m passen zu den Proportionen des Renderings. Das Traufgesims sitzt bei 6,83 m, weil die Wandhöhe von 7,25 m bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach und bekommt Licht über Gauben.</span></li>
+            <li class="info"><span><b>Offene Rampe in der Zufahrt.</b> Die Rampe beginnt knapp 2 m hinter der Grenze und läuft zwischen Betonwänden mit Geländer nach Norden: 2,80 m breit, oben und unten 3 m mit 8 %, dazwischen 16 %. Das letzte Stück liegt unter dem Poolhaus, dort bleiben gut 2,00 m lichte Höhe. Am Fuß der Rampe schließt ein Tor die Tiefgarage. Darin haben vier Autos an einer 6 m breiten Fahrgasse Platz; unter der Terrasse ist Raum für Fahrräder und Lager. Der Personenaufzug im Haus verbindet Tiefgarage und alle Geschosse.</span></li>
+            <li class="warn"><span><b>Schutzbäume der Nachbarn.</b> Der große Baum im Nordosten (Krone etwa 16 m) und der Baum im Südosten haben Wurzelschutzbereiche (Krone plus 1,50 m), die in Zuwegung und Zufahrt reichen. Der Schutzbereich im Südosten erfasst auch die ersten Meter der Rampe. Dort ist wurzelschonendes Bauen nötig.</span></li>
           </ul>
         </section>
         <section>
@@ -214,7 +209,7 @@
           <div class="facts">
             <div class="fact"><b>1.661 m²</b><span>Grundstück (amtlich)</span></div>
             <div class="fact"><b>16,00 × 11,65</b><span>Wohnhaus in m · 186,4 m²</span></div>
-            <div class="fact"><b>372,8 m²</b><span>Geschossfläche EG + OG (Vogel: 363,9)</span></div>
+            <div class="fact"><b>372,8 m²</b><span>Geschossfläche EG + OG</span></div>
             <div class="fact"><b>7,25 / 11,12</b><span>Wandhöhe / Firsthöhe in m</span></div>
             <div class="fact"><b data-stat="grz"></b><span>GRZ nur Wohnhaus</span></div>
             <div class="fact"><b><span data-stat="versiegelt"></span> %</b><span>überbaut und befestigt</span></div>
@@ -225,15 +220,18 @@
         <section>
           <h2>Was maßstäblich ist und was angenommen</h2>
           <div class="cols">
-            <div><h3>Aus dem Konzeptplan, M 1:100</h3><ul>
-              <li>Grundstück mit sieben Grenzpunkten</li><li>Haus 16,00 × 11,65 m, Außenwand 36 cm</li><li>Sieben Fensterachsen der Südfassade</li>
-              <li>Terrasse 7,00 × 3,00 m mit Balkon darüber, Freisitz 3,00 × 5,00 m, Podest 5,00 × 1,00 m; im DG ein zurückversetzter Balkon (nach dem Rendering)</li><li>Zuwegung 1,50 m, Zufahrt, Pool 4,00 × 12,00 m, Poolhaus 3,50 × 6,00 m</li><li>Umriss der Tiefgarage</li></ul></div>
-            <div><h3>Aus Baurecht-Skizze und Flurkarte</h3><ul>
-              <li>Wandhöhe 7,25 m, Firsthöhe 11,12 m, Dachknick bei etwa 10,25 m</li><li>Bäume und Wurzelschutzbereiche</li><li>Nachbarhäuser, Grenzen und Straße; Dachformen und Höhen der Nachbarn aus dem amtlichen 3D-Gebäudemodell (LoD2)</li>
-              <li>Linie 5,00 m parallel zur Straße</li><li>Abstandsflächen-Ansatz 0,8 H (Nord/Süd) und 0,4 H (Ost/West)</li></ul></div>
-            <div><h3>Angenommen</h3><ul>
-              <li>Geschosshöhen: EG 3,35 m, OG 3,10 m, Fußboden EG 0,20 m über Gelände</li><li>Dachneigung unten 50°, oben 15°</li><li>Nord-, Ost- und Westfassade, Gauben</li>
-              <li>Untergeschoss unter dem Haus, Grundrisse und Innenwände als Vorschlag, Hecken an West-, Nord- und Ostgrenze</li><li>Dachfarben der Nachbarn nach Luftbild, Baumhöhen</li><li>Gestaltung und Materialien nach dem Rendering</li></ul></div>
+            <div><h3>Aus Chalines Konzeptplan, M 1:100</h3><ul>
+              <li>Haus 16,00 × 11,65 m und seine Lage auf dem Grundstück, Außenwand 36 cm</li><li>Sieben Fensterachsen der Südfassade</li>
+              <li>Terrasse 7,00 × 3,00 m mit Balkon darüber, Freisitz 3,00 × 5,00 m, Podest 5,00 × 1,00 m</li><li>Zuwegung 1,50 m, Zufahrt, Pool 4,00 × 12,00 m, Poolhaus 3,50 × 6,00 m</li>
+              <li>Umriss der Tiefgarage, Linie 5,00 m parallel zur Straße</li></ul></div>
+            <div><h3>Grundstück und Umgebung</h3><ul>
+              <li>Grundstück mit sieben Grenzpunkten; Konzeptplan und Skizze Vogel+Partner stimmen darin überein</li><li>Bäume und Wurzelschutzbereiche</li>
+              <li>Nachbarhäuser, Grenzen und Straße aus der Flurkarte; Dachformen und Höhen der Nachbarn aus dem amtlichen 3D-Gebäudemodell (LoD2)</li></ul></div>
+            <div><h3>Aus dem Rendering oder angenommen</h3><ul>
+              <li>Wandhöhe 7,25 m und First 11,12 m nach den Proportionen des Renderings; Gestaltung, Materialien und der zurückversetzte Balkon im DG nach dem Rendering</li>
+              <li>Geschosshöhen: EG 3,35 m, OG 3,10 m, Fußboden EG 0,20 m über Gelände; Dachneigung unten 50°, oben 15°</li><li>Nord-, Ost- und Westfassade, Gauben</li>
+              <li>Untergeschoss, Grundrisse und Innenwände als Vorschlag, Hecken an West-, Nord- und Ostgrenze</li>
+              <li>Längsprofil der Rampe, Höhen der Tiefgarage und Stellplätze</li><li>Dachfarben der Nachbarn nach Luftbild, Baumhöhen</li></ul></div>
           </div>
         </section>
         <section>
@@ -242,7 +240,7 @@
         </section>
         <section>
           <h2>Quellen</h2>
-          <p class="src">Konzept EG mit TG, Chaline Deutsch, 28.10.2026, M 1:100 · Skizze Baurecht, Vogel+Partner Architekten, 30.10.2026, M 1:500 · Flurkarte BayernAtlas und 3D-Gebäudemodell LoD2 (Kachel 688_5324), © Bayerische Vermessungsverwaltung 2026, CC BY 4.0 · Rendering als Gestaltungsvorlage. Überschlägige Rekonstruktion ohne Gewähr; baurechtliche Fragen klärt der Architekt.</p>
+          <p class="src">Konzept EG mit TG, Chaline Deutsch, 28.10.2026, M 1:100 (Haus, Außenanlagen, Zufahrt, Tiefgarage) · Skizze Vogel+Partner Architekten, 30.10.2026, M 1:500 (nur Grundstück und Umgebung) · Flurkarte BayernAtlas und 3D-Gebäudemodell LoD2 (Kachel 688_5324), © Bayerische Vermessungsverwaltung 2026, CC BY 4.0 · Rendering als Gestaltungsvorlage. Überschlägige Rekonstruktion ohne Gewähr; baurechtliche Fragen klärt der Architekt.</p>
         </section>
       </div>
     </section>

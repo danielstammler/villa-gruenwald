@@ -260,21 +260,29 @@ const Plans = (() => {
       R(cx - 0.55, cx + 0.55, cy - 0.7, cy + 0.7, 'g-cabin') + R(cx - 0.45, cx + 0.45, y1 - t - 0.02, y1 + 0.02, 'g-gap') + T(cx, cy - 0.08, 'Aufzug', 'g-ftxt g-lifttxt');
   }
   function tiefgarage() {
-    const tg = C.tg, ph = C.poolhaus, rp = HOUSE.rampe, len = -(rp.y0 - rp.y1);
-    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · vier Stellplätze, einer davon längs unter der Terrasse"/>`;
-    s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · beginnt im Poolhaus · 2,80 m breit · ${num(len)} m lang · ca. ${num(rp.gefaelle * 100)} % Gefälle`);
-    for (let y = rp.y0 + 0.5; y < rp.y1 - 0.2; y += 1.0) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
-    s += `<polygon points="${pts(tg)}" class="g-tgwall"/><polygon points="${pts(ph)}" class="g-tgwall"/>` + R(rp.x0 - 0.2, rp.x0, rp.wandEnde, rp.y0, 'g-wall');
-    s += R(19.95, 22.31, rp.y0 - 0.05, rp.y0 + 0.05, 'g-gate', 'Garagentor im Poolhaus');
-    s += `<polygon points="${pts([[21.13 - 0.35, -21.4], [21.13 + 0.35, -21.4], [21.13, -20.5]])}" class="g-walkhead"/>`;
-    s += `<text x="21.13" y="26.5" class="g-ftxt" transform="rotate(-90 21.13 26.5)">Rampe ca. ${num(rp.gefaelle * 100)} %</text>` + T(21.13, -32.4, 'Einfahrt im Poolhaus', 'g-ftxt');
-    for (let i = 0; i <= 3; i++) s += L(11.9 + 2.5 * i, -22.65, 11.9 + 2.5 * i, -17.65, 'g-park');
-    s += L(11.9, -17.65, 19.4, -17.65, 'g-park');
-    for (let i = 0; i < 3; i++) s += fu.car(13.15 + 2.5 * i, -20.15) + T(13.15 + 2.5 * i, -22.95, `P${i + 1}`, 'g-ftxt');
-    s += L(5.4, -14.5, 10.8, -14.5, 'g-park') + L(5.4, -14.5, 5.4, -11.95, 'g-park') + L(10.8, -14.5, 10.8, -11.95, 'g-park');
-    s += fu.carH(8.1, -13.2) + T(8.1, -14.25, 'P4 · unter der Terrasse', 'g-ftxt');
-    s += fu.box(11.9, 12.9, -16.9, -12.4, 'Räder') + T(15.6, -14.2, 'Fahrgasse', 'g-ftxt');
-    s += T(15.6, -15.6, 'Tiefgarage', 'g-roomtxt') + T(15.6, -16.3, `${num(area2(tg))} m² · 4 Stellplätze`, 'g-areatxt');
+    const tg = C.tg, ph = C.poolhaus, rp = HOUSE.rampe, PL = SITE.plot, wx0 = rp.x0 - rp.wand, wx1 = rp.x1 + rp.wand, rc = (rp.x0 + rp.x1) / 2;
+    const kote = v => (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + num(Math.abs(v), 2);
+    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · vier Stellplätze, unter der Terrasse Fahrräder und Lager"/>`;
+    // Rampe: offen in der Zufahrt, dann unter dem Poolhaus bis in den Anschluss der Tiefgarage
+    s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · offen in der Zufahrt, dann unter dem Poolhaus · 2,80 m breit · ${num(rp.y1 - rp.y0)} m lang · oben und unten ${num(rp.s0 * 100, 0)} %, dazwischen ${num(rp.s * 100, 0)} %`);
+    for (let y = rp.y0 + 1; y < rp.y1 - 0.2; y += 1) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
+    s += R(wx0, rp.x0, rp.y0, rp.yTor, 'g-wall') + R(rp.x1, wx1, rp.y0, rp.yTor, 'g-wall');
+    // Außenwand der Tiefgarage, zur Rampe hin offen; darüber das Poolhaus
+    const i0 = tg.findIndex(p => p[0] === 22.885 && p[1] === rp.yPH);
+    s += `<polyline points="${pts([...tg.slice(i0 + 1), ...tg.slice(0, i0 + 1)])}" class="g-tgwall"/>`;
+    s += `<polygon points="${pts(ph)}" class="g-above" data-tip="Poolhaus darüber · lichte Höhe der Durchfahrt ca. ${num(rp.lichte, 2)} m"/>`;
+    s += R(rp.x0, rp.x1, rp.yTor - 0.05, rp.yTor + 0.05, 'g-gate', 'Tor zur Tiefgarage am Fuß der Rampe') + T(rc, rp.yTor - 0.5, 'Tor', 'g-ftxt');
+    s += `<polyline points="${pts([[16, -50.123], PL[2], PL[3]])}" class="g-grenze"/>` + T(17.4, -50.75, 'Grenze · Ebertstraße', 'g-ftxt');
+    s += T(rc, rp.y0 - 0.45, 'Einfahrt', 'g-ftxt') + T(rc, -30.75, 'unter dem Poolhaus', 'g-ftxt');
+    s += `<text x="${f(rc)}" y="41.3" class="g-ftxt" transform="rotate(-90 ${f(rc)} 41.3)">offene Rampe · ${num(rp.s * 100, 0)} %</text>`;
+    for (const y of [rp.y0, rp.yPortal, rp.y1]) s += T(wx0 - 0.75, y - 0.08, kote(rp.z(y)), 'g-ftxt');
+    for (const y of [-36.9, -21.4]) s += `<polygon points="${pts([[rc - 0.35, y], [rc + 0.35, y], [rc, y + 0.9]])}" class="g-walkhead"/>`;
+    // Vier Stellplätze 2,50 × 5,00 m an der 6 m breiten Fahrgasse; nördlich davon der Gang zur Schleuse und zum Lager unter der Terrasse
+    for (let i = 0; i <= 4; i++) s += L(12.2, -23.85 + 2.5 * i, 17.2, -23.85 + 2.5 * i, 'g-park');
+    for (let i = 0; i < 4; i++) { const cy = -22.6 + 2.5 * i; s += fu.carH(14.7, cy) + T(17.75, cy - 0.1, `P${i + 1}`, 'g-ftxt'); }
+    for (let x = 5.2; x < 11.0; x += 0.65) s += L(x, -12.0, x, -13.7, 'g-furn-l');
+    s += T(8.0, -14.2, 'Fahrräder · Lager', 'g-ftxt') + T(14.7, -12.85, 'Gang zur Schleuse', 'g-ftxt') + T(20.2, -18.2, 'Fahrgasse 6,00 m', 'g-ftxt');
+    s += T(20.2, -15.0, 'Tiefgarage', 'g-roomtxt') + T(20.2, -15.7, `${num(area2(tg))} m² · 4 Stellplätze`, 'g-areatxt');
     return s;
   }
   function context(fl) {
@@ -316,11 +324,13 @@ const Plans = (() => {
       s += T(at[0], at[1] + 0.12, rm.n, `g-roomtxt${sm}`) + T(at[0], at[1] - (sm ? 0.32 : 0.42), txt, `g-areatxt${sm}`);
     }
     // Außenmaße und Nordpfeil
-    s += `<g class="g-dims">${L(0, -D - 0.9, W, -D - 0.9, 'g-dim')}${L(-0.9, -D, -0.9, 0, 'g-dim')}${T(W / 2, -D - 0.75, '16,00', 'g-dimtxt')}` +
+    // Im UG liegt südlich des Hauses die Tiefgarage, dort steht die Breite an der Nordseite
+    const dy = fl === 'UG' ? 0.9 : -D - 0.9;
+    s += `<g class="g-dims">${L(0, dy, W, dy, 'g-dim')}${L(-0.9, -D, -0.9, 0, 'g-dim')}${T(W / 2, dy + 0.15, '16,00', 'g-dimtxt')}` +
       `<text x="-0.75" y="${f(D / 2)}" class="g-dimtxt" transform="rotate(-90 -0.75 ${f(D / 2)})">11,65</text></g>`;
     const na = (rot => { const a = rot * Math.PI / 180, c = [-1.6, 1.9], Rt = p => [c[0] + p[0] * Math.cos(a) - p[1] * Math.sin(a), c[1] + p[0] * Math.sin(a) + p[1] * Math.cos(a)]; return `<polygon points="${pts([[0, 0.9], [0.32, -0.55], [-0.32, -0.55]].map(Rt))}" class="g-north"/>` + T(...Rt([0, 1.35]), 'N', 'g-ntxt'); })(SITE.north.grid);
     s += na;
-    const vb = fl === 'UG' ? [-2.6, -1.4, 28.6, 36.0] : [-2.6, -1.6, 22.2, 17.2];
+    const vb = fl === 'UG' ? [-2.6, -2.2, 28.6, 53.8] : [-2.6, -1.6, 22.2, 17.2];
     return { svg: s, vb };
   }
   function table(fl) {

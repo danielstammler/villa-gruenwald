@@ -4,8 +4,8 @@
   --accent: #295a83; --accent-ink: #ffffff; --limit: #c0392b; --vogel: #2c5fc6; --tg: #cf7a23;
   --lawn: #bcd3a1; --lawn-2: #7f9f62; --water: #9ccbe3; --stone: #dfd8cb; --pave: #e3e0d8; --street: #e2e2df;
   --nb: #c6c3bc; --nb-2: #dcd9d3; --house: #39414a; --house-ink: #ffffff;
-  --m-putz: #efe8da; --m-putz-hell: #f6f2e9; --m-putz-2: #ddd3c0; --m-reveal: #cfc6b4; --m-sockel: #c9bfad;
-  --m-roof: #3b4148; --m-roof-line: #58606a; --m-zink: #59616a; --m-glass: #aebfcc; --m-curtain: #f4efe6; --m-frame: #1a1e22; --m-lamp: #f5d9a8;
+  --m-putz: #ecdfc4; --m-putz-hell: #f5ebd8; --m-putz-2: #d2bf9c; --m-reveal: #c9b693; --m-sockel: #dfd1b4;
+  --m-roof: #25282c; --m-roof-line: #3c4146; --m-zink: #2a2e32; --m-glass: #d6a466; --m-curtain: #f4ecdd; --m-frame: #121416; --m-lamp: #f5d9a8;
   --font-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
   --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -17,8 +17,8 @@
     --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --vogel: #7ea6ff; --tg: #f0a04f;
     --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
     --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
-    --m-putz: #d9d1c1; --m-putz-hell: #e4ddd0; --m-putz-2: #c1b7a4; --m-reveal: #a99f8c; --m-sockel: #a39886;
-    --m-roof: #2c3237; --m-roof-line: #4b535b; --m-zink: #474e55; --m-glass: #5f7c90; --m-curtain: #cfc7b9; --m-frame: #0c0e10; --m-lamp: #e9c98d;
+    --m-putz: #d8cbb0; --m-putz-hell: #e3d8c3; --m-putz-2: #bba984; --m-reveal: #a8977a; --m-sockel: #c3b597;
+    --m-roof: #1e2124; --m-roof-line: #363b40; --m-zink: #24282b; --m-glass: #b88d58; --m-curtain: #d9d0c0; --m-frame: #0b0c0e; --m-lamp: #e9c98d;
     color-scheme: dark;
   }
 }
@@ -27,8 +27,8 @@
   --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --vogel: #7ea6ff; --tg: #f0a04f;
   --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
   --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
-  --m-putz: #d9d1c1; --m-putz-hell: #e4ddd0; --m-putz-2: #c1b7a4; --m-reveal: #a99f8c; --m-sockel: #a39886;
-  --m-roof: #2c3237; --m-roof-line: #4b535b; --m-zink: #474e55; --m-glass: #5f7c90; --m-curtain: #cfc7b9; --m-frame: #0c0e10; --m-lamp: #e9c98d;
+  --m-putz: #d8cbb0; --m-putz-hell: #e3d8c3; --m-putz-2: #bba984; --m-reveal: #a8977a; --m-sockel: #c3b597;
+  --m-roof: #1e2124; --m-roof-line: #363b40; --m-zink: #24282b; --m-glass: #b88d58; --m-curtain: #d9d0c0; --m-frame: #0b0c0e; --m-lamp: #e9c98d;
   color-scheme: dark;
 }
 
@@ -145,8 +145,8 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .e-rust { stroke: var(--m-putz-2); stroke-width: 0.02; }
 .e-reveal { fill: var(--m-reveal); }
 .e-frame { fill: var(--m-frame); }
-.e-glass { fill: var(--m-glass); }
-.e-curtain { fill: var(--m-curtain); opacity: 0.55; }
+.e-glass { fill: url(#gGlass); }
+.e-curtain { fill: var(--m-curtain); opacity: 0.85; }
 .e-sill, .e-sockel { fill: var(--m-sockel); stroke: var(--ink); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
 .e-roof { fill: var(--m-roof); }
 .e-roof-line { fill: none; stroke: var(--m-roof-line); stroke-width: 0.014; }
@@ -194,6 +194,8 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .s-annex { fill: var(--nb); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 .s-house { fill: var(--house); stroke: var(--ink); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
 .s-win { fill: var(--m-glass); }
+.s-balkon { fill: none; stroke: var(--ink); stroke-width: 1px; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+.s-col { fill: var(--surface); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 .s-houselabel { font: 600 1.05px var(--font-ui); fill: var(--house-ink); text-anchor: middle; }
 .s-small { font-size: 0.72px; font-weight: 500; }
 .s-tiny { font-size: 0.52px; font-weight: 500; }
@@ -245,3 +247,78 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
   .hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+
+/* ---------- Zeichnungen: Grundrisse ---------- */
+.g-wall { fill: var(--ink); }
+.g-room, .g-gap, .g-shaft { fill: var(--surface); }
+.g-glass { fill: var(--water); }
+.g-sill { fill: var(--ink-2); }
+.g-leaf { stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.g-arc { fill: none; stroke: var(--ink-2); stroke-width: 0.6px; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
+.g-furn { fill: none; stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.g-furn-l { stroke: var(--ink-2); stroke-width: 0.45px; vector-effect: non-scaling-stroke; }
+.g-ftxt { font: 500 0.22px var(--font-ui); fill: var(--ink-2); text-anchor: middle; }
+.g-car { fill: color-mix(in srgb, var(--ink-2) 12%, transparent); stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.g-stair { fill: var(--surface); stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-tread { stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.g-eye { fill: var(--ink-2); }
+.g-walk { fill: none; stroke: var(--accent); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.g-walkhead { fill: var(--accent); }
+.g-stairtxt { font: 600 0.24px var(--font-ui); fill: var(--accent); text-anchor: middle; }
+.g-railing { stroke: var(--ink); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
+.g-cabin { fill: color-mix(in srgb, var(--accent) 16%, transparent); stroke: var(--accent); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-thin { stroke: var(--ink-2); stroke-width: 0.4px; vector-effect: non-scaling-stroke; }
+.g-lifttxt { fill: var(--accent); font-weight: 600; }
+.g-tgfloor { fill: var(--surface); }
+.g-tgwall { fill: none; stroke: var(--ink); stroke-width: 0.3; stroke-linejoin: miter; }
+.g-park { stroke: var(--ink-2); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-outside { fill: var(--stone); stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.g-col { fill: var(--surface); stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-dormer { fill: color-mix(in srgb, var(--accent) 6%, transparent); stroke: var(--ink-2); stroke-width: 0.7px; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+.g-hline { fill: none; stroke: var(--accent); stroke-width: 0.8px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
+.g-htxt { font: 500 0.22px var(--font-ui); fill: var(--accent); }
+.g-roomtxt { font: 600 0.36px var(--font-ui); fill: var(--ink); text-anchor: middle; }
+.g-areatxt { font: 500 0.27px var(--font-data); fill: var(--ink-2); text-anchor: middle; }
+.g-dim { stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-dimtxt { font: 500 0.34px var(--font-data); fill: var(--ink); text-anchor: middle; }
+.g-north { fill: var(--ink); }
+.g-ntxt { font: 600 0.5px var(--font-ui); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
+
+/* ---------- Vollbild und Tab-Beschriftung ---------- */
+.t-short { display: none; }
+.maxbtn { position: absolute; top: 10px; left: 10px; cursor: pointer; font-weight: 500; }
+.zoom .maxbtn-in { width: auto; padding: 0 10px; font-size: 13px; font-weight: 500; }
+.stage.max {
+  position: fixed; inset: 0; z-index: 40; height: auto !important; min-height: 0; border: 0; border-radius: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+.stage.max .maxbtn { top: calc(10px + env(safe-area-inset-top, 0px)); left: calc(10px + env(safe-area-inset-left, 0px)); }
+body.noscroll { overflow: hidden; }
+
+@media (max-width: 860px) {
+  .t-long { display: none; }
+  .t-short { display: inline; }
+  .plankopf { padding-block: 10px 0; gap: 4px; }
+  .pk-title h1 { font-size: 22px; }
+  .pk-sub { font-size: 12px; }
+  .pk-meta { gap: 8px 12px; font-size: 11px; }
+  .pk-meta dd { font-size: 11px; }
+  .tabs button { padding: 9px 10px 8px; }
+  .view-wrap { gap: 12px; padding-block: 10px 20px; }
+  .stage { height: 64vh; min-height: 330px; }
+  .chips button, .btn { min-height: 36px; }
+  .zoom button { width: 38px; height: 38px; }
+  .hud-box { font-size: 11px; padding: 4px 7px; }
+  .hud-sun { font-size: 10.5px; }
+  .cap { max-width: 62%; }
+  .cap span { display: none; }
+  .e-dimtxt { font-size: 0.42px; } .e-kote { font-size: 0.44px; } .e-kname { font-size: 0.32px; } .e-limittxt { font-size: 0.42px; } .e-label { font-size: 0.48px; }
+  .s-edge { font-size: 1.05px; } .s-dimtxt { font-size: 0.9px; } .s-lbl { font-size: 1.0px; } .s-hnr { font-size: 1.3px; } .s-houselabel { font-size: 1.3px; }
+  .g-roomtxt { font-size: 0.5px; } .g-areatxt { font-size: 0.38px; } .g-ftxt { font-size: 0.28px; } .g-dimtxt { font-size: 0.45px; }
+}
+.g-roomtxt.g-sm { font-size: 0.27px; }
+.g-areatxt.g-sm { font-size: 0.22px; }
+@media (max-width: 860px) { .g-roomtxt.g-sm { font-size: 0.34px; } .g-areatxt.g-sm { font-size: 0.28px; } }
+.g-ramp { fill: var(--pave); }
+.g-above { fill: none; stroke: var(--ink-2); stroke-width: 0.9px; stroke-dasharray: 6 3; vector-effect: non-scaling-stroke; }
+.s-ramp { fill: none; stroke: var(--tg); stroke-width: 1.2px; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }

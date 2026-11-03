@@ -73,7 +73,7 @@ const Site = (() => {
     for (const st of SITE.streets) s.push(poly(st, 's-street', 'Öffentliche Straße'));
     for (const [a, b, c, d] of SITE.parcelLines) s.push(line([a, b], [c, d], 's-parcel'));
     for (const b of SITE.secondary) s.push(poly(b.pts, 's-nb2', 'Nebengebäude Nachbar (Flurkarte)'));
-    for (const b of SITE.neighbors) s.push(poly(b.pts, 's-nb', 'Nachbarhaus (Flurkarte)'));
+    for (const b of SITE.neighbors) s.push(poly(b.pts, 's-nb', 'Nachbarhaus (Flurkarte) · Erdgeschoss + Dachgeschoss'));
     for (const l of SITE.labels) if (!l.t.startsWith('14')) s.push(text(l.p, l.t, 's-hnr'));
     s.push(text([7.5, -56.2], 'Ebertstraße', 's-streetname', 4.0));
     s.push('</g>');
@@ -81,8 +81,8 @@ const Site = (() => {
     s.push('<g data-layer="konzept">');
     s.push(poly(SITE.plot, 's-lawn', `Garten · ${num(STATS.gruen, 0)} m² unversiegelt`));
     s.push(poly(C.zuwegung, 's-pave', `Zuwegung · 1,50 m breit · ${num(area(C.zuwegung), 1)} m²`));
-    s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · endet am Poolhaus`));
-    s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m'));
+    s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · mit Rampe zur Tiefgarage`));
+    s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m · darüber Balkon auf vier Säulen'));
     s.push(poly(C.podest, 's-stone', 'Podest am Eingang · 5,00 × 1,00 m'));
     s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · überdacht, darüber Dachterrasse'));
     s.push(poly(C.pool, 's-coping', 'Pool · 4,00 × 12,00 m'));
@@ -90,6 +90,8 @@ const Site = (() => {
     s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m'));
     s.push(poly(C.haus, 's-house', 'Wohnhaus · 16,00 × 11,65 m · 186,4 m² · Wandhöhe 7,25 m · First 11,12 m'));
     for (const o of HOUSE.fas.S.open.filter(q => q.z0 < 1)) s.push(poly(rect(o.u0, -HOUSE.D, o.u1, -HOUSE.D + 0.2), 's-win'));
+    const bk = HOUSE.balkon;
+    s.push(poly(rect(bk.x0, bk.y0, bk.x1, bk.y1), 's-balkon', 'Balkon im OG · 7,00 × 3,00 m · auf vier Säulen') + bk.cols.map(x => circ([x, bk.colY], bk.colR, 's-col')).join(''));
     s.push(text([8, -4.6], 'Wohnhaus', 's-houselabel') + text([8, -6.0], '16,00 × 11,65', 's-houselabel s-small') + text([8, -7.2], '186,4 m²', 's-houselabel s-small'));
     s.push(text([8, -13.4], 'Terrasse', 's-lbl s-small') + text([17.5, -8.6], 'Freisitz', 's-lbl s-small', -90) + text([8, 0.35], 'Podest', 's-lbl s-tiny'));
     s.push(poly([[8, 1.1], [7.55, 2.05], [8.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));
@@ -97,7 +99,9 @@ const Site = (() => {
     s.push(text([23.63, -21], 'Zuwegung 1,50', 's-lbl s-tiny', -90) + text([22.2, -48.6], 'Zufahrt', 's-lbl s-small'));
     s.push('</g>');
     s.push(`<g data-layer="bestand">${SITE.bestand.map(b => poly(b.pts, 's-bestand', b.kind === 'haus' ? 'Bestandshaus Nr. 14 · Abriss' : 'Bestandsgarage · Abriss')).join('')}</g>`);
-    s.push(`<g data-layer="tg">${poly(C.tg, 's-tg', `Tiefgarage (unterirdisch) · ${num(STATS.tg, 1)} m² außerhalb des Hauses`)}${text([17.6, -18.2], 'Tiefgarage (unterirdisch)', 's-tglabel')}</g>`);
+    const rp = HOUSE.rampe;
+    s.push(`<g data-layer="tg">${poly(C.tg, 's-tg', `Tiefgarage (unterirdisch) · ${num(STATS.tg, 1)} m² außerhalb des Hauses`)}${text([17.6, -18.2], 'Tiefgarage (unterirdisch)', 's-tglabel')}` +
+      `${poly(rect(rp.x0, rp.y0, rp.x1, rp.y1), 's-ramp', 'Rampe zur Tiefgarage · ca. 14 % · läuft unter dem Poolhaus durch')}${text([21.13, -40.5], 'Rampe', 's-tglabel', -90)}</g>`);
     // Vogel
     const V = SITE.vogel, vb = (o, side) => {
       const [a, b] = o[side];

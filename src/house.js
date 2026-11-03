@@ -29,9 +29,8 @@ const HOUSE = (() => {
       name: 'Süd', titel: 'Ansicht Süd · Garten', len: W, pil: pilLang, quelle: 'plan',
       open: [
         ...ax7.map(([a, b]) => op(a, b, Z.ffbEG, 2.85, 'tuer')),
-        ...ax7.map(([a, b], i) => op(a, b, Z.ffbOG, Z.sturzOG, 'franz', i >= 2 && i <= 4 ? {} : { rail: 4.5 })),
+        ...ax7.map(([a, b], i) => i >= 2 && i <= 4 ? op(a, b, Z.ffbOG, Z.sturzOG, 'tuer') : op(a, b, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 })),
       ],
-      rails: [{ u0: 4.95, u1: 11.05, z0: Z.ffbOG, z1: 4.5 }],
       dormers: [
         gaube(2.65, 3.95, [gWin(3.3)]),
         { u0: 4.95, u1: 11.05, top: 9.75, clad: 'putz', front: 0.2, win: [gWin(5.7, 0.8, 9.35), gWin(8.0, 1.8, 9.35), gWin(10.3, 0.8, 9.35)] },
@@ -65,7 +64,7 @@ const HOUSE = (() => {
     W: {
       name: 'West', titel: 'Ansicht West', len: D, pil: pilKurz, quelle: 'annahme',
       open: [
-        ...[2.325, 5.825, 9.325].map(c => op(c - 0.5, c + 0.5, Z.ffbEG, 2.85, 'tuer')),
+        op(1.825, 2.825, 1.1, 2.85, 'fenster'), ...[5.825, 9.325].map(c => op(c - 0.5, c + 0.5, Z.ffbEG, 2.85, 'tuer')),
         ...[2.325, 5.825, 9.325].map(c => op(c - 0.5, c + 0.5, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 })),
       ],
       dormers: [gaube(5.175, 6.475, [gWin(5.825)])],
@@ -83,6 +82,11 @@ const HOUSE = (() => {
   const freisitz = { x0: 16, x1: 19, y0: -10.825, y1: -5.825, z: 0.18, slab: [3.0, 3.45], rail: 4.45, col: 0.35 };
   const terrasse = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, z: 0.18 };
   const podest = { x0: 5.5, x1: 10.5, y0: 0, y1: 1.0, z: 0.18 };
+  // Balkon über der Terrasse, getragen von vier Säulen in den Achsen der Fensterpfeiler
+  const balkon = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, slab: [3.1, 3.5], rail: 4.5, cols: [4.75, 6.6, 9.4, 11.25], colY: -14.35, colR: 0.17 };
 
-  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, dachwinkel, fas, frame, freisitz, terrasse, podest };
+  // Rampe zur Tiefgarage in der Zufahrt: beginnt 1,70 m hinter der Grenze, läuft unter dem Poolhaus bis zur Tiefgarage (ca. 14 %)
+  const rampe = { x0: 19.73, x1: 22.53, y0: -48.8, yPH: -33.65, y1: -27.65, gefaelle: 0.142 };
+
+  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, rampe };
 })();

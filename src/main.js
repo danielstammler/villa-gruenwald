@@ -1,12 +1,13 @@
-// Bedienung: Tabs, 3D-Steuerung, Ansichten, Lageplan-Ebenen, Kennzahlen.
+// Bedienung: Tabs, 3D-Steuerung, Ansichten, Grundrisse, Lageplan-Ebenen, Kennzahlen.
 (() => {
   const noop = () => {};
   const View3D = window.View3D || { ready: false, init() { throw new Error("three.js konnte nicht geladen werden"); }, show: noop, goTo: noop, rotate: noop, setDate: noop, setTime: noop, play: noop, setLayer: noop, setCut: noop, snapshot: () => "" };
   const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
-  const VIEWS = ['modell', 'ansichten', 'lageplan', 'daten'];
+  const VIEWS = ['modell', 'ansichten', 'grundrisse', 'lageplan', 'daten'];
   const ELEV = { sued: 'S', nord: 'N', ost: 'E', west: 'W', schnitt: 'A' };
-  const elevOpt = { mass: true, koten: true, recht: true };
-  let elevView = 'S', elevHome = [0, 0, 10, 10], elevPZ = null, siteReady = false;
+  const PLAN = { ug: 'UG', eg: 'EG', og: 'OG', dg: 'DG' };
+  const elevOpt = { mass: true, koten: true, recht: true }, planOpt = { moebel: true, flaechen: true };
+  let elevView = 'S', elevHome = [0, 0, 10, 10], planFloor = 'EG', planHome = [0, 0, 10, 10], siteReady = false;
   const num = Site.num;
 
   function show(name, push = true) {
@@ -23,12 +24,14 @@
       if (View3D.ready) View3D.show(true);
     } else if (View3D.ready) View3D.show(false);
     if (name === 'ansichten') renderElev();
+    if (name === 'grundrisse') renderPlan();
     if (name === 'lageplan' && !siteReady) {
       Site.init($('#stageSite'), $('#siteSvg'), $('#siteTip'));
       siteReady = true;
       for (const cb of $$('[data-site-layer]')) Site.setLayer(cb.dataset.siteLayer, cb.checked);
     }
-    if (push) try { history.replaceState(null, '', `#${name === 'ansichten' ? Object.keys(ELEV).find(k => ELEV[k] === elevView) : name}`); } catch (e) { /* eingebettete Ansicht */ }
+    const token = name === 'ansichten' ? Object.keys(ELEV).find(k => ELEV[k] === elevView) : name === 'grundrisse' ? planFloor.toLowerCase() : name;
+    if (push) try { history.replaceState(null, '', `#${token}`); } catch (e) { /* eingebettete Ansicht */ }
   }
   $$('[role="tab"]').forEach((t, i, all) => {
     t.addEventListener('click', () => show(t.dataset.view));
@@ -39,6 +42,34 @@
     });
   });
   const press = (group, btn) => { for (const b of $$('button', group)) b.setAttribute('aria-pressed', String(b === btn)); };
+
+  // Vollbild für jede Zeichenfläche (wichtig am Handy)
+  for (const b of $$('[data-max]')) b.addEventListener('click', () => {
+    const stage = $(b.dataset.max), on = !stage.classList.contains('max');
+    stage.classList.toggle('max', on); document.body.classList.toggle('noscroll', on);
+    b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Schließen' : 'Vollbild';
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const m = $('.stage.max'); if (m) $(`[data-max="#${m.id}"]`).click();
+  });
+
+  // Hinweisfeld beim Darüberfahren oder Antippen
+  function attachTips(stage, svg, tip) {
+    let downAt = null;
+    const showTip = e => {
+      const el = e.target.closest && e.target.closest('[data-tip]');
+      if (!el) { tip.hidden = true; return; }
+      const r = stage.getBoundingClientRect();
+      tip.textContent = el.dataset.tip; tip.hidden = false;
+      tip.style.left = `${Math.max(8, Math.min(e.clientX - r.left + 14, r.width - tip.offsetWidth - 8))}px`;
+      tip.style.top = `${Math.max(8, e.clientY - r.top - tip.offsetHeight - 12)}px`;
+    };
+    svg.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+    svg.addEventListener('pointermove', e => { if (e.buttons) tip.hidden = true; else showTip(e); });
+    svg.addEventListener('pointerup', e => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) showTip(e); });
+    svg.addEventListener('pointerleave', () => { tip.hidden = true; });
+  }
 
   // ---- 3D ----
   $('#camChips').addEventListener('click', e => {
@@ -81,8 +112,7 @@
   else snap.hidden = true;
 
   // ---- Ansichten ----
-  const elevSvg = $('#elevSvg');
-  elevPZ = PanZoom(elevSvg, () => elevHome);
+  const elevSvg = $('#elevSvg'), elevPZ = PanZoom(elevSvg, () => elevHome);
   function renderElev() {
     const res = Elev.render(elevView, elevOpt);
     elevSvg.innerHTML = res.svg; elevHome = res.vb; elevPZ.home();
@@ -101,6 +131,32 @@
   if (BUILD.downloads) $('#elevDl').addEventListener('click', () => svgDl(elevSvg, `ansicht-${elevView}.svg`));
   else $('#elevDl').hidden = true;
 
+  // ---- Grundrisse ----
+  const planSvg = $('#planSvg'), planPZ = PanZoom(planSvg, () => planHome);
+  attachTips($('#stagePlan'), planSvg, $('#planTip'));
+  const kote = v => (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + num(Math.abs(v));
+  function renderPlan() {
+    const res = Plans.render(planFloor, planOpt);
+    planSvg.innerHTML = res.svg; planHome = res.vb; planPZ.home();
+    $('#planTitle').textContent = `${Plans.FL[planFloor].titel} · Fußboden ${kote(Plans.FL[planFloor].ffb)} m`;
+    const t = Plans.table(planFloor), dg = planFloor === 'DG';
+    $('#planRooms').innerHTML = t.rows.map(r => `<tr><th scope="row">${r.n}</th><td>${num(r.a)} m²${dg && Math.abs(r.wf - r.a) > 0.2 ? ` · WoFl. ${num(r.wf)}` : ''}</td></tr>`).join('') +
+      `<tr class="sum"><th scope="row">Summe Nutzfläche</th><td>${num(t.sum)} m²</td></tr>`;
+  }
+  const wf = Plans.wohnflaeche();
+  $('#planWfl').innerHTML = [['Erdgeschoss', wf.eg], ['Obergeschoss', wf.og], ['Dachgeschoss (WoFlV)', wf.dg], ['Balkon und Dachterrasse (¼)', wf.aussen]]
+    .map(([n, a]) => `<tr><th scope="row">${n}</th><td>${num(a)} m²</td></tr>`).join('') + `<tr class="sum"><th scope="row">Wohnfläche gesamt</th><td>${num(wf.sum)} m²</td></tr>`;
+  $('#planChips').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    press($('#planChips'), b); planFloor = b.dataset.plan; show('grundrisse');
+  });
+  for (const cb of $$('[data-plan-opt]')) cb.addEventListener('change', () => { planOpt[cb.dataset.planOpt] = cb.checked; renderPlan(); });
+  $('#planZoomIn').addEventListener('click', () => planPZ.zoom(0.7));
+  $('#planZoomOut').addEventListener('click', () => planPZ.zoom(1.4));
+  $('#planHome').addEventListener('click', () => planPZ.home());
+  if (BUILD.downloads) $('#planDl').addEventListener('click', () => svgDl(planSvg, `grundriss-${planFloor}.svg`));
+  else $('#planDl').hidden = true;
+
   // ---- Lageplan ----
   for (const cb of $$('[data-site-layer]')) cb.addEventListener('change', () => { if (siteReady) Site.setLayer(cb.dataset.siteLayer, cb.checked); });
   $('#siteZoomIn').addEventListener('click', () => Site.zoom(0.7));
@@ -117,8 +173,8 @@
     `<tr class="sum"><th scope="row">Garten ohne Unterbauung</th><td>${num(S.gruenOhneTG, 1)} m² · ${pct(S.gruenOhneTG)}</td></tr>`;
   for (const el of $$('[data-stat]')) {
     const v = { west0: S.west[0], west1: S.west[1], north0: S.north[0], north1: S.north[1], east: S.east, ew: S.AB.ew, ns: S.AB.ns, H: S.AB.H,
-      grz: 186.4 / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG }[el.dataset.stat];
-    el.textContent = num(v, { grz: 3, versiegelt: 1, tg: 1, plot: 1 }[el.dataset.stat] ?? 2);
+      grz: 186.4 / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG, wohnfl: wf.sum }[el.dataset.stat];
+    el.textContent = num(v, { grz: 3, versiegelt: 1, tg: 1, plot: 1, wohnfl: 0 }[el.dataset.stat] ?? 2);
   }
 
   function svgFile(svg) {
@@ -130,16 +186,12 @@
   }
   function download(href, name) { const a = document.createElement('a'); a.href = href; a.download = name; document.body.append(a); a.click(); a.remove(); }
 
-  function fromHash() {
+  function fromHash(push) {
     const k = (location.hash || '').slice(1);
-    if (ELEV[k]) { elevView = ELEV[k]; press($('#elevChips'), $(`#elevChips [data-elev="${elevView}"]`)); show('ansichten', false); }
-    else if (VIEWS.includes(k)) show(k, false);
+    if (ELEV[k]) { elevView = ELEV[k]; press($('#elevChips'), $(`#elevChips [data-elev="${elevView}"]`)); show('ansichten', push); }
+    else if (PLAN[k]) { planFloor = PLAN[k]; press($('#planChips'), $(`#planChips [data-plan="${planFloor}"]`)); show('grundrisse', push); }
+    else show(VIEWS.includes(k) ? k : 'modell', push);
   }
-  window.addEventListener('hashchange', fromHash);
-  const h = (location.hash || '').slice(1);
-  if (ELEV[h]) {
-    elevView = ELEV[h];
-    press($('#elevChips'), $(`#elevChips [data-elev="${elevView}"]`));
-    show('ansichten', false);
-  } else show(h || 'modell', false);
+  window.addEventListener('hashchange', () => fromHash(false));
+  fromHash(false);
 })();

@@ -18,10 +18,11 @@
       <div><dt>Stand</dt><dd>03.11.2026</dd></div>
     </dl>
     <nav class="tabs" role="tablist" aria-label="Ansichten">
-      <button role="tab" id="tab-modell" aria-controls="view-modell" data-view="modell">3D-Modell</button>
-      <button role="tab" id="tab-ansichten" aria-controls="view-ansichten" data-view="ansichten">Ansichten &amp; Schnitt</button>
+      <button role="tab" id="tab-modell" aria-controls="view-modell" data-view="modell"><span class="t-long">3D-Modell</span><span class="t-short">3D</span></button>
+      <button role="tab" id="tab-ansichten" aria-controls="view-ansichten" data-view="ansichten"><span class="t-long">Ansichten &amp; Schnitt</span><span class="t-short">Ansichten</span></button>
+      <button role="tab" id="tab-grundrisse" aria-controls="view-grundrisse" data-view="grundrisse">Grundrisse</button>
       <button role="tab" id="tab-lageplan" aria-controls="view-lageplan" data-view="lageplan">Lageplan</button>
-      <button role="tab" id="tab-daten" aria-controls="view-daten" data-view="daten">Kennzahlen &amp; Hinweise</button>
+      <button role="tab" id="tab-daten" aria-controls="view-daten" data-view="daten"><span class="t-long">Kennzahlen &amp; Hinweise</span><span class="t-short">Daten</span></button>
     </nav>
   </header>
   <main>
@@ -30,6 +31,7 @@
         <canvas aria-label="3D-Modell des Hauses mit Grundstück"></canvas>
         <div class="fallback" hidden>Das 3D-Modell braucht WebGL. Die Ansichten und der Lageplan funktionieren auch ohne.</div>
         <div class="hint hud-box">Ziehen: drehen · Rechts ziehen: verschieben · Rad: zoomen</div>
+        <button class="maxbtn hud-box" data-max="#stage3d" aria-pressed="false">Vollbild</button>
         <div class="hud">
           <div class="hud-box"><div class="hud-view">Garten</div><div class="hud-sun"></div></div>
           <div class="hud-box scalebar" hidden><i></i><span>5 m</span></div>
@@ -52,19 +54,19 @@
         <section class="group">
           <h2>Sonnenstand Grünwald</h2>
           <div class="chips" id="dateChips">
-            <button data-date="06-21" aria-pressed="true">21. Juni</button>
-            <button data-date="03-20">20. März</button>
+            <button data-date="09-05" aria-pressed="true">5. Sept.</button>
+            <button data-date="06-21">21. Juni</button>
             <button data-date="12-21">21. Dez.</button>
             <button data-date="heute">Heute</button>
           </div>
-          <label class="field"><span>Datum</span><input type="date" id="sunDate" value="2026-06-21"></label>
-          <label class="field"><span>Uhrzeit <output id="sunTimeOut">17:00</output></span><input type="range" id="sunTime" min="4" max="22.5" step="0.0833" value="17"></label>
+          <label class="field"><span>Datum</span><input type="date" id="sunDate" value="2026-09-05"></label>
+          <label class="field"><span>Uhrzeit <output id="sunTimeOut">16:45</output></span><input type="range" id="sunTime" min="4" max="22.5" step="0.0833" value="16.75"></label>
           <button class="btn" id="sunPlay" aria-pressed="false">Tagesverlauf abspielen</button>
           <dl class="readout" id="sunInfo"></dl>
         </section>
         <section class="group">
           <h2>Ebenen</h2>
-          <label class="switch"><input type="checkbox" id="ly-nachbarn" data-layer3d="nachbarn" checked> Nachbarhäuser (Höhe angenommen)</label>
+          <label class="switch"><input type="checkbox" id="ly-nachbarn" data-layer3d="nachbarn" checked> Nachbarhäuser (EG + Dachgeschoss)</label>
           <label class="switch"><input type="checkbox" id="ly-baeume" data-layer3d="baeume" checked> Bäume und Wurzelschutzbereiche</label>
           <label class="switch"><input type="checkbox" id="ly-grenze" data-layer3d="grenze" checked> Grundstücksgrenze</label>
           <label class="switch"><input type="checkbox" id="ly-baurecht" data-layer3d="baurecht"> Baurecht: Wandhöhe 7,25 m und First 11,12 m</label>
@@ -84,7 +86,7 @@
         <svg id="elevSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Maßstäbliche Ansicht"></svg>
         <div class="stage-top">
           <div class="cap hud-box"><strong id="elevTitle">Ansicht Süd</strong><span id="elevNote"></span></div>
-          <div class="zoom"><button id="elevZoomIn" aria-label="Vergrößern">+</button><button id="elevZoomOut" aria-label="Verkleinern">−</button><button id="elevHome" aria-label="Ganze Zeichnung">⤢</button></div>
+          <div class="zoom"><button id="elevZoomIn" aria-label="Vergrößern">+</button><button id="elevZoomOut" aria-label="Verkleinern">−</button><button id="elevHome" aria-label="Ganze Zeichnung">⤢</button><button class="maxbtn-in" data-max="#stageElev" aria-pressed="false">Vollbild</button></div>
         </div>
       </div>
       <aside class="panel" aria-label="Steuerung Ansichten">
@@ -113,12 +115,54 @@
       </aside>
     </section>
 
+    <section id="view-grundrisse" class="view-wrap" role="tabpanel" aria-labelledby="tab-grundrisse" hidden>
+      <div class="stage" id="stagePlan">
+        <svg id="planSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grundriss"></svg>
+        <div class="stage-top">
+          <div class="cap hud-box"><strong id="planTitle">Erdgeschoss</strong><span>Vorschlag · Antippen zeigt Raummaße</span></div>
+          <div class="zoom"><button id="planZoomIn" aria-label="Vergrößern">+</button><button id="planZoomOut" aria-label="Verkleinern">−</button><button id="planHome" aria-label="Ganzer Grundriss">⤢</button><button class="maxbtn-in" data-max="#stagePlan" aria-pressed="false">Vollbild</button></div>
+        </div>
+        <div class="tip" id="planTip" hidden></div>
+      </div>
+      <aside class="panel" aria-label="Steuerung Grundrisse">
+        <section class="group">
+          <h2>Geschoss</h2>
+          <div class="chips" id="planChips">
+            <button data-plan="UG">UG mit Tiefgarage</button>
+            <button data-plan="EG" aria-pressed="true">Erdgeschoss</button>
+            <button data-plan="OG">Obergeschoss</button>
+            <button data-plan="DG">Dachgeschoss</button>
+          </div>
+        </section>
+        <section class="group">
+          <h2>Einblenden</h2>
+          <label class="switch"><input type="checkbox" id="po-moebel" data-plan-opt="moebel" checked> Möblierung</label>
+          <label class="switch"><input type="checkbox" id="po-flaechen" data-plan-opt="flaechen" checked> Raumnamen und Flächen</label>
+        </section>
+        <section class="group">
+          <h2>Räume in diesem Geschoss</h2>
+          <table class="fl"><tbody id="planRooms"></tbody></table>
+        </section>
+        <section class="group">
+          <h2>Wohnfläche (überschlägig)</h2>
+          <table class="fl"><tbody id="planWfl"></tbody></table>
+          <p>Dachgeschoss nach Wohnflächenverordnung: unter 1 m lichter Höhe 0 %, bis 2 m 50 %. Balkon und Dachterrasse zu einem Viertel. Treppe und Aufzug zählen nicht.</p>
+        </section>
+        <section class="group">
+          <h2>So ist der Vorschlag aufgebaut</h2>
+          <p>Der Vorschlag stammt von mir, nicht vom Architekten. Er passt zu Fensterachsen, Eingang, Terrasse, Balkon und Freisitz des Konzepts: unten Wohnen, Essen und Küche zum Garten, hinter der Küche die Backkitchen, oben die Elternsuite mit Balkon.</p>
+          <p>Treppe und Aufzug liegen im Kern hinter dem Eingang. Der Aufzug (Kabine 1,10 × 1,40 m, rollstuhlgerecht) fährt vom UG bis ins DG. Er sitzt so weit innen, dass der Schachtkopf unter das Mansarddach passt. Eine Schleuse verbindet das UG mit der Tiefgarage. Autos fahren über eine Rampe in der Zufahrt hinein, die unter dem Poolhaus durchläuft.</p>
+        </section>
+        <button class="btn" id="planDl">Grundriss speichern (SVG)</button>
+      </aside>
+    </section>
+
     <section id="view-lageplan" class="view-wrap" role="tabpanel" aria-labelledby="tab-lageplan" hidden>
       <div class="stage" id="stageSite">
         <svg id="siteSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lageplan"></svg>
         <div class="stage-top">
           <div class="cap hud-box"><strong>Lageplan</strong><span>Antippen oder darüberfahren zeigt Maße und Flächen</span></div>
-          <div class="zoom"><button id="siteZoomIn" aria-label="Vergrößern">+</button><button id="siteZoomOut" aria-label="Verkleinern">−</button><button id="siteHome" aria-label="Ganzes Grundstück">⤢</button></div>
+          <div class="zoom"><button id="siteZoomIn" aria-label="Vergrößern">+</button><button id="siteZoomOut" aria-label="Verkleinern">−</button><button id="siteHome" aria-label="Ganzes Grundstück">⤢</button><button class="maxbtn-in" data-max="#stageSite" aria-pressed="false">Vollbild</button></div>
         </div>
         <div class="tip" id="siteTip" hidden></div>
       </div>
@@ -141,7 +185,7 @@
           <ul class="notes">
             <li class="warn"><span>Westabstand nur <b data-stat="west0"></b>–<b data-stat="west1"></b> m. Mit dem Ansatz der Vogel-Skizze (0,4 H) wären <b data-stat="ew"></b> m nötig.</span></li>
             <li class="warn"><span>Die Wurzelschutzbereiche der Nachbarbäume im Nordosten und Südosten reichen in Zuwegung und Zufahrt.</span></li>
-            <li class="info"><span>Die Zufahrt endet am Poolhaus (3,50 × 6,00 m). Eine Rampe ist nicht gezeichnet; das Maß passt zu einem Autoaufzug.</span></li>
+            <li class="info"><span>Die Zufahrt führt als Rampe (gut 21 m, ca. 14 %) unter dem Poolhaus in die Tiefgarage. Im Konzept ist sie nicht gezeichnet, ich habe sie ergänzt.</span></li>
           </ul>
         </section>
         <section class="group">
@@ -161,7 +205,7 @@
             <li class="info"><span><b>Die Proportionen des Renderings stimmen weitgehend.</b> Breite 16,00 m und Gesamthöhe 11,12 m passen. Maßstäblich sitzt das Traufgesims aber bei 6,83 m, weil die erlaubte Wandhöhe von 7,25 m bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach und bekommt Licht über Gauben.</span></li>
             <li class="warn"><span><b>Der Westabstand ist knapp.</b> Zwischen Westfassade und Grenze liegen <span data-stat="west0"></span> m (Nordwestecke) bis <span data-stat="west1"></span> m. Nach dem Ansatz aus Vogels Skizze (0,4 H mit H = <span data-stat="H"></span> m) wären <span data-stat="ew"></span> m nötig. Ob das reicht, hängt von der Dachneigung und dem Ortsrecht ab.</span></li>
             <li class="warn"><span><b>Schutzbäume der Nachbarn.</b> Der große Baum im Nordosten (Krone etwa 16 m) und der Baum im Südosten haben Wurzelschutzbereiche (Krone plus 1,50 m), die in Zuwegung und Zufahrt reichen. Dort ist wurzelschonendes Bauen nötig.</span></li>
-            <li class="info"><span><b>Zufahrt zur Tiefgarage noch offen.</b> Die Zufahrt endet am Poolhaus mit 3,50 × 6,00 m. Eine Rampe ist nicht gezeichnet; das Maß passt zu einem Autoaufzug.</span></li>
+            <li class="info"><span><b>Rampe zur Tiefgarage.</b> Ohne Autoaufzug braucht die Zufahrt eine Rampe: 2,80 m breit, gut 21 m lang, ca. 14 % Gefälle. Sie beginnt kurz hinter der Grenze und läuft unter dem Poolhaus in die Tiefgarage. Der Personenaufzug im Haus verbindet Tiefgarage und alle Geschosse.</span></li>
             <li><span><b>Abweichend von der Vogel-Skizze.</b> Vogel geht von 15,10 × 12,05 m aus und setzt das Haus gut 3,5 m weiter nach Osten. Das Konzept hat 16,00 × 11,65 m: 0,90 m mehr Gartenfassade und 4,4 m² mehr Grundfläche.</span></li>
           </ul>
         </section>
@@ -183,13 +227,13 @@
           <div class="cols">
             <div><h3>Aus dem Konzeptplan, M 1:100</h3><ul>
               <li>Grundstück mit sieben Grenzpunkten</li><li>Haus 16,00 × 11,65 m, Außenwand 36 cm</li><li>Sieben Fensterachsen der Südfassade</li>
-              <li>Terrasse 7,00 × 3,00 m, Freisitz 3,00 × 5,00 m, Podest 5,00 × 1,00 m</li><li>Zuwegung 1,50 m, Zufahrt, Pool 4,00 × 12,00 m, Poolhaus 3,50 × 6,00 m</li><li>Umriss der Tiefgarage</li></ul></div>
+              <li>Terrasse 7,00 × 3,00 m mit Balkon darüber, Freisitz 3,00 × 5,00 m, Podest 5,00 × 1,00 m</li><li>Zuwegung 1,50 m, Zufahrt, Pool 4,00 × 12,00 m, Poolhaus 3,50 × 6,00 m</li><li>Umriss der Tiefgarage</li></ul></div>
             <div><h3>Aus Baurecht-Skizze und Flurkarte</h3><ul>
               <li>Wandhöhe 7,25 m, Firsthöhe 11,12 m, Dachknick bei etwa 10,25 m</li><li>Bäume und Wurzelschutzbereiche</li><li>Nachbarhäuser, Grenzen und Straße</li>
               <li>Linie 5,00 m parallel zur Straße</li><li>Abstandsflächen-Ansatz 0,8 H (Nord/Süd) und 0,4 H (Ost/West)</li></ul></div>
             <div><h3>Angenommen</h3><ul>
               <li>Geschosshöhen: EG 3,35 m, OG 3,10 m, Fußboden EG 0,20 m über Gelände</li><li>Dachneigung unten 50°, oben 15°</li><li>Nord-, Ost- und Westfassade, Gauben</li>
-              <li>Untergeschoss unter dem Haus</li><li>Höhen der Nachbarhäuser und Bäume</li><li>Gestaltung nach dem Rendering</li></ul></div>
+              <li>Untergeschoss unter dem Haus, Grundrisse als Vorschlag</li><li>Nachbarhäuser als EG + Dachgeschoss, Baumhöhen</li><li>Gestaltung und Materialien nach dem Rendering</li></ul></div>
           </div>
         </section>
         <section>

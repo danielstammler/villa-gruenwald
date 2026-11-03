@@ -11,7 +11,8 @@ const Elev = (() => {
   const tx = (x, z, s, cls) => `<text x="${f(x)}" y="${f(-z)}" class="${cls}">${s}</text>`;
 
   const DEFS = `<defs>
-    <pattern id="pSlate" width="0.6" height="0.2" patternUnits="userSpaceOnUse"><rect width="0.6" height="0.2" class="e-roof"/><path d="M0 0.2H0.6M0.3 0V0.1M0 0.1V0.2M0.6 0.1V0.2" class="e-roof-line"/></pattern>
+    <pattern id="pSlate" width="0.8" height="0.4" patternUnits="userSpaceOnUse"><rect width="0.8" height="0.4" class="e-roof"/><path d="M0 0.2H0.8M0 0.4H0.8M0.4 0V0.2M0 0.2V0.4M0.8 0.2V0.4" class="e-roof-line"/></pattern>
+    <linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a4830"/><stop offset="0.35" stop-color="#d9a466"/><stop offset="0.75" stop-color="#c48b51"/><stop offset="1" stop-color="#7a563a"/></linearGradient>
     <pattern id="pZink" width="0.32" height="1" patternUnits="userSpaceOnUse"><rect width="0.32" height="1" class="e-zink"/><path d="M0 0V1" class="e-roof-line"/></pattern>
     <pattern id="pEarth" width="0.32" height="0.32" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V0.32" class="e-hatch"/></pattern>
   </defs>`;
@@ -64,6 +65,21 @@ const Elev = (() => {
     for (const [a, b] of cols) s += r(a, fz.z, b, fz.slab[0], 'e-pil');
     s += r(ua, fz.slab[0], ub, fz.slab[1], 'e-pil');
     return s + rail(ua + 0.06, ub - 0.06, fz.slab[1], fz.rail);
+  }
+  // Toskanische Säule von der Terrasse bis unter die Balkonplatte
+  function column(u, cr) {
+    const z0 = HOUSE.terrasse.z, z1 = HOUSE.balkon.slab[0];
+    return r(u - cr * 1.35, z0, u + cr * 1.35, z0 + 0.12, 'e-pil') + r(u - cr * 1.2, z0 + 0.12, u + cr * 1.2, z0 + 0.2, 'e-pil') +
+      poly([[u - cr, z0 + 0.2], [u + cr, z0 + 0.2], [u + cr * 0.86, z1 - 0.2], [u - cr * 0.86, z1 - 0.2]], 'e-pil') +
+      r(u - cr * 1.15, z1 - 0.2, u + cr * 1.15, z1 - 0.1, 'e-pil') + r(u - cr * 1.3, z1 - 0.1, u + cr * 1.3, z1, 'e-pil');
+  }
+  function balkon(side) {
+    const b = HOUSE.balkon, D = HOUSE.D;
+    const slab = (a, c) => r(a, b.slab[0], c, b.slab[1] - 0.12, 'e-pil') + r(a - 0.06, b.slab[1] - 0.12, c + 0.06, b.slab[1], 'e-pil') + rail(a + 0.05, c - 0.05, b.slab[1], b.rail);
+    if (side === 'S') return b.cols.map(x => column(x, b.colR)).join('') + slab(b.x0, b.x1);
+    if (side === 'E') return column(b.colY + D, b.colR) + slab(b.y0 + D, b.y1 + D);
+    if (side === 'W') return column(-b.colY, b.colR) + slab(-b.y1, -b.y0);
+    return '';
   }
   function flatwork(side) {
     const t = HOUSE.terrasse, p = HOUSE.podest, W = HOUSE.W, D = HOUSE.D;
@@ -124,7 +140,7 @@ const Elev = (() => {
     if (F.canopy) { const c = F.canopy; s += r(c.u0, c.z0, c.u1, c.z1, 'e-frame'); }
     for (const rl of F.rails || []) s += r(rl.u0 - 0.05, rl.z0 - 0.1, rl.u1 + 0.05, rl.z0, 'e-pil') + rail(rl.u0, rl.u1, rl.z0, rl.z1);
     if (side === 'S' || side === 'E') s += freisitz(side);
-    s += flatwork(side);
+    s += flatwork(side) + balkon(side);
     s += ln(x0 + 0.3, 0, x1 - 0.3, 0, 'e-ground');
     if (opt.mass) {
       const eg = F.open.filter(q => q.z0 < 1.5).sort((a, b) => a.u0 - b.u0);

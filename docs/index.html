@@ -15,8 +15,8 @@
   --accent: #295a83; --accent-ink: #ffffff; --limit: #c0392b; --vogel: #2c5fc6; --tg: #cf7a23;
   --lawn: #bcd3a1; --lawn-2: #7f9f62; --water: #9ccbe3; --stone: #dfd8cb; --pave: #e3e0d8; --street: #e2e2df;
   --nb: #c6c3bc; --nb-2: #dcd9d3; --house: #39414a; --house-ink: #ffffff;
-  --m-putz: #efe8da; --m-putz-hell: #f6f2e9; --m-putz-2: #ddd3c0; --m-reveal: #cfc6b4; --m-sockel: #c9bfad;
-  --m-roof: #3b4148; --m-roof-line: #58606a; --m-zink: #59616a; --m-glass: #aebfcc; --m-curtain: #f4efe6; --m-frame: #1a1e22; --m-lamp: #f5d9a8;
+  --m-putz: #ecdfc4; --m-putz-hell: #f5ebd8; --m-putz-2: #d2bf9c; --m-reveal: #c9b693; --m-sockel: #dfd1b4;
+  --m-roof: #25282c; --m-roof-line: #3c4146; --m-zink: #2a2e32; --m-glass: #d6a466; --m-curtain: #f4ecdd; --m-frame: #121416; --m-lamp: #f5d9a8;
   --font-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
   --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -28,8 +28,8 @@
     --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --vogel: #7ea6ff; --tg: #f0a04f;
     --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
     --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
-    --m-putz: #d9d1c1; --m-putz-hell: #e4ddd0; --m-putz-2: #c1b7a4; --m-reveal: #a99f8c; --m-sockel: #a39886;
-    --m-roof: #2c3237; --m-roof-line: #4b535b; --m-zink: #474e55; --m-glass: #5f7c90; --m-curtain: #cfc7b9; --m-frame: #0c0e10; --m-lamp: #e9c98d;
+    --m-putz: #d8cbb0; --m-putz-hell: #e3d8c3; --m-putz-2: #bba984; --m-reveal: #a8977a; --m-sockel: #c3b597;
+    --m-roof: #1e2124; --m-roof-line: #363b40; --m-zink: #24282b; --m-glass: #b88d58; --m-curtain: #d9d0c0; --m-frame: #0b0c0e; --m-lamp: #e9c98d;
     color-scheme: dark;
   }
 }
@@ -38,8 +38,8 @@
   --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --vogel: #7ea6ff; --tg: #f0a04f;
   --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
   --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
-  --m-putz: #d9d1c1; --m-putz-hell: #e4ddd0; --m-putz-2: #c1b7a4; --m-reveal: #a99f8c; --m-sockel: #a39886;
-  --m-roof: #2c3237; --m-roof-line: #4b535b; --m-zink: #474e55; --m-glass: #5f7c90; --m-curtain: #cfc7b9; --m-frame: #0c0e10; --m-lamp: #e9c98d;
+  --m-putz: #d8cbb0; --m-putz-hell: #e3d8c3; --m-putz-2: #bba984; --m-reveal: #a8977a; --m-sockel: #c3b597;
+  --m-roof: #1e2124; --m-roof-line: #363b40; --m-zink: #24282b; --m-glass: #b88d58; --m-curtain: #d9d0c0; --m-frame: #0b0c0e; --m-lamp: #e9c98d;
   color-scheme: dark;
 }
 
@@ -156,8 +156,8 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .e-rust { stroke: var(--m-putz-2); stroke-width: 0.02; }
 .e-reveal { fill: var(--m-reveal); }
 .e-frame { fill: var(--m-frame); }
-.e-glass { fill: var(--m-glass); }
-.e-curtain { fill: var(--m-curtain); opacity: 0.55; }
+.e-glass { fill: url(#gGlass); }
+.e-curtain { fill: var(--m-curtain); opacity: 0.85; }
 .e-sill, .e-sockel { fill: var(--m-sockel); stroke: var(--ink); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
 .e-roof { fill: var(--m-roof); }
 .e-roof-line { fill: none; stroke: var(--m-roof-line); stroke-width: 0.014; }
@@ -205,6 +205,8 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .s-annex { fill: var(--nb); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 .s-house { fill: var(--house); stroke: var(--ink); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
 .s-win { fill: var(--m-glass); }
+.s-balkon { fill: none; stroke: var(--ink); stroke-width: 1px; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+.s-col { fill: var(--surface); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 .s-houselabel { font: 600 1.05px var(--font-ui); fill: var(--house-ink); text-anchor: middle; }
 .s-small { font-size: 0.72px; font-weight: 500; }
 .s-tiny { font-size: 0.52px; font-weight: 500; }
@@ -256,6 +258,81 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
   .hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+
+/* ---------- Zeichnungen: Grundrisse ---------- */
+.g-wall { fill: var(--ink); }
+.g-room, .g-gap, .g-shaft { fill: var(--surface); }
+.g-glass { fill: var(--water); }
+.g-sill { fill: var(--ink-2); }
+.g-leaf { stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.g-arc { fill: none; stroke: var(--ink-2); stroke-width: 0.6px; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
+.g-furn { fill: none; stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.g-furn-l { stroke: var(--ink-2); stroke-width: 0.45px; vector-effect: non-scaling-stroke; }
+.g-ftxt { font: 500 0.22px var(--font-ui); fill: var(--ink-2); text-anchor: middle; }
+.g-car { fill: color-mix(in srgb, var(--ink-2) 12%, transparent); stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.g-stair { fill: var(--surface); stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-tread { stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.g-eye { fill: var(--ink-2); }
+.g-walk { fill: none; stroke: var(--accent); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.g-walkhead { fill: var(--accent); }
+.g-stairtxt { font: 600 0.24px var(--font-ui); fill: var(--accent); text-anchor: middle; }
+.g-railing { stroke: var(--ink); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
+.g-cabin { fill: color-mix(in srgb, var(--accent) 16%, transparent); stroke: var(--accent); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-thin { stroke: var(--ink-2); stroke-width: 0.4px; vector-effect: non-scaling-stroke; }
+.g-lifttxt { fill: var(--accent); font-weight: 600; }
+.g-tgfloor { fill: var(--surface); }
+.g-tgwall { fill: none; stroke: var(--ink); stroke-width: 0.3; stroke-linejoin: miter; }
+.g-park { stroke: var(--ink-2); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-outside { fill: var(--stone); stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.g-col { fill: var(--surface); stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-dormer { fill: color-mix(in srgb, var(--accent) 6%, transparent); stroke: var(--ink-2); stroke-width: 0.7px; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+.g-hline { fill: none; stroke: var(--accent); stroke-width: 0.8px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
+.g-htxt { font: 500 0.22px var(--font-ui); fill: var(--accent); }
+.g-roomtxt { font: 600 0.36px var(--font-ui); fill: var(--ink); text-anchor: middle; }
+.g-areatxt { font: 500 0.27px var(--font-data); fill: var(--ink-2); text-anchor: middle; }
+.g-dim { stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.g-dimtxt { font: 500 0.34px var(--font-data); fill: var(--ink); text-anchor: middle; }
+.g-north { fill: var(--ink); }
+.g-ntxt { font: 600 0.5px var(--font-ui); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
+
+/* ---------- Vollbild und Tab-Beschriftung ---------- */
+.t-short { display: none; }
+.maxbtn { position: absolute; top: 10px; left: 10px; cursor: pointer; font-weight: 500; }
+.zoom .maxbtn-in { width: auto; padding: 0 10px; font-size: 13px; font-weight: 500; }
+.stage.max {
+  position: fixed; inset: 0; z-index: 40; height: auto !important; min-height: 0; border: 0; border-radius: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+.stage.max .maxbtn { top: calc(10px + env(safe-area-inset-top, 0px)); left: calc(10px + env(safe-area-inset-left, 0px)); }
+body.noscroll { overflow: hidden; }
+
+@media (max-width: 860px) {
+  .t-long { display: none; }
+  .t-short { display: inline; }
+  .plankopf { padding-block: 10px 0; gap: 4px; }
+  .pk-title h1 { font-size: 22px; }
+  .pk-sub { font-size: 12px; }
+  .pk-meta { gap: 8px 12px; font-size: 11px; }
+  .pk-meta dd { font-size: 11px; }
+  .tabs button { padding: 9px 10px 8px; }
+  .view-wrap { gap: 12px; padding-block: 10px 20px; }
+  .stage { height: 64vh; min-height: 330px; }
+  .chips button, .btn { min-height: 36px; }
+  .zoom button { width: 38px; height: 38px; }
+  .hud-box { font-size: 11px; padding: 4px 7px; }
+  .hud-sun { font-size: 10.5px; }
+  .cap { max-width: 62%; }
+  .cap span { display: none; }
+  .e-dimtxt { font-size: 0.42px; } .e-kote { font-size: 0.44px; } .e-kname { font-size: 0.32px; } .e-limittxt { font-size: 0.42px; } .e-label { font-size: 0.48px; }
+  .s-edge { font-size: 1.05px; } .s-dimtxt { font-size: 0.9px; } .s-lbl { font-size: 1.0px; } .s-hnr { font-size: 1.3px; } .s-houselabel { font-size: 1.3px; }
+  .g-roomtxt { font-size: 0.5px; } .g-areatxt { font-size: 0.38px; } .g-ftxt { font-size: 0.28px; } .g-dimtxt { font-size: 0.45px; }
+}
+.g-roomtxt.g-sm { font-size: 0.27px; }
+.g-areatxt.g-sm { font-size: 0.22px; }
+@media (max-width: 860px) { .g-roomtxt.g-sm { font-size: 0.34px; } .g-areatxt.g-sm { font-size: 0.28px; } }
+.g-ramp { fill: var(--pave); }
+.g-above { fill: none; stroke: var(--ink-2); stroke-width: 0.9px; stroke-dasharray: 6 3; vector-effect: non-scaling-stroke; }
+.s-ramp { fill: none; stroke: var(--tg); stroke-width: 1.2px; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
 </style>
 </head>
 <body>
@@ -271,10 +348,11 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
       <div><dt>Stand</dt><dd>03.11.2026</dd></div>
     </dl>
     <nav class="tabs" role="tablist" aria-label="Ansichten">
-      <button role="tab" id="tab-modell" aria-controls="view-modell" data-view="modell">3D-Modell</button>
-      <button role="tab" id="tab-ansichten" aria-controls="view-ansichten" data-view="ansichten">Ansichten &amp; Schnitt</button>
+      <button role="tab" id="tab-modell" aria-controls="view-modell" data-view="modell"><span class="t-long">3D-Modell</span><span class="t-short">3D</span></button>
+      <button role="tab" id="tab-ansichten" aria-controls="view-ansichten" data-view="ansichten"><span class="t-long">Ansichten &amp; Schnitt</span><span class="t-short">Ansichten</span></button>
+      <button role="tab" id="tab-grundrisse" aria-controls="view-grundrisse" data-view="grundrisse">Grundrisse</button>
       <button role="tab" id="tab-lageplan" aria-controls="view-lageplan" data-view="lageplan">Lageplan</button>
-      <button role="tab" id="tab-daten" aria-controls="view-daten" data-view="daten">Kennzahlen &amp; Hinweise</button>
+      <button role="tab" id="tab-daten" aria-controls="view-daten" data-view="daten"><span class="t-long">Kennzahlen &amp; Hinweise</span><span class="t-short">Daten</span></button>
     </nav>
   </header>
   <main>
@@ -283,6 +361,7 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
         <canvas aria-label="3D-Modell des Hauses mit Grundstück"></canvas>
         <div class="fallback" hidden>Das 3D-Modell braucht WebGL. Die Ansichten und der Lageplan funktionieren auch ohne.</div>
         <div class="hint hud-box">Ziehen: drehen · Rechts ziehen: verschieben · Rad: zoomen</div>
+        <button class="maxbtn hud-box" data-max="#stage3d" aria-pressed="false">Vollbild</button>
         <div class="hud">
           <div class="hud-box"><div class="hud-view">Garten</div><div class="hud-sun"></div></div>
           <div class="hud-box scalebar" hidden><i></i><span>5 m</span></div>
@@ -305,19 +384,19 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
         <section class="group">
           <h2>Sonnenstand Grünwald</h2>
           <div class="chips" id="dateChips">
-            <button data-date="06-21" aria-pressed="true">21. Juni</button>
-            <button data-date="03-20">20. März</button>
+            <button data-date="09-05" aria-pressed="true">5. Sept.</button>
+            <button data-date="06-21">21. Juni</button>
             <button data-date="12-21">21. Dez.</button>
             <button data-date="heute">Heute</button>
           </div>
-          <label class="field"><span>Datum</span><input type="date" id="sunDate" value="2026-06-21"></label>
-          <label class="field"><span>Uhrzeit <output id="sunTimeOut">17:00</output></span><input type="range" id="sunTime" min="4" max="22.5" step="0.0833" value="17"></label>
+          <label class="field"><span>Datum</span><input type="date" id="sunDate" value="2026-09-05"></label>
+          <label class="field"><span>Uhrzeit <output id="sunTimeOut">16:45</output></span><input type="range" id="sunTime" min="4" max="22.5" step="0.0833" value="16.75"></label>
           <button class="btn" id="sunPlay" aria-pressed="false">Tagesverlauf abspielen</button>
           <dl class="readout" id="sunInfo"></dl>
         </section>
         <section class="group">
           <h2>Ebenen</h2>
-          <label class="switch"><input type="checkbox" id="ly-nachbarn" data-layer3d="nachbarn" checked> Nachbarhäuser (Höhe angenommen)</label>
+          <label class="switch"><input type="checkbox" id="ly-nachbarn" data-layer3d="nachbarn" checked> Nachbarhäuser (EG + Dachgeschoss)</label>
           <label class="switch"><input type="checkbox" id="ly-baeume" data-layer3d="baeume" checked> Bäume und Wurzelschutzbereiche</label>
           <label class="switch"><input type="checkbox" id="ly-grenze" data-layer3d="grenze" checked> Grundstücksgrenze</label>
           <label class="switch"><input type="checkbox" id="ly-baurecht" data-layer3d="baurecht"> Baurecht: Wandhöhe 7,25 m und First 11,12 m</label>
@@ -337,7 +416,7 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
         <svg id="elevSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Maßstäbliche Ansicht"></svg>
         <div class="stage-top">
           <div class="cap hud-box"><strong id="elevTitle">Ansicht Süd</strong><span id="elevNote"></span></div>
-          <div class="zoom"><button id="elevZoomIn" aria-label="Vergrößern">+</button><button id="elevZoomOut" aria-label="Verkleinern">−</button><button id="elevHome" aria-label="Ganze Zeichnung">⤢</button></div>
+          <div class="zoom"><button id="elevZoomIn" aria-label="Vergrößern">+</button><button id="elevZoomOut" aria-label="Verkleinern">−</button><button id="elevHome" aria-label="Ganze Zeichnung">⤢</button><button class="maxbtn-in" data-max="#stageElev" aria-pressed="false">Vollbild</button></div>
         </div>
       </div>
       <aside class="panel" aria-label="Steuerung Ansichten">
@@ -366,12 +445,54 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
       </aside>
     </section>
 
+    <section id="view-grundrisse" class="view-wrap" role="tabpanel" aria-labelledby="tab-grundrisse" hidden>
+      <div class="stage" id="stagePlan">
+        <svg id="planSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grundriss"></svg>
+        <div class="stage-top">
+          <div class="cap hud-box"><strong id="planTitle">Erdgeschoss</strong><span>Vorschlag · Antippen zeigt Raummaße</span></div>
+          <div class="zoom"><button id="planZoomIn" aria-label="Vergrößern">+</button><button id="planZoomOut" aria-label="Verkleinern">−</button><button id="planHome" aria-label="Ganzer Grundriss">⤢</button><button class="maxbtn-in" data-max="#stagePlan" aria-pressed="false">Vollbild</button></div>
+        </div>
+        <div class="tip" id="planTip" hidden></div>
+      </div>
+      <aside class="panel" aria-label="Steuerung Grundrisse">
+        <section class="group">
+          <h2>Geschoss</h2>
+          <div class="chips" id="planChips">
+            <button data-plan="UG">UG mit Tiefgarage</button>
+            <button data-plan="EG" aria-pressed="true">Erdgeschoss</button>
+            <button data-plan="OG">Obergeschoss</button>
+            <button data-plan="DG">Dachgeschoss</button>
+          </div>
+        </section>
+        <section class="group">
+          <h2>Einblenden</h2>
+          <label class="switch"><input type="checkbox" id="po-moebel" data-plan-opt="moebel" checked> Möblierung</label>
+          <label class="switch"><input type="checkbox" id="po-flaechen" data-plan-opt="flaechen" checked> Raumnamen und Flächen</label>
+        </section>
+        <section class="group">
+          <h2>Räume in diesem Geschoss</h2>
+          <table class="fl"><tbody id="planRooms"></tbody></table>
+        </section>
+        <section class="group">
+          <h2>Wohnfläche (überschlägig)</h2>
+          <table class="fl"><tbody id="planWfl"></tbody></table>
+          <p>Dachgeschoss nach Wohnflächenverordnung: unter 1 m lichter Höhe 0 %, bis 2 m 50 %. Balkon und Dachterrasse zu einem Viertel. Treppe und Aufzug zählen nicht.</p>
+        </section>
+        <section class="group">
+          <h2>So ist der Vorschlag aufgebaut</h2>
+          <p>Der Vorschlag stammt von mir, nicht vom Architekten. Er passt zu Fensterachsen, Eingang, Terrasse, Balkon und Freisitz des Konzepts: unten Wohnen, Essen und Küche zum Garten, hinter der Küche die Backkitchen, oben die Elternsuite mit Balkon.</p>
+          <p>Treppe und Aufzug liegen im Kern hinter dem Eingang. Der Aufzug (Kabine 1,10 × 1,40 m, rollstuhlgerecht) fährt vom UG bis ins DG. Er sitzt so weit innen, dass der Schachtkopf unter das Mansarddach passt. Eine Schleuse verbindet das UG mit der Tiefgarage. Autos fahren über eine Rampe in der Zufahrt hinein, die unter dem Poolhaus durchläuft.</p>
+        </section>
+        <button class="btn" id="planDl">Grundriss speichern (SVG)</button>
+      </aside>
+    </section>
+
     <section id="view-lageplan" class="view-wrap" role="tabpanel" aria-labelledby="tab-lageplan" hidden>
       <div class="stage" id="stageSite">
         <svg id="siteSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lageplan"></svg>
         <div class="stage-top">
           <div class="cap hud-box"><strong>Lageplan</strong><span>Antippen oder darüberfahren zeigt Maße und Flächen</span></div>
-          <div class="zoom"><button id="siteZoomIn" aria-label="Vergrößern">+</button><button id="siteZoomOut" aria-label="Verkleinern">−</button><button id="siteHome" aria-label="Ganzes Grundstück">⤢</button></div>
+          <div class="zoom"><button id="siteZoomIn" aria-label="Vergrößern">+</button><button id="siteZoomOut" aria-label="Verkleinern">−</button><button id="siteHome" aria-label="Ganzes Grundstück">⤢</button><button class="maxbtn-in" data-max="#stageSite" aria-pressed="false">Vollbild</button></div>
         </div>
         <div class="tip" id="siteTip" hidden></div>
       </div>
@@ -394,7 +515,7 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
           <ul class="notes">
             <li class="warn"><span>Westabstand nur <b data-stat="west0"></b>–<b data-stat="west1"></b> m. Mit dem Ansatz der Vogel-Skizze (0,4 H) wären <b data-stat="ew"></b> m nötig.</span></li>
             <li class="warn"><span>Die Wurzelschutzbereiche der Nachbarbäume im Nordosten und Südosten reichen in Zuwegung und Zufahrt.</span></li>
-            <li class="info"><span>Die Zufahrt endet am Poolhaus (3,50 × 6,00 m). Eine Rampe ist nicht gezeichnet; das Maß passt zu einem Autoaufzug.</span></li>
+            <li class="info"><span>Die Zufahrt führt als Rampe (gut 21 m, ca. 14 %) unter dem Poolhaus in die Tiefgarage. Im Konzept ist sie nicht gezeichnet, ich habe sie ergänzt.</span></li>
           </ul>
         </section>
         <section class="group">
@@ -414,7 +535,7 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
             <li class="info"><span><b>Die Proportionen des Renderings stimmen weitgehend.</b> Breite 16,00 m und Gesamthöhe 11,12 m passen. Maßstäblich sitzt das Traufgesims aber bei 6,83 m, weil die erlaubte Wandhöhe von 7,25 m bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach und bekommt Licht über Gauben.</span></li>
             <li class="warn"><span><b>Der Westabstand ist knapp.</b> Zwischen Westfassade und Grenze liegen <span data-stat="west0"></span> m (Nordwestecke) bis <span data-stat="west1"></span> m. Nach dem Ansatz aus Vogels Skizze (0,4 H mit H = <span data-stat="H"></span> m) wären <span data-stat="ew"></span> m nötig. Ob das reicht, hängt von der Dachneigung und dem Ortsrecht ab.</span></li>
             <li class="warn"><span><b>Schutzbäume der Nachbarn.</b> Der große Baum im Nordosten (Krone etwa 16 m) und der Baum im Südosten haben Wurzelschutzbereiche (Krone plus 1,50 m), die in Zuwegung und Zufahrt reichen. Dort ist wurzelschonendes Bauen nötig.</span></li>
-            <li class="info"><span><b>Zufahrt zur Tiefgarage noch offen.</b> Die Zufahrt endet am Poolhaus mit 3,50 × 6,00 m. Eine Rampe ist nicht gezeichnet; das Maß passt zu einem Autoaufzug.</span></li>
+            <li class="info"><span><b>Rampe zur Tiefgarage.</b> Ohne Autoaufzug braucht die Zufahrt eine Rampe: 2,80 m breit, gut 21 m lang, ca. 14 % Gefälle. Sie beginnt kurz hinter der Grenze und läuft unter dem Poolhaus in die Tiefgarage. Der Personenaufzug im Haus verbindet Tiefgarage und alle Geschosse.</span></li>
             <li><span><b>Abweichend von der Vogel-Skizze.</b> Vogel geht von 15,10 × 12,05 m aus und setzt das Haus gut 3,5 m weiter nach Osten. Das Konzept hat 16,00 × 11,65 m: 0,90 m mehr Gartenfassade und 4,4 m² mehr Grundfläche.</span></li>
           </ul>
         </section>
@@ -436,13 +557,13 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
           <div class="cols">
             <div><h3>Aus dem Konzeptplan, M 1:100</h3><ul>
               <li>Grundstück mit sieben Grenzpunkten</li><li>Haus 16,00 × 11,65 m, Außenwand 36 cm</li><li>Sieben Fensterachsen der Südfassade</li>
-              <li>Terrasse 7,00 × 3,00 m, Freisitz 3,00 × 5,00 m, Podest 5,00 × 1,00 m</li><li>Zuwegung 1,50 m, Zufahrt, Pool 4,00 × 12,00 m, Poolhaus 3,50 × 6,00 m</li><li>Umriss der Tiefgarage</li></ul></div>
+              <li>Terrasse 7,00 × 3,00 m mit Balkon darüber, Freisitz 3,00 × 5,00 m, Podest 5,00 × 1,00 m</li><li>Zuwegung 1,50 m, Zufahrt, Pool 4,00 × 12,00 m, Poolhaus 3,50 × 6,00 m</li><li>Umriss der Tiefgarage</li></ul></div>
             <div><h3>Aus Baurecht-Skizze und Flurkarte</h3><ul>
               <li>Wandhöhe 7,25 m, Firsthöhe 11,12 m, Dachknick bei etwa 10,25 m</li><li>Bäume und Wurzelschutzbereiche</li><li>Nachbarhäuser, Grenzen und Straße</li>
               <li>Linie 5,00 m parallel zur Straße</li><li>Abstandsflächen-Ansatz 0,8 H (Nord/Süd) und 0,4 H (Ost/West)</li></ul></div>
             <div><h3>Angenommen</h3><ul>
               <li>Geschosshöhen: EG 3,35 m, OG 3,10 m, Fußboden EG 0,20 m über Gelände</li><li>Dachneigung unten 50°, oben 15°</li><li>Nord-, Ost- und Westfassade, Gauben</li>
-              <li>Untergeschoss unter dem Haus</li><li>Höhen der Nachbarhäuser und Bäume</li><li>Gestaltung nach dem Rendering</li></ul></div>
+              <li>Untergeschoss unter dem Haus, Grundrisse als Vorschlag</li><li>Nachbarhäuser als EG + Dachgeschoss, Baumhöhen</li><li>Gestaltung und Materialien nach dem Rendering</li></ul></div>
           </div>
         </section>
         <section>
@@ -555,9 +676,8 @@ const HOUSE = (() => {
       name: 'Süd', titel: 'Ansicht Süd · Garten', len: W, pil: pilLang, quelle: 'plan',
       open: [
         ...ax7.map(([a, b]) => op(a, b, Z.ffbEG, 2.85, 'tuer')),
-        ...ax7.map(([a, b], i) => op(a, b, Z.ffbOG, Z.sturzOG, 'franz', i >= 2 && i <= 4 ? {} : { rail: 4.5 })),
+        ...ax7.map(([a, b], i) => i >= 2 && i <= 4 ? op(a, b, Z.ffbOG, Z.sturzOG, 'tuer') : op(a, b, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 })),
       ],
-      rails: [{ u0: 4.95, u1: 11.05, z0: Z.ffbOG, z1: 4.5 }],
       dormers: [
         gaube(2.65, 3.95, [gWin(3.3)]),
         { u0: 4.95, u1: 11.05, top: 9.75, clad: 'putz', front: 0.2, win: [gWin(5.7, 0.8, 9.35), gWin(8.0, 1.8, 9.35), gWin(10.3, 0.8, 9.35)] },
@@ -591,7 +711,7 @@ const HOUSE = (() => {
     W: {
       name: 'West', titel: 'Ansicht West', len: D, pil: pilKurz, quelle: 'annahme',
       open: [
-        ...[2.325, 5.825, 9.325].map(c => op(c - 0.5, c + 0.5, Z.ffbEG, 2.85, 'tuer')),
+        op(1.825, 2.825, 1.1, 2.85, 'fenster'), ...[5.825, 9.325].map(c => op(c - 0.5, c + 0.5, Z.ffbEG, 2.85, 'tuer')),
         ...[2.325, 5.825, 9.325].map(c => op(c - 0.5, c + 0.5, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 })),
       ],
       dormers: [gaube(5.175, 6.475, [gWin(5.825)])],
@@ -609,8 +729,13 @@ const HOUSE = (() => {
   const freisitz = { x0: 16, x1: 19, y0: -10.825, y1: -5.825, z: 0.18, slab: [3.0, 3.45], rail: 4.45, col: 0.35 };
   const terrasse = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, z: 0.18 };
   const podest = { x0: 5.5, x1: 10.5, y0: 0, y1: 1.0, z: 0.18 };
+  // Balkon über der Terrasse, getragen von vier Säulen in den Achsen der Fensterpfeiler
+  const balkon = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, slab: [3.1, 3.5], rail: 4.5, cols: [4.75, 6.6, 9.4, 11.25], colY: -14.35, colR: 0.17 };
 
-  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, dachwinkel, fas, frame, freisitz, terrasse, podest };
+  // Rampe zur Tiefgarage in der Zufahrt: beginnt 1,70 m hinter der Grenze, läuft unter dem Poolhaus bis zur Tiefgarage (ca. 14 %)
+  const rampe = { x0: 19.73, x1: 22.53, y0: -48.8, yPH: -33.65, y1: -27.65, gefaelle: 0.142 };
+
+  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, rampe };
 })();
 
 // Maßstäbliche Ansichten und Schnitt als SVG. Einheit: Meter; Höhe z wird zu SVG-y = -z.
@@ -626,7 +751,8 @@ const Elev = (() => {
   const tx = (x, z, s, cls) => `<text x="${f(x)}" y="${f(-z)}" class="${cls}">${s}</text>`;
 
   const DEFS = `<defs>
-    <pattern id="pSlate" width="0.6" height="0.2" patternUnits="userSpaceOnUse"><rect width="0.6" height="0.2" class="e-roof"/><path d="M0 0.2H0.6M0.3 0V0.1M0 0.1V0.2M0.6 0.1V0.2" class="e-roof-line"/></pattern>
+    <pattern id="pSlate" width="0.8" height="0.4" patternUnits="userSpaceOnUse"><rect width="0.8" height="0.4" class="e-roof"/><path d="M0 0.2H0.8M0 0.4H0.8M0.4 0V0.2M0 0.2V0.4M0.8 0.2V0.4" class="e-roof-line"/></pattern>
+    <linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a4830"/><stop offset="0.35" stop-color="#d9a466"/><stop offset="0.75" stop-color="#c48b51"/><stop offset="1" stop-color="#7a563a"/></linearGradient>
     <pattern id="pZink" width="0.32" height="1" patternUnits="userSpaceOnUse"><rect width="0.32" height="1" class="e-zink"/><path d="M0 0V1" class="e-roof-line"/></pattern>
     <pattern id="pEarth" width="0.32" height="0.32" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V0.32" class="e-hatch"/></pattern>
   </defs>`;
@@ -679,6 +805,21 @@ const Elev = (() => {
     for (const [a, b] of cols) s += r(a, fz.z, b, fz.slab[0], 'e-pil');
     s += r(ua, fz.slab[0], ub, fz.slab[1], 'e-pil');
     return s + rail(ua + 0.06, ub - 0.06, fz.slab[1], fz.rail);
+  }
+  // Toskanische Säule von der Terrasse bis unter die Balkonplatte
+  function column(u, cr) {
+    const z0 = HOUSE.terrasse.z, z1 = HOUSE.balkon.slab[0];
+    return r(u - cr * 1.35, z0, u + cr * 1.35, z0 + 0.12, 'e-pil') + r(u - cr * 1.2, z0 + 0.12, u + cr * 1.2, z0 + 0.2, 'e-pil') +
+      poly([[u - cr, z0 + 0.2], [u + cr, z0 + 0.2], [u + cr * 0.86, z1 - 0.2], [u - cr * 0.86, z1 - 0.2]], 'e-pil') +
+      r(u - cr * 1.15, z1 - 0.2, u + cr * 1.15, z1 - 0.1, 'e-pil') + r(u - cr * 1.3, z1 - 0.1, u + cr * 1.3, z1, 'e-pil');
+  }
+  function balkon(side) {
+    const b = HOUSE.balkon, D = HOUSE.D;
+    const slab = (a, c) => r(a, b.slab[0], c, b.slab[1] - 0.12, 'e-pil') + r(a - 0.06, b.slab[1] - 0.12, c + 0.06, b.slab[1], 'e-pil') + rail(a + 0.05, c - 0.05, b.slab[1], b.rail);
+    if (side === 'S') return b.cols.map(x => column(x, b.colR)).join('') + slab(b.x0, b.x1);
+    if (side === 'E') return column(b.colY + D, b.colR) + slab(b.y0 + D, b.y1 + D);
+    if (side === 'W') return column(-b.colY, b.colR) + slab(-b.y1, -b.y0);
+    return '';
   }
   function flatwork(side) {
     const t = HOUSE.terrasse, p = HOUSE.podest, W = HOUSE.W, D = HOUSE.D;
@@ -739,7 +880,7 @@ const Elev = (() => {
     if (F.canopy) { const c = F.canopy; s += r(c.u0, c.z0, c.u1, c.z1, 'e-frame'); }
     for (const rl of F.rails || []) s += r(rl.u0 - 0.05, rl.z0 - 0.1, rl.u1 + 0.05, rl.z0, 'e-pil') + rail(rl.u0, rl.u1, rl.z0, rl.z1);
     if (side === 'S' || side === 'E') s += freisitz(side);
-    s += flatwork(side);
+    s += flatwork(side) + balkon(side);
     s += ln(x0 + 0.3, 0, x1 - 0.3, 0, 'e-ground');
     if (opt.mass) {
       const eg = F.open.filter(q => q.z0 < 1.5).sort((a, b) => a.u0 - b.u0);
@@ -894,7 +1035,7 @@ const Site = (() => {
     for (const st of SITE.streets) s.push(poly(st, 's-street', 'Öffentliche Straße'));
     for (const [a, b, c, d] of SITE.parcelLines) s.push(line([a, b], [c, d], 's-parcel'));
     for (const b of SITE.secondary) s.push(poly(b.pts, 's-nb2', 'Nebengebäude Nachbar (Flurkarte)'));
-    for (const b of SITE.neighbors) s.push(poly(b.pts, 's-nb', 'Nachbarhaus (Flurkarte)'));
+    for (const b of SITE.neighbors) s.push(poly(b.pts, 's-nb', 'Nachbarhaus (Flurkarte) · Erdgeschoss + Dachgeschoss'));
     for (const l of SITE.labels) if (!l.t.startsWith('14')) s.push(text(l.p, l.t, 's-hnr'));
     s.push(text([7.5, -56.2], 'Ebertstraße', 's-streetname', 4.0));
     s.push('</g>');
@@ -902,8 +1043,8 @@ const Site = (() => {
     s.push('<g data-layer="konzept">');
     s.push(poly(SITE.plot, 's-lawn', `Garten · ${num(STATS.gruen, 0)} m² unversiegelt`));
     s.push(poly(C.zuwegung, 's-pave', `Zuwegung · 1,50 m breit · ${num(area(C.zuwegung), 1)} m²`));
-    s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · endet am Poolhaus`));
-    s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m'));
+    s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · mit Rampe zur Tiefgarage`));
+    s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m · darüber Balkon auf vier Säulen'));
     s.push(poly(C.podest, 's-stone', 'Podest am Eingang · 5,00 × 1,00 m'));
     s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · überdacht, darüber Dachterrasse'));
     s.push(poly(C.pool, 's-coping', 'Pool · 4,00 × 12,00 m'));
@@ -911,6 +1052,8 @@ const Site = (() => {
     s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m'));
     s.push(poly(C.haus, 's-house', 'Wohnhaus · 16,00 × 11,65 m · 186,4 m² · Wandhöhe 7,25 m · First 11,12 m'));
     for (const o of HOUSE.fas.S.open.filter(q => q.z0 < 1)) s.push(poly(rect(o.u0, -HOUSE.D, o.u1, -HOUSE.D + 0.2), 's-win'));
+    const bk = HOUSE.balkon;
+    s.push(poly(rect(bk.x0, bk.y0, bk.x1, bk.y1), 's-balkon', 'Balkon im OG · 7,00 × 3,00 m · auf vier Säulen') + bk.cols.map(x => circ([x, bk.colY], bk.colR, 's-col')).join(''));
     s.push(text([8, -4.6], 'Wohnhaus', 's-houselabel') + text([8, -6.0], '16,00 × 11,65', 's-houselabel s-small') + text([8, -7.2], '186,4 m²', 's-houselabel s-small'));
     s.push(text([8, -13.4], 'Terrasse', 's-lbl s-small') + text([17.5, -8.6], 'Freisitz', 's-lbl s-small', -90) + text([8, 0.35], 'Podest', 's-lbl s-tiny'));
     s.push(poly([[8, 1.1], [7.55, 2.05], [8.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));
@@ -918,7 +1061,9 @@ const Site = (() => {
     s.push(text([23.63, -21], 'Zuwegung 1,50', 's-lbl s-tiny', -90) + text([22.2, -48.6], 'Zufahrt', 's-lbl s-small'));
     s.push('</g>');
     s.push(`<g data-layer="bestand">${SITE.bestand.map(b => poly(b.pts, 's-bestand', b.kind === 'haus' ? 'Bestandshaus Nr. 14 · Abriss' : 'Bestandsgarage · Abriss')).join('')}</g>`);
-    s.push(`<g data-layer="tg">${poly(C.tg, 's-tg', `Tiefgarage (unterirdisch) · ${num(STATS.tg, 1)} m² außerhalb des Hauses`)}${text([17.6, -18.2], 'Tiefgarage (unterirdisch)', 's-tglabel')}</g>`);
+    const rp = HOUSE.rampe;
+    s.push(`<g data-layer="tg">${poly(C.tg, 's-tg', `Tiefgarage (unterirdisch) · ${num(STATS.tg, 1)} m² außerhalb des Hauses`)}${text([17.6, -18.2], 'Tiefgarage (unterirdisch)', 's-tglabel')}` +
+      `${poly(rect(rp.x0, rp.y0, rp.x1, rp.y1), 's-ramp', 'Rampe zur Tiefgarage · ca. 14 % · läuft unter dem Poolhaus durch')}${text([21.13, -40.5], 'Rampe', 's-tglabel', -90)}</g>`);
     // Vogel
     const V = SITE.vogel, vb = (o, side) => {
       const [a, b] = o[side];
@@ -1024,6 +1169,334 @@ function PanZoom(svg, getHome) {
     zoom(k) { const r = svg.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, k); },
   };
 }
+
+// Vorgeschlagene Grundrisse: UG mit Tiefgarage, EG, OG, DG. Eigener Vorschlag auf Basis des Konzepts, keine Architektenplanung.
+// Räume sind lichte Rechtecke im Plan (x Ost, y Nord, Meter). Was zwischen ihnen frei bleibt, wird als Wand gezeichnet.
+const Plans = (() => {
+  const W = HOUSE.W, D = HOUSE.D, C = SITE.concept;
+  const f = v => +v.toFixed(3);
+  const num = (v, d = 1) => v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const tipA = t => (t ? ` data-tip="${t}"` : '');
+  const R = (x0, x1, y0, y1, cls, t) => `<rect x="${f(Math.min(x0, x1))}" y="${f(-Math.max(y0, y1))}" width="${f(Math.abs(x1 - x0))}" height="${f(Math.abs(y1 - y0))}" class="${cls}"${tipA(t)}/>`;
+  const RR = (x0, x1, y0, y1, rx, cls) => `<rect x="${f(x0)}" y="${f(-y1)}" width="${f(x1 - x0)}" height="${f(y1 - y0)}" rx="${rx}" class="${cls}"/>`;
+  const L = (x0, y0, x1, y1, cls = 'g-furn-l') => `<line x1="${f(x0)}" y1="${f(-y0)}" x2="${f(x1)}" y2="${f(-y1)}" class="${cls}"/>`;
+  const T = (x, y, s, cls) => `<text x="${f(x)}" y="${f(-y)}" class="${cls}">${s}</text>`;
+  const Ci = (x, y, r, cls) => `<circle cx="${f(x)}" cy="${f(-y)}" r="${f(r)}" class="${cls}"/>`;
+  const El = (x, y, rx, ry, cls) => `<ellipse cx="${f(x)}" cy="${f(-y)}" rx="${f(rx)}" ry="${f(ry)}" class="${cls}"/>`;
+  const pts = P => P.map(p => `${f(p[0])},${f(-p[1])}`).join(' ');
+  const area = r => (r[1] - r[0]) * (r[3] - r[2]);
+  const STAIR = [9.0, 11.28, -3.9, -0.36], LIFT = [4.72, 6.72, -4.88, -2.88];
+  const CORE = area(STAIR) + area(LIFT);
+
+  // ---------- Möbel und Ausstattung ----------
+  const fu = {
+    box: (x0, x1, y0, y1, label) => R(x0, x1, y0, y1, 'g-furn') + (label ? T((x0 + x1) / 2, (y0 + y1) / 2 - 0.08, label, 'g-ftxt') : ''),
+    shelf: (x0, x1, y0, y1) => R(x0, x1, y0, y1, 'g-furn') + L(x0, y0, x1, y1),
+    bed(x0, x1, y0, y1, head = 'N') {
+      let s = R(x0, x1, y0, y1, 'g-furn');
+      const vert = head === 'N' || head === 'S', span = vert ? x1 - x0 : y1 - y0, n = span > 1.4 ? 2 : 1, pw = (span - 0.2) / n;
+      for (let i = 0; i < n; i++) {
+        const a = (vert ? x0 : y0) + 0.1 + i * pw, b = a + pw - 0.08;
+        if (head === 'N') s += R(a, b, y1 - 0.42, y1 - 0.1, 'g-furn'); else if (head === 'S') s += R(a, b, y0 + 0.1, y0 + 0.42, 'g-furn');
+        else if (head === 'E') s += R(x1 - 0.42, x1 - 0.1, a, b, 'g-furn'); else s += R(x0 + 0.1, x0 + 0.42, a, b, 'g-furn');
+      }
+      if (head === 'N') s += L(x0, y1 - 0.75, x1, y1 - 0.75); else if (head === 'S') s += L(x0, y0 + 0.75, x1, y0 + 0.75);
+      else if (head === 'E') s += L(x1 - 0.75, y0, x1 - 0.75, y1); else s += L(x0 + 0.75, y0, x0 + 0.75, y1);
+      return s;
+    },
+    sofa(x0, x1, y0, y1, back) {
+      const t = 0.24, a = 0.2;
+      let s = R(x0, x1, y0, y1, 'g-furn');
+      if (back === 'N' || back === 'S') s += R(x0, x1, back === 'N' ? y1 - t : y0, back === 'N' ? y1 : y0 + t, 'g-furn') + R(x0, x0 + a, y0, y1, 'g-furn') + R(x1 - a, x1, y0, y1, 'g-furn');
+      else s += R(back === 'E' ? x1 - t : x0, back === 'E' ? x1 : x0 + t, y0, y1, 'g-furn') + R(x0, x1, y0, y0 + a, 'g-furn') + R(x0, x1, y1 - a, y1, 'g-furn');
+      return s;
+    },
+    table(x0, x1, y0, y1, n = 3, ends = true) {
+      let s = R(x0, x1, y0, y1, 'g-furn');
+      const c = 0.42, g = 0.08, horiz = x1 - x0 >= y1 - y0;
+      for (let i = 0; i < n; i++) {
+        if (horiz) { const m = x0 + (i + 0.5) * (x1 - x0) / n; s += R(m - c / 2, m + c / 2, y1 + g, y1 + g + c, 'g-furn') + R(m - c / 2, m + c / 2, y0 - g - c, y0 - g, 'g-furn'); }
+        else { const m = y0 + (i + 0.5) * (y1 - y0) / n; s += R(x1 + g, x1 + g + c, m - c / 2, m + c / 2, 'g-furn') + R(x0 - g - c, x0 - g, m - c / 2, m + c / 2, 'g-furn'); }
+      }
+      if (ends) {
+        if (horiz) { const m = (y0 + y1) / 2; s += R(x0 - g - c, x0 - g, m - c / 2, m + c / 2, 'g-furn') + R(x1 + g, x1 + g + c, m - c / 2, m + c / 2, 'g-furn'); }
+        else { const m = (x0 + x1) / 2; s += R(m - c / 2, m + c / 2, y1 + g, y1 + g + c, 'g-furn') + R(m - c / 2, m + c / 2, y0 - g - c, y0 - g, 'g-furn'); }
+      }
+      return s;
+    },
+    tub: (x0, x1, y0, y1) => R(x0, x1, y0, y1, 'g-furn') + RR(x0 + 0.08, x1 - 0.08, y0 + 0.08, y1 - 0.08, 0.22, 'g-furn'),
+    shower: (x0, x1, y0, y1) => R(x0, x1, y0, y1, 'g-furn') + L(x0, y0, x1, y1) + L(x0, y1, x1, y0),
+    // WC und Waschtisch stehen an der Wand (x, y liegt auf der Wand), dir = Wandseite
+    wc(x, y, dir) {
+      const d = { N: [0, -1], S: [0, 1], E: [-1, 0], W: [1, 0] }[dir], v = dir === 'N' || dir === 'S';
+      return R(x + d[0] * 0 - (v ? 0.2 : 0), x + d[0] * 0.2 + (v ? 0.2 : 0), y - (v ? 0 : 0.2), y + d[1] * 0.2 + (v ? 0 : 0.2), 'g-furn') +
+        El(x + d[0] * 0.5, y + d[1] * 0.5, v ? 0.19 : 0.28, v ? 0.28 : 0.19, 'g-furn');
+    },
+    basin(x, y, w, dir) {
+      const d = { N: [0, -1], S: [0, 1], E: [-1, 0], W: [1, 0] }[dir], v = dir === 'N' || dir === 'S', h = 0.5;
+      const x0 = v ? x - w / 2 : Math.min(x, x + d[0] * h), x1 = v ? x + w / 2 : Math.max(x, x + d[0] * h);
+      const y0 = v ? Math.min(y, y + d[1] * h) : y - w / 2, y1 = v ? Math.max(y, y + d[1] * h) : y + w / 2;
+      let s = R(x0, x1, y0, y1, 'g-furn');
+      const n = w > 1.1 ? 2 : 1;
+      for (let i = 0; i < n; i++) {
+        const t = (i + 0.5) / n;
+        s += v ? El(x0 + t * (x1 - x0), (y0 + y1) / 2, 0.2, 0.14, 'g-furn') : El((x0 + x1) / 2, y0 + t * (y1 - y0), 0.14, 0.2, 'g-furn');
+      }
+      return s;
+    },
+    desk(x0, x1, y0, y1, chair) {
+      const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, o = { N: [0, 1], S: [0, -1], E: [1, 0], W: [-1, 0] }[chair];
+      return R(x0, x1, y0, y1, 'g-furn') + Ci(cx + o[0] * ((x1 - x0) / 2 + 0.35), cy + o[1] * ((y1 - y0) / 2 + 0.35), 0.24, 'g-furn');
+    },
+    car(cx, cy) {
+      return RR(cx - 0.92, cx + 0.92, cy - 2.3, cy + 2.3, 0.35, 'g-car') + L(cx - 0.8, cy + 0.9, cx + 0.8, cy + 0.9, 'g-furn-l') + L(cx - 0.8, cy - 1.5, cx + 0.8, cy - 1.5, 'g-furn-l');
+    },
+    hob: (cx, cy) => [[-0.14, 0.14], [0.14, 0.14], [-0.14, -0.14], [0.14, -0.14]].map(([a, b]) => Ci(cx + a, cy + b, 0.09, 'g-furn')).join(''),
+  };
+
+  // ---------- Grundrisse ----------
+  const FL = {
+    UG: {
+      titel: 'Untergeschoss mit Tiefgarage', ffb: HOUSE.Z.ffbUG,
+      rooms: [
+        { n: 'Fitness', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Sauna', r: [6.72, 9.4, -11.29, -8.0] },
+        { n: 'Dusche / WC', r: [9.52, 11.28, -11.29, -8.0] }, { n: 'Flur', r: [6.72, 11.28, -7.88, -5.12] },
+        { n: 'Schleuse', r: [11.52, 13.4, -11.29, -5.12] }, { n: 'Lager', r: [13.52, 15.64, -11.29, -5.12] },
+        { n: 'Technik', r: [11.52, 15.64, -4.88, -0.36] }, { n: 'Waschen', r: [0.36, 4.48, -4.88, -0.36] },
+        { n: 'Vorraum', r: [4.72, 11.28, -4.88, -0.36], core: true, at: [7.85, -1.4] },
+      ],
+      open: [[7.0, 9.0, -5.12, -4.88]],
+      doors: [
+        { x: 4.6, y: -2.25, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 11.4, y: -4.78, w: 0.85, o: 'v', s: 1, h: 0 },
+        { x: 6.6, y: -7.6, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 7.3, y: -7.94, w: 0.7, o: 'h', s: -1, h: 0 },
+        { x: 9.9, y: -7.94, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -7.6, w: 0.9, o: 'v', s: 1, h: 0 },
+        { x: 13.46, y: -8.6, w: 0.8, o: 'v', s: 1, h: 0 }, { x: 12.1, y: -11.47, w: 0.9, o: 'h', s: -1, h: 0, t: 0.5 },
+      ],
+      furn: () => [
+        fu.box(0.9, 1.7, -10.9, -9.0, 'Laufband'), fu.box(2.3, 3.1, -10.9, -9.3, 'Rad'), fu.box(3.9, 6.1, -10.9, -9.8, 'Matte'),
+        fu.box(4.3, 6.0, -7.2, -5.6, 'Kraftstation'),
+        fu.box(6.72, 9.4, -11.29, -10.69), fu.box(6.72, 7.32, -10.69, -8.7), fu.box(8.5, 9.0, -9.0, -8.5, 'Ofen'),
+        fu.shower(9.52, 10.72, -11.29, -10.09), fu.wc(11.28, -9.1, 'E'), fu.basin(10.5, -8.0, 0.6, 'N'),
+        fu.box(9.5, 11.0, -7.55, -7.0, 'Liege'), fu.box(9.5, 11.0, -6.6, -6.05, 'Liege'),
+        fu.shelf(13.52, 14.02, -11.0, -5.4), fu.shelf(15.14, 15.64, -11.0, -5.4),
+        fu.box(11.9, 13.5, -1.5, -0.6, 'Wärmepumpe'), Ci(14.7, -1.25, 0.5, 'g-furn'), T(14.7, -1.33, 'Speicher', 'g-ftxt'), fu.box(11.9, 13.1, -4.6, -3.8, 'Anschluss'),
+        fu.box(0.6, 1.2, -1.0, -0.4, 'WM'), fu.box(1.3, 1.9, -1.0, -0.4, 'TR'), fu.box(2.1, 3.3, -0.96, -0.4, 'Spüle'), fu.shelf(0.36, 0.86, -4.6, -2.2),
+      ],
+    },
+    EG: {
+      titel: 'Erdgeschoss', ffb: HOUSE.Z.ffbEG,
+      rooms: [
+        { n: 'Wohnen', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Essen', r: [6.72, 11.28, -11.29, -5.12], at: [9.0, -10.6] },
+        { n: 'Küche', r: [11.52, 15.64, -11.29, -5.12], at: [13.6, -10.4] },
+        { n: 'Diele', r: [4.72, 11.28, -4.88, -0.36], core: true, at: [8.0, -3.6] },
+        { n: 'Garderobe', r: [0.36, 4.48, -2.95, -0.36], at: [2.5, -1.75] }, { n: 'Gäste-WC', r: [2.74, 4.48, -4.88, -3.07], at: [3.6, -3.75] },
+        { n: 'Abstellraum', r: [0.36, 2.62, -4.88, -3.07], at: [1.5, -3.75] },
+        { n: 'Backkitchen', r: [11.52, 15.64, -4.88, -0.36], at: [13.55, -2.9] },
+      ],
+      open: [[7.0, 9.0, -5.12, -4.88], [6.48, 6.72, -10.4, -5.9], [11.28, 11.52, -10.4, -6.2]],
+      doors: [
+        { x: 4.6, y: -2.25, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 3.2, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 },
+        { x: 0.95, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -4.78, w: 0.85, o: 'v', s: 1, h: 0 },
+        { x: 12.3, y: -5.0, w: 0.9, o: 'h', s: 1, h: 0 },
+        { x: 7.1, y: -0.18, w: 0.9, o: 'h', s: -1, h: 0, t: 0.5 }, { x: 8.0, y: -0.18, w: 0.9, o: 'h', s: -1, h: 1, t: 0.5 },
+      ],
+      furn: () => [
+        fu.box(0.36, 0.86, -8.2, -6.95, 'Kamin'), fu.sofa(2.9, 3.85, -8.9, -6.3, 'E'), fu.box(1.45, 2.35, -8.15, -7.05),
+        fu.box(1.25, 2.05, -9.55, -8.75), fu.box(1.25, 2.05, -6.45, -5.65),
+        fu.table(8.47, 9.53, -9.5, -6.9, 3),
+        fu.box(13.3, 15.64, -5.77, -5.12), fu.box(14.99, 15.64, -7.15, -5.77), fu.hob(14.3, -5.45),
+        fu.box(12.6, 14.6, -8.85, -7.85, 'Insel'),
+        fu.shelf(1.8, 3.1, -2.95, -2.35), fu.box(3.95, 4.48, -1.25, -0.5, 'Bank'),
+        fu.wc(3.65, -4.88, 'S'), fu.basin(2.74, -3.95, 0.45, 'W'), fu.shelf(0.36, 0.81, -4.7, -3.2),
+        fu.box(11.8, 15.64, -1.0, -0.36), fu.box(12.6, 13.4, -0.95, -0.42, 'Spüle'), fu.box(15.0, 15.64, -4.6, -1.0),
+        fu.shelf(11.52, 12.1, -3.85, -1.1), fu.box(13.0, 14.4, -3.2, -2.4, 'Arbeitsfläche'),
+      ],
+    },
+    OG: {
+      titel: 'Obergeschoss', ffb: HOUSE.Z.ffbOG,
+      rooms: [
+        { n: 'Eltern', r: [4.72, 11.28, -11.29, -6.24], at: [8.0, -9.6] }, { n: 'Kind 1', r: [0.36, 4.48, -11.29, -4.88], at: [2.0, -10.0] },
+        { n: 'Bad', r: [0.36, 4.48, -4.76, -0.36], at: [2.6, -2.6] }, { n: 'Flur', r: [4.72, 11.28, -6.0, -0.36], core: true, at: [8.0, -5.25] },
+        { n: 'Ankleide', r: [11.52, 15.64, -7.3, -5.24], at: [13.9, -6.27] }, { n: 'Elternbad', r: [11.52, 15.64, -11.29, -7.42], at: [13.4, -9.4] },
+        { n: 'Kind 2', r: [11.52, 15.64, -5.12, -0.36], at: [13.9, -2.4] },
+      ],
+      doors: [
+        { x: 4.6, y: -2.3, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 4.6, y: -5.95, w: 0.9, o: 'v', s: -1, h: 0 },
+        { x: 5.4, y: -6.12, w: 0.9, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -7.2, w: 0.8, o: 'v', s: 1, h: 0 },
+        { x: 12.85, y: -7.36, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -5.0, w: 0.85, o: 'v', s: 1, h: 0 },
+      ],
+      furn: () => [
+        fu.bed(7.1, 8.9, -8.34, -6.24, 'N'), fu.box(6.5, 6.98, -6.72, -6.24), fu.box(9.02, 9.5, -6.72, -6.24), fu.box(4.72, 5.22, -10.4, -8.6),
+        fu.bed(3.38, 4.38, -8.9, -6.9, 'N'), fu.desk(0.36, 1.06, -8.4, -6.9, 'E'), fu.shelf(0.5, 3.2, -5.48, -4.88),
+        fu.tub(0.5, 2.3, -1.16, -0.36), fu.shower(0.36, 1.56, -4.76, -3.56), fu.basin(4.48, -3.2, 1.4, 'E'), fu.wc(0.36, -2.6, 'W'),
+        fu.shelf(12.4, 15.64, -5.84, -5.24), fu.shelf(12.4, 15.64, -7.3, -6.7),
+        fu.tub(12.6, 14.4, -10.85, -10.05), fu.shower(11.52, 12.72, -8.62, -7.42), fu.basin(14.6, -7.42, 1.4, 'N'), fu.wc(15.64, -10.2, 'E'),
+        fu.bed(11.62, 12.62, -3.4, -1.4, 'N'), fu.desk(14.94, 15.64, -4.6, -3.2, 'W'), fu.shelf(12.7, 15.2, -5.12, -4.52),
+      ],
+    },
+    DG: {
+      titel: 'Dachgeschoss', ffb: HOUSE.Z.ffbDG,
+      rooms: [
+        { n: 'Gast', r: [4.72, 11.28, -11.29, -6.24], at: [8.0, -9.2] }, { n: 'Hobby', r: [0.36, 4.48, -11.29, -4.88], at: [2.4, -6.3] },
+        { n: 'Abstellraum', r: [0.36, 4.48, -4.76, -0.36], wf: 0, at: [2.5, -3.2] }, { n: 'Flur', r: [4.72, 11.28, -6.0, -0.36], core: true, at: [8.0, -5.25] },
+        { n: 'Bibliothek', r: [11.52, 15.64, -11.29, -5.0], at: [13.4, -8.6] }, { n: 'Duschbad', r: [11.52, 15.64, -4.88, -0.36], at: [13.0, -1.7] },
+      ],
+      doors: [
+        { x: 4.6, y: -2.3, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 4.6, y: -5.95, w: 0.9, o: 'v', s: -1, h: 0 },
+        { x: 5.4, y: -6.12, w: 0.9, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -5.95, w: 0.85, o: 'v', s: 1, h: 0 },
+        { x: 11.4, y: -4.8, w: 0.85, o: 'v', s: 1, h: 0 },
+      ],
+      furn: () => [
+        fu.bed(7.1, 8.9, -8.24, -6.24, 'N'), fu.box(6.5, 6.98, -6.72, -6.24), fu.box(9.02, 9.5, -6.72, -6.24), fu.sofa(6.2, 9.8, -10.75, -9.85, 'S'),
+        fu.table(1.4, 3.2, -8.6, -7.6, 2), fu.sofa(1.5, 3.5, -10.6, -9.75, 'S'),
+        fu.shelf(1.2, 3.9, -1.65, -1.15),
+        fu.shelf(12.0, 15.1, -10.6, -10.1), fu.sofa(12.6, 14.6, -7.0, -6.1, 'N'), fu.box(13.1, 14.1, -8.3, -7.5),
+        fu.shower(12.0, 13.2, -3.3, -2.1), fu.basin(13.6, -4.88, 0.6, 'S'), fu.wc(14.6, -4.88, 'S'),
+      ],
+    },
+  };
+
+  // Dachgeschoss: lichte Höhe hängt vom Abstand s zur Außenwand ab (Mansarde 50°, Dachaufbau 30 cm)
+  const h0 = HOUSE.Z.wand - 0.3 / Math.cos(Math.atan(HOUSE.tan1)) - HOUSE.Z.ffbDG;
+  const sAt = h => (h - h0) / HOUSE.tan1;
+  const inset = s => [s, W - s, -D + s, -s];
+  const clip = (r, z) => Math.max(0, Math.min(r[1], z[1]) - Math.max(r[0], z[0])) * Math.max(0, Math.min(r[3], z[3]) - Math.max(r[2], z[2]));
+  function roomArea(fl, rm) {
+    let a = area(rm.r);
+    if (rm.core) a -= CORE;
+    if (fl !== 'DG') return { a, wf: fl === 'UG' ? 0 : (rm.wf ?? 1) * a };
+    // Wohnfläche nach WoFlV: unter 1 m lichter Höhe 0 %, 1–2 m 50 %, ab 2 m 100 % (ohne Gauben gerechnet, also eher zu niedrig)
+    const full = clip(rm.r, inset(sAt(2))), half = clip(rm.r, inset(sAt(1))) - full;
+    const coreFull = rm.core ? CORE : 0;
+    return { a, wf: (rm.wf ?? 1) * (full - coreFull + 0.5 * half) };
+  }
+
+  // ---------- Zeichnen ----------
+  function planSeg(side, u0, u1, t0, t1) {
+    if (side === 'S') return [u0, u1, -D + t0, -D + t1];
+    if (side === 'N') return [W - u1, W - u0, -t1, -t0];
+    if (side === 'E') return [W - t1, W - t0, u0 - D, u1 - D];
+    return [t0, t1, -u1, -u0];
+  }
+  function arc(H, A, B, r) {
+    const a = [A[0] - H[0], -(A[1] - H[1])], b = [B[0] - H[0], -(B[1] - H[1])];
+    const sw = a[0] * b[1] - a[1] * b[0] > 0 ? 1 : 0;
+    return `<path d="M${f(A[0])} ${f(-A[1])} A${f(r)} ${f(r)} 0 0 ${sw} ${f(B[0])} ${f(-B[1])}" class="g-arc"/>`;
+  }
+  function door({ x, y, w, o, s, h, t = 0.3 }) {
+    if (o === 'v') {
+      const H = [x, h ? y + w : y], B = [x, h ? y : y + w], A = [x + s * w, H[1]];
+      return R(x - t / 2, x + t / 2, y, y + w, 'g-gap') + L(H[0], H[1], A[0], A[1], 'g-leaf') + arc(H, A, B, w);
+    }
+    const H = [h ? x + w : x, y], B = [h ? x : x + w, y], A = [H[0], y + s * w];
+    return R(x, x + w, y - t / 2, y + t / 2, 'g-gap') + L(H[0], H[1], A[0], A[1], 'g-leaf') + arc(H, A, B, w);
+  }
+  function outerOpenings(fl) {
+    let s = '';
+    if (fl === 'EG' || fl === 'OG') {
+      const [za, zb] = fl === 'EG' ? [0, 3] : [3, 6.5];
+      for (const side of ['S', 'N', 'E', 'W']) for (const o of HOUSE.fas[side].open) {
+        if (o.z0 < za || o.z0 >= zb || o.kind === 'eingang') continue;
+        s += R(...planSeg(side, o.u0, o.u1, -0.01, 0.37), 'g-gap') + R(...planSeg(side, o.u0, o.u1, 0.13, 0.19), 'g-glass');
+        if (o.kind === 'fenster') s += R(...planSeg(side, o.u0, o.u1, 0, 0.05), 'g-sill');
+      }
+    }
+    if (fl === 'DG') for (const side of ['S', 'N', 'E', 'W']) for (const d of HOUSE.fas[side].dormers || []) {
+      const back = (d.top - HOUSE.Z.wand) / HOUSE.tan1;
+      s += R(...planSeg(side, d.u0, d.u1, d.front, back), 'g-dormer', 'Gaube');
+      for (const w of d.win) s += R(...planSeg(side, w.u0, w.u1, d.front, d.front + 0.12), 'g-glass');
+    }
+    return s;
+  }
+  function stair(fl) {
+    const [x0, x1, y0, y1] = STAIR, eye = 0.12, fw = (x1 - x0 - eye) / 2, land = 1.2, run = y1 - land - y0, n = 9;
+    let s = R(x0, x1, y0, y1, 'g-stair');
+    for (let i = 1; i < n; i++) { const y = y0 + run * i / n; s += L(x0, y, x0 + fw, y, 'g-tread') + L(x1 - fw, y, x1, y, 'g-tread'); }
+    s += L(x0, y1 - land, x1, y1 - land, 'g-tread') + R(x0 + fw, x0 + fw + eye, y0, y1 - land, 'g-eye');
+    const xa = x0 + fw / 2, xb = x1 - fw / 2, ym = y1 - land / 2;
+    if (fl !== 'DG') s += `<polyline points="${pts([[xa, y0 + 0.25], [xa, ym], [xb, ym], [xb, y0 + 0.45]])}" class="g-walk"/>` +
+      `<polygon points="${pts([[xb - 0.14, y0 + 0.5], [xb + 0.14, y0 + 0.5], [xb, y0 + 0.22]])}" class="g-walkhead"/>`;
+    const lbl = { UG: '↑ EG', EG: '↑ OG  ↓ UG', OG: '↑ DG  ↓ EG', DG: '↓ OG' }[fl];
+    return s + T((x0 + x1) / 2, y0 + 0.75, lbl, 'g-stairtxt') + (fl === 'DG' ? L(x0 + 0.05, y0 + 0.1, x1 - 0.05, y0 + 0.1, 'g-railing') : '');
+  }
+  function lift() {
+    const [x0, x1, y0, y1] = LIFT, t = 0.2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    return R(x0, x1, y0, y1, 'g-wall') + R(x0 + t, x1 - t, y0 + t, y1 - t, 'g-shaft', 'Personenaufzug · Kabine 1,10 × 1,40 m · UG bis DG') +
+      L(x0 + t, y0 + t, x1 - t, y1 - t, 'g-thin') + L(x0 + t, y1 - t, x1 - t, y0 + t, 'g-thin') +
+      R(cx - 0.55, cx + 0.55, cy - 0.7, cy + 0.7, 'g-cabin') + R(cx - 0.45, cx + 0.45, y1 - t - 0.02, y1 + 0.02, 'g-gap') + T(cx, cy - 0.08, 'Aufzug', 'g-ftxt g-lifttxt');
+  }
+  function tiefgarage() {
+    const tg = C.tg, ph = C.poolhaus, rp = HOUSE.rampe, len = -(rp.y0 - rp.y1);
+    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(162.3)} m² · vier Stellplätze"/>`;
+    s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · 2,80 m breit · ${num(len)} m lang · ca. ${Math.round(rp.gefaelle * 100)} % Gefälle`);
+    for (let y = rp.y0 + 0.5; y < rp.y1 - 0.2; y += 1.0) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
+    s += `<polygon points="${pts(tg)}" class="g-tgwall"/>` + R(rp.x0 - 0.2, rp.x0, rp.y0, rp.y1, 'g-wall') + R(rp.x1, rp.x1 + 0.2, rp.y0, rp.y1, 'g-wall');
+    s += `<polygon points="${pts(ph)}" class="g-above" data-tip="Poolhaus darüber · 3,50 × 6,00 m · die Rampe läuft darunter durch"/>`;
+    s += `<polygon points="${pts([[21.13 - 0.35, -38.8], [21.13 + 0.35, -38.8], [21.13, -37.9]])}" class="g-walkhead"/>`;
+    s += `<text x="21.13" y="43" class="g-ftxt" transform="rotate(-90 21.13 43)">Rampe ca. ${Math.round(rp.gefaelle * 100)} %</text>` + T(21.13, -30.7, 'Poolhaus darüber', 'g-ftxt');
+    for (let i = 0; i <= 4; i++) s += L(12.0 + 2.5 * i, -17.6, 12.0 + 2.5 * i, -12.6, 'g-park');
+    s += L(12.0, -17.6, 22.0, -17.6, 'g-park');
+    for (let i = 0; i < 4; i++) s += fu.car(13.25 + 2.5 * i, -15.1) + T(13.25 + 2.5 * i, -17.25, `P${i + 1}`, 'g-ftxt');
+    s += fu.box(22.25, 23.3, -17.4, -12.8, 'Räder') + T(17.6, -21.2, 'Fahrgasse 6,50 m', 'g-ftxt');
+    s += T(17.6, -22.6, 'Tiefgarage', 'g-roomtxt') + T(17.6, -23.3, '162,3 m² · 4 Stellplätze', 'g-areatxt');
+    return s;
+  }
+  function context(fl) {
+    const t = HOUSE.terrasse, b = HOUSE.balkon, fz = HOUSE.freisitz, p = HOUSE.podest;
+    if (fl === 'EG') return R(t.x0, t.x1, t.y0, t.y1, 'g-outside', 'Terrasse · 7,00 × 3,00 m') + b.cols.map(x => Ci(x, b.colY, b.colR, 'g-col')).join('') +
+      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', 'Freisitz · 3,00 × 5,00 m') + Ci(fz.x1 - 0.175, fz.y0 + 0.175, 0.17, 'g-col') + Ci(fz.x1 - 0.175, fz.y1 - 0.175, 0.17, 'g-col') +
+      R(p.x0, p.x1, p.y0, p.y1, 'g-outside', 'Podest am Eingang') + T(8, -13.25, 'Terrasse', 'g-ftxt') + T(17.5, -8.4, 'Freisitz', 'g-ftxt') + T(8, 0.45, 'Eingang', 'g-ftxt');
+    if (fl === 'OG') return R(b.x0, b.x1, b.y0, b.y1, 'g-outside', 'Balkon · 7,00 × 3,00 m') + L(b.x0 + 0.06, b.y0 + 0.06, b.x1 - 0.06, b.y0 + 0.06, 'g-railing') +
+      L(b.x0 + 0.06, b.y0 + 0.06, b.x0 + 0.06, b.y1, 'g-railing') + L(b.x1 - 0.06, b.y0 + 0.06, b.x1 - 0.06, b.y1, 'g-railing') + T(8, -13.25, 'Balkon', 'g-ftxt') +
+      fu.table(7.4, 8.6, -13.6, -12.9, 1, false) +
+      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', 'Dachterrasse auf dem Freisitz · 3,00 × 5,00 m') + T(17.5, -8.4, 'Dachterrasse', 'g-ftxt');
+    return '';
+  }
+  function heightLines() {
+    let s = '';
+    for (const [h, lbl] of [[1, '1,00 m'], [2, '2,00 m']]) {
+      const [x0, x1, y0, y1] = inset(sAt(h));
+      s += R(x0, x1, y0, y1, 'g-hline') + T(x0 + 0.15, y0 + 0.08, `lichte Höhe ${lbl}`, 'g-htxt');
+    }
+    return s;
+  }
+  function render(fl, opt) {
+    const F = FL[fl];
+    let s = fl === 'UG' ? tiefgarage() : '';
+    s += context(fl);
+    s += R(0, W, -D, 0, 'g-wall');
+    for (const rm of F.rooms) s += R(...rm.r, 'g-room', `${rm.n} · ${num(rm.r[1] - rm.r[0], 2)} × ${num(rm.r[3] - rm.r[2], 2)} m`);
+    for (const o of F.open || []) s += R(...o, 'g-room');
+    s += outerOpenings(fl);
+    for (const d of F.doors) s += door(d);
+    if (fl === 'DG') s += heightLines();
+    if (opt.moebel) s += `<g class="g-furniture">${F.furn().join('')}</g>`;
+    s += stair(fl) + lift();
+    if (opt.flaechen) for (const rm of F.rooms) {
+      const { a, wf } = roomArea(fl, rm), at = rm.at || [(rm.r[0] + rm.r[1]) / 2, (rm.r[2] + rm.r[3]) / 2];
+      const sm = rm.r[1] - rm.r[0] < 2.6 ? ' g-sm' : '';
+      const txt = fl === 'DG' && rm.wf !== 0 && Math.abs(wf - a) > 0.2 ? `${num(a)} m² · WoFl. ${num(wf)}` : `${num(a)} m²`;
+      s += T(at[0], at[1] + 0.12, rm.n, `g-roomtxt${sm}`) + T(at[0], at[1] - (sm ? 0.32 : 0.42), txt, `g-areatxt${sm}`);
+    }
+    // Außenmaße und Nordpfeil
+    s += `<g class="g-dims">${L(0, -D - 0.9, W, -D - 0.9, 'g-dim')}${L(-0.9, -D, -0.9, 0, 'g-dim')}${T(W / 2, -D - 0.75, '16,00', 'g-dimtxt')}` +
+      `<text x="-0.75" y="${f(D / 2)}" class="g-dimtxt" transform="rotate(-90 -0.75 ${f(D / 2)})">11,65</text></g>`;
+    const na = (rot => { const a = rot * Math.PI / 180, c = [-1.6, 1.9], Rt = p => [c[0] + p[0] * Math.cos(a) - p[1] * Math.sin(a), c[1] + p[0] * Math.sin(a) + p[1] * Math.cos(a)]; return `<polygon points="${pts([[0, 0.9], [0.32, -0.55], [-0.32, -0.55]].map(Rt))}" class="g-north"/>` + T(...Rt([0, 1.35]), 'N', 'g-ntxt'); })(SITE.north.grid);
+    s += na;
+    const vb = fl === 'UG' ? [-2.6, -1.4, 28.6, 50.8] : [-2.6, -1.6, 22.2, 17.2];
+    return { svg: s, vb };
+  }
+  function table(fl) {
+    const rows = FL[fl].rooms.map(rm => ({ n: rm.n, ...roomArea(fl, rm) }));
+    return { rows, sum: rows.reduce((t, r) => t + r.a, 0), wf: rows.reduce((t, r) => t + r.wf, 0) };
+  }
+  function wohnflaeche() {
+    const part = ['EG', 'OG', 'DG'].map(fl => table(fl).wf);
+    const aussen = 0.25 * (area([HOUSE.balkon.x0, HOUSE.balkon.x1, HOUSE.balkon.y0, HOUSE.balkon.y1]) + 15.0);
+    return { eg: part[0], og: part[1], dg: part[2], aussen, sum: part[0] + part[1] + part[2] + aussen };
+  }
+  return { render, table, wohnflaeche, FL, num };
+})();
 </script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 <script type="module">import * as THREE from 'three';
@@ -1036,7 +1509,7 @@ const View3D = (() => {
   const Zh = HOUSE.Z;
   let renderer, scene, camP, camO, cam, controls, sun, moon, hemi, sky, skyScene, pmrem, envRT;
   let canvas, stage, raf = 0, last = 0, tween = null, envDue = 0, ready = false, active = false;
-  const st = { y: 2026, m: 5, d: 21, h: 17, play: false, ortho: false, cut: false, cutX: 8, rotate: false };
+  const st = { y: 2026, m: 8, d: 5, h: 16.75, play: false, ortho: false, cut: false, cutX: 8, rotate: false };
   const L = {}, M = {}, houseMats = new Set(), batches = new Map();
   const cutPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 8);
   const ui = {};
@@ -1058,57 +1531,73 @@ const View3D = (() => {
 
   function makeMaterials() {
     const std = (color, r = 0.9, m = 0, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: r, metalness: m, ...extra });
+    // Putz in warmem Elfenbein wie im Rendering, im EG mit Quaderfugen
     const rust = canvasTex(64, 1024, (g, w, h) => {
-      g.fillStyle = '#ece5d5'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#eadbbd'; g.fillRect(0, 0, w, h);
       const k = h / 6.6;
       for (let z = 0.5; z < 3.2; z += 0.3) {
         const y = h - z * k;
-        g.fillStyle = '#cfc5b2'; g.fillRect(0, y - 2, w, 3);
-        g.fillStyle = '#f6f1e6'; g.fillRect(0, y + 1, w, 1);
+        g.fillStyle = '#c9b48e'; g.fillRect(0, y - 2, w, 3);
+        g.fillStyle = '#f7eedc'; g.fillRect(0, y + 1, w, 1);
       }
     }, [1, 1 / 6.6]);
-    const slate = canvasTex(256, 256, (g, w, h) => {
-      g.fillStyle = '#353a40'; g.fillRect(0, 0, w, h);
-      const rows = 5, rh = h / rows;
+    // Dachdeckung: anthrazitfarbene Rechteckschindeln
+    const shingles = canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = '#141618'; g.fillRect(0, 0, w, h);
+      const rows = 5, rh = h / rows, cw = w / 2.5;
       for (let r = 0; r < rows; r++) {
         const y = h - (r + 1) * rh, off = (r % 2) * 0.5;
         for (let c = -1; c < 4; c++) {
-          const x = (c + off) * (w / 3.3);
-          const v = 46 + Math.floor(rnd() * 14);
-          g.fillStyle = `rgb(${v},${v + 4},${v + 9})`; g.fillRect(x + 1, y + 1, w / 3.3 - 2, rh - 2);
+          const x = (c + off) * cw, v = 36 + Math.floor(rnd() * 12);
+          g.fillStyle = `rgb(${v},${v + 3},${v + 7})`; g.fillRect(x + 1.5, y + 1.5, cw - 3, rh - 3);
+          g.fillStyle = 'rgba(255,255,255,0.06)'; g.fillRect(x + 1.5, y + 1.5, cw - 3, 3);
         }
-        g.fillStyle = '#23272b'; g.fillRect(0, y, w, 2);
       }
     });
-    const lawn = canvasTex(256, 256, (g, w, h) => {
-      g.fillStyle = '#6d8c4b'; g.fillRect(0, 0, w, h);
-      for (let i = 0; i < 5000; i++) {
-        const v = rnd();
-        g.fillStyle = v < 0.5 ? 'rgba(92,122,58,0.55)' : 'rgba(132,160,92,0.5)';
-        g.fillRect(rnd() * w, rnd() * h, 2, 2);
+    // Blick ins warm beleuchtete Innere mit hellen Vorhängen
+    const interior = canvasTex(128, 256, (g, w, h) => {
+      const grd = g.createLinearGradient(0, 0, 0, h);
+      grd.addColorStop(0, '#6a4830'); grd.addColorStop(0.35, '#dba768'); grd.addColorStop(0.75, '#c48b51'); grd.addColorStop(1, '#79553a');
+      g.fillStyle = grd; g.fillRect(0, 0, w, h);
+      const glow = g.createRadialGradient(w / 2, h * 0.27, 2, w / 2, h * 0.27, w * 0.6);
+      glow.addColorStop(0, 'rgba(255,238,195,0.95)'); glow.addColorStop(1, 'rgba(255,238,195,0)');
+      g.fillStyle = glow; g.fillRect(0, 0, w, h);
+      for (const [a, b] of [[0, w * 0.21], [w * 0.79, w]]) {
+        g.fillStyle = '#f3eadb'; g.fillRect(a, 0, b - a, h);
+        g.fillStyle = 'rgba(150,128,98,0.35)';
+        for (let x = a + 4; x < b; x += 7) g.fillRect(x, 0, 2, h);
       }
-    }, [0.25, 0.25]);
+    });
+    interior.wrapS = interior.wrapT = THREE.ClampToEdgeWrapping; interior.repeat.set(1, 1);
+    const lawn = canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = '#5a8a35'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 9000; i++) {
+        const v = rnd();
+        g.fillStyle = v < 0.45 ? 'rgba(66,108,38,0.6)' : v < 0.9 ? 'rgba(122,166,72,0.55)' : 'rgba(168,196,104,0.6)';
+        g.fillRect(rnd() * w, rnd() * h, 1.5, 2.5);
+      }
+    }, [0.3, 0.3]);
     const pave = canvasTex(256, 256, (g, w, h) => {
-      g.fillStyle = '#c3beb3'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#d2ccbf'; g.fillRect(0, 0, w, h);
       const sx = w / 2, sy = h / 4;
-      g.strokeStyle = '#a49f94'; g.lineWidth = 2;
+      g.strokeStyle = '#b2ab9e'; g.lineWidth = 2;
       for (let r = 0; r < 4; r++) for (let c = -1; c < 3; c++) g.strokeRect(c * sx + (r % 2) * sx / 2, r * sy, sx, sy);
     }, [1 / 1.2, 1 / 1.2]);
+    const glass = () => std(0x9a9590, 0.12, 0.25, { map: interior, emissiveMap: interior, emissive: 0xffffff, emissiveIntensity: 0.3 });
     Object.assign(M, {
-      putz: std(0xebe4d4), putzRust: std(0xffffff, 0.92, 0, { map: rust }), putzHell: std(0xf2ede3, 0.85),
-      sockel: std(0xc6bdab, 0.85), roof: std(0xffffff, 0.72, 0.08, { map: slate, side: THREE.DoubleSide }),
-      zink: std(0x4b5259, 0.5, 0.35), frame: std(0x1c2024, 0.45, 0.25), metal: std(0x16191c, 0.4, 0.55),
-      glass: std(0x1a252d, 0.06, 0.85, { emissive: 0xffc47c, emissiveIntensity: 0 }),
-      lamp: std(0x2a2a2a, 0.4, 0.2, { emissive: 0xffd49c, emissiveIntensity: 0 }),
-      slab: std(0xb9b2a4, 0.9),
-      stone: std(0xd7d0c2, 0.8), pave: std(0xffffff, 0.9, 0, { map: pave }), lawn: std(0xffffff, 1, 0, { map: lawn }),
-      ground: std(0x8d9a7e, 1), street: std(0x6b6f74, 0.95), coping: std(0xe6e1d6, 0.7),
+      putz: std(0xeadbbd), putzRust: std(0xffffff, 0.92, 0, { map: rust }), putzHell: std(0xf3e9d6, 0.85),
+      sockel: std(0xdccbab, 0.85), roof: std(0xffffff, 0.5, 0.3, { map: shingles, side: THREE.DoubleSide }),
+      zink: std(0x26292d, 0.45, 0.35), frame: std(0x141618, 0.4, 0.3), metal: std(0x111316, 0.38, 0.6),
+      glass: glass(), lamp: std(0x1c1c1c, 0.4, 0.2, { emissive: 0xffd49c, emissiveIntensity: 0 }),
+      slab: std(0xb9b2a4, 0.9), beton: std(0xb7b3ab, 0.92),
+      stone: std(0xdfd4c0, 0.8), pave: std(0xffffff, 0.9, 0, { map: pave }), lawn: std(0xffffff, 1, 0, { map: lawn }),
+      ground: std(0x7b9262, 1), street: std(0x6b6f74, 0.95), coping: std(0xe9e2d4, 0.7),
       tile: std(0x8fcbe0, 0.35, 0, { side: THREE.BackSide }),
       water: std(0x2f86ad, 0.05, 0.1, { transparent: true, opacity: 0.8 }),
-      site: std(0xebe4d4), siteHell: std(0xf2ede3, 0.85),
-      siteGlass: std(0x1a252d, 0.06, 0.85, { emissive: 0xffc47c, emissiveIntensity: 0 }),
-      nb: std(0xcdc8bf, 0.95), nbRoof: std(0x9e998f, 0.95), nb2: std(0xbfbaaf, 0.95),
-      trunk: std(0x5c4938, 0.95), crowns: [0x5a7c3f, 0x4d7037, 0x678846].map(c => std(c, 0.95)),
+      site: std(0xeadbbd), siteHell: std(0xf3e9d6, 0.85), siteGlass: glass(),
+      nb: std(0xd3cdc2, 0.95), nbRoof: std(0x8b7d72, 0.9, 0, { side: THREE.DoubleSide }), nb2: std(0xbfbaaf, 0.95),
+      trunk: std(0x5c4938, 0.95), crowns: [0x527a37, 0x466c30, 0x5f8540].map(c => std(c, 0.95)),
+      plants: { lavendel: std(0x8c72b8, 0.9), hortensie: std(0xf1ede2, 0.85), buchs: std(0x3d6a2a, 0.95), gruen: std(0x4f7a34, 0.95) },
       tg: new THREE.MeshStandardMaterial({ color: 0xe0892c, transparent: true, opacity: 0.3, depthWrite: false, roughness: 1 }),
       ug: new THREE.MeshStandardMaterial({ color: 0x5c80a0, transparent: true, opacity: 0.25, depthWrite: false, roughness: 1 }),
     });
@@ -1128,6 +1617,19 @@ const View3D = (() => {
     const g = new THREE.BoxGeometry(Math.max(x1 - x0, 0.004), Math.max(y1 - y0, 0.004), Math.max(z1 - z0, 0.004));
     g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
     addGeo(mat, g, mx);
+  }
+  function addCyl(mat, x, yPlan, z0, z1, rTop, rBot, seg = 20) {
+    const g = new THREE.CylinderGeometry(rTop, rBot, z1 - z0, seg);
+    g.translate(x, (z0 + z1) / 2, -yPlan);
+    addGeo(mat, g, null);
+  }
+  // Toskanische Säule vom Boden z0 bis zur Balkonplatte z1
+  function column(x, y, z0, z1, r) {
+    boxPlan(M.putzHell, x - r * 1.35, x + r * 1.35, y - r * 1.35, y + r * 1.35, z0, z0 + 0.12);
+    addCyl(M.putzHell, x, y, z0 + 0.12, z0 + 0.2, r * 1.2, r * 1.25);
+    addCyl(M.putzHell, x, y, z0 + 0.2, z1 - 0.2, r * 0.86, r);
+    addCyl(M.putzHell, x, y, z1 - 0.2, z1 - 0.1, r * 1.15, r * 0.9);
+    boxPlan(M.putzHell, x - r * 1.3, x + r * 1.3, y - r * 1.3, y + r * 1.3, z1 - 0.1, z1);
   }
   // Quader in Plan-Koordinaten (x, yPlan) und Höhe z
   const boxPlan = (mat, x0, x1, y0, y1, z0, z1) => addBox(mat, null, x0, x1, z0, z1, -Math.max(y0, y1), -Math.min(y0, y1));
@@ -1294,6 +1796,15 @@ const View3D = (() => {
     railing(M.metal, mxE, f.y0 + 0.06, f.y1 - 0.06, f.slab[1], f.rail, 0);
     const mxN = new THREE.Matrix4().makeTranslation(0, 0, -f.y1 + 0.06);
     railing(M.metal, mxN, f.x0 + 0.1, f.x1 - 0.06, f.slab[1], f.rail, 0);
+    // Balkon über der Terrasse auf vier Säulen
+    const bk = HOUSE.balkon;
+    boxPlan(M.putzHell, bk.x0, bk.x1, bk.y0, bk.y1, bk.slab[0], bk.slab[1]);
+    boxPlan(M.putzHell, bk.x0 - 0.06, bk.x1 + 0.06, bk.y0 - 0.06, bk.y1, bk.slab[1] - 0.12, bk.slab[1]);
+    for (const x of bk.cols) column(x, bk.colY, HOUSE.terrasse.z, bk.slab[0], bk.colR);
+    railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -bk.y0 - 0.07), bk.x0 + 0.07, bk.x1 - 0.07, bk.slab[1], bk.rail, 0);
+    for (const xr of [bk.x0 + 0.07, bk.x1 - 0.07]) {
+      railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(xr, 0, 0)), bk.y0 + 0.07, bk.y1 - 0.02, bk.slab[1], bk.rail, 0);
+    }
     const t = HOUSE.terrasse, p = HOUSE.podest;
     flushBatches(g);
     boxPlan(M.stone, t.x0, t.x1, t.y0, t.y1, 0, t.z);
@@ -1303,14 +1814,28 @@ const View3D = (() => {
   function buildSite() {
     const g = new THREE.Group(), C = SITE.concept;
     const poolOuter = C.pool;
+    // Rampe zur Tiefgarage in der Zufahrt (ca. 14 %), das letzte Stück läuft unter dem Poolhaus hindurch
+    const R0 = HOUSE.rampe, trench = [[R0.x0, R0.y0], [R0.x1, R0.y0], [R0.x1, R0.yPH], [R0.x0, R0.yPH]];
+    const zPH = -(R0.yPH - R0.y0) * R0.gefaelle;
     const ground = new THREE.Shape(rectPts(-260, -260, 280, 260));
-    ground.holes.push(new THREE.Path(poolOuter.map(q => v2(q[0], q[1]))));
+    for (const h of [poolOuter, trench]) ground.holes.push(new THREE.Path(h.map(q => v2(q[0], q[1]))));
     const gg = new THREE.ShapeGeometry(ground); gg.rotateX(-Math.PI / 2);
     const gm = new THREE.Mesh(gg, M.ground); gm.position.y = -0.03; gm.receiveShadow = true; g.add(gm);
     L.grund = [gm];
     for (const s of SITE.streets) { const m = flat(s, M.street, -0.01); g.add(m); L.grund.push(m); }
-    const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter]); g.add(lawn); L.grund.push(lawn);
-    for (const k of ['zuwegung', 'zufahrt']) { const m = flat(C[k], M.pave, 0.016); g.add(m); L.grund.push(m); }
+    const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter, trench]); g.add(lawn); L.grund.push(lawn);
+    const zufahrtEben = [[19.732, -50.499], [24.731, -51.342], [24.731, -44.471], [R0.x1, -44.471], [R0.x1, R0.y0], [19.732, R0.y0]];
+    for (const P0 of [C.zuwegung, zufahrtEben]) { const m = flat(P0, M.pave, 0.016); g.add(m); L.grund.push(m); }
+    const rl = Math.hypot(R0.yPH - R0.y0, zPH), ramp = new THREE.Mesh(new THREE.BoxGeometry(R0.x1 - R0.x0, 0.2, rl), M.beton);
+    ramp.position.set((R0.x0 + R0.x1) / 2, zPH / 2 - 0.1, -(R0.y0 + R0.yPH) / 2); ramp.rotation.x = -Math.atan2(-zPH, R0.yPH - R0.y0);
+    ramp.receiveShadow = true; g.add(ramp);
+    boxPlan(M.beton, R0.x0 - 0.2, R0.x0, R0.y0, R0.yPH, zPH - 0.3, 0.15);
+    boxPlan(M.beton, R0.x1, R0.x1 + 0.2, R0.y0, R0.yPH, zPH - 0.3, 0.15);
+    boxPlan(M.beton, R0.x0, R0.x1, R0.yPH - 0.3, R0.yPH, -0.35, 0.02);
+    boxPlan(M.frame, R0.x0, R0.x1, R0.yPH - 0.6, R0.yPH - 0.3, zPH - 0.1, -0.35);
+    for (const xr of [R0.x0 - 0.1, R0.x1 + 0.1]) {
+      railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(xr, 0, 0)), R0.y0 + 0.3, R0.yPH - 0.1, 0.15, 1.05, 0);
+    }
     // Pool
     g.add(extrude(poolOuter, M.coping, 0, 0.06, [C.poolWasser]));
     const pw = C.poolWasser, w = pw[1][0] - pw[0][0], d = pw[0][1] - pw[2][1];
@@ -1325,8 +1850,6 @@ const View3D = (() => {
     g.add(roofPH);
     const pg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.45, 5.0), M.siteGlass);
     pg.position.set(px0 - 0.01, 0.25 + 1.225, -(py0 + py1) / 2); g.add(pg);
-    const door = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.55, 0.05), M.frame);
-    door.position.set((px0 + px1) / 2, 1.3, -py0 + 0.02); g.add(door);
     // Grenze
     const pts = [...SITE.plot, SITE.plot[0]].map(q => P(q[0], q[1], 0.05));
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0x24292e, dashSize: 0.9, gapSize: 0.45 }));
@@ -1361,10 +1884,19 @@ const View3D = (() => {
       const disc = new THREE.Mesh(new THREE.CircleGeometry(z.r, 96), redFill);
       disc.rotation.x = -Math.PI / 2; disc.position.copy(P(z.c[0], z.c[1], 0.035)); baeume.add(disc);
     }
+    baeume.add(plantBeds());
     g.add(baeume); L.baeume = baeume;
     // Nachbarschaft
     const nb = new THREE.Group();
-    for (const b of SITE.neighbors) nb.add(extrudeMulti(b.pts, [M.nbRoof, M.nb], b.h));
+    // Nachbarhäuser: Grundriss aus der Flurkarte, Dachform und -farbe nach Daniels Luftbild, Höhen als EG + Dachgeschoss
+    for (const b of SITE.neighbors) {
+      const st = neighborStyle(b.pts), rm = nbRoofMat(st.color);
+      if (st.roof === 'walm') { nb.add(extrudeMulti(b.pts, [M.nb, M.nb], st.wall)); nb.add(roofOver(b.pts, st.wall, rm)); }
+      else {
+        nb.add(extrudeMulti(b.pts, [rm, M.nb], st.wall));
+        if (st.roof === 'staffel') { const top = extrudeMulti(scalePts(b.pts, 0.7), [rm, M.nb], st.top - st.wall); top.position.y = st.wall; nb.add(top); }
+      }
+    }
     for (const b of SITE.secondary) nb.add(extrudeMulti(b.pts, [M.nbRoof, M.nb2], b.h));
     const seg = []; for (const [a, b, c, e] of SITE.parcelLines) seg.push(P(a, b, 0.03), P(c, e, 0.03));
     nb.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), new THREE.LineBasicMaterial({ color: 0x5b6168 })));
@@ -1391,6 +1923,71 @@ const View3D = (() => {
     br.visible = false; g.add(br); L.baurecht = br;
     flushBatches(g);
     return g;
+  }
+  // Beete wie im Rendering: Lavendel, weiße Hortensien und Buchskugeln vor der Fassade
+  function plantBeds() {
+    const grp = new THREE.Group(), sph = new THREE.SphereGeometry(1, 12, 9);
+    const items = { lavendel: [], hortensie: [], buchs: [], gruen: [] };
+    const bed = (x0, x1, y0, y1, kinds, dens) => {
+      const n = Math.round((x1 - x0) * (y1 - y0) * dens);
+      for (let i = 0; i < n; i++) {
+        const k = kinds[Math.floor(rnd() * kinds.length)];
+        const r = k === 'lavendel' ? 0.16 + rnd() * 0.07 : k === 'hortensie' ? 0.3 + rnd() * 0.12 : 0.28 + rnd() * 0.1;
+        items[k].push([x0 + rnd() * (x1 - x0), y0 + rnd() * (y1 - y0), r]);
+      }
+    };
+    bed(0.25, 4.3, -12.55, -11.78, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
+    bed(11.7, 15.75, -12.55, -11.78, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
+    bed(-0.95, -0.15, -11.4, -0.6, ['hortensie', 'gruen', 'lavendel'], 4);
+    bed(19.1, 19.8, -10.8, -5.9, ['hortensie', 'lavendel'], 5);
+    bed(0.3, 5.3, 0.15, 0.85, ['gruen', 'hortensie'], 4);
+    bed(10.7, 15.7, 0.15, 0.85, ['gruen', 'hortensie'], 4);
+    for (const [x, y] of [[4.15, -14.95], [11.85, -14.95], [19.35, -11.15], [5.2, 0.55], [10.8, 0.55], [-0.6, -12.2], [16.6, -12.2]]) items.buchs.push([x, y, 0.42]);
+    for (const [k, list] of Object.entries(items)) {
+      const im = new THREE.InstancedMesh(sph, M.plants[k], list.length), m = new THREE.Matrix4();
+      const sy = k === 'lavendel' ? 1.5 : 0.9, lift = k === 'lavendel' ? 1.2 : 0.8;
+      list.forEach(([x, y, r], i) => { m.makeScale(r, r * sy, r).setPosition(x, r * lift, -y); im.setMatrixAt(i, m); });
+      im.castShadow = true; im.receiveShadow = true; grp.add(im);
+    }
+    return grp;
+  }
+  // Dachform und Farbe der Nachbarhäuser nach dem Luftbild (Google Earth, Foto vom 3.11.2026); Schlüssel = Hausnummer der Flurkarte
+  const NB_STYLE = {
+    '8a': { roof: 'walm', color: 0x9a4c3d, wall: 3.9 }, '8': { roof: 'staffel', color: 0xb8b4ab, wall: 3.4, top: 6.5 },
+    '9': { roof: 'flach', color: 0x8b9375, wall: 6.4 }, '53': { roof: 'walm', color: 0x6c717b, wall: 4.2 },
+    '12a': { roof: 'walm', color: 0x666a72, wall: 4.0 }, '55a': { roof: 'walm', color: 0x7e828a, wall: 4.0 },
+    '55b': { roof: 'walm', color: 0x76717d, wall: 4.0 }, '10': { roof: 'walm', color: 0x72767f, wall: 4.0 },
+  };
+  function outline(pts) {
+    let A = 0, Pm = 0, cx = 0, cy = 0;
+    pts.forEach((p, i) => { const q = pts[(i + 1) % pts.length], c = p[0] * q[1] - q[0] * p[1]; A += c / 2; cx += (p[0] + q[0]) * c; cy += (p[1] + q[1]) * c; Pm += Math.hypot(q[0] - p[0], q[1] - p[1]); });
+    return { A, Pm, cx: cx / (6 * A), cy: cy / (6 * A) };
+  }
+  const scalePts = (pts, k) => { const { cx, cy } = outline(pts); return pts.map(p => [cx + (p[0] - cx) * k, cy + (p[1] - cy) * k]); };
+  function neighborStyle(pts) {
+    const { cx, cy } = outline(pts);
+    let best = null, dBest = 1e9;
+    for (const l of SITE.labels) { const d = Math.hypot(l.p[0] - cx, l.p[1] - cy); if (d < dBest) { dBest = d; best = l.t; } }
+    return NB_STYLE[best] || { roof: 'walm', color: 0x777b83, wall: 3.9 };
+  }
+  const nbRoofMats = new Map();
+  function nbRoofMat(c) {
+    if (!nbRoofMats.has(c)) nbRoofMats.set(c, new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, metalness: 0.05, side: THREE.DoubleSide }));
+    return nbRoofMats.get(c);
+  }
+  // Steildach über einem beliebigen Grundriss: Traufe auf zEave, Dachfläche zur verkleinerten Firstfigur (wirkt wie ein Walmdach)
+  function roofOver(pts, zEave, mat = M.nbRoof) {
+    const { A, Pm, cx, cy } = outline(pts);
+    const rise = Math.min(5.2, 1.6 * Math.abs(A) / Pm), k = 0.22, zt = zEave + rise;
+    const top = pts.map(p => [cx + (p[0] - cx) * k, cy + (p[1] - cy) * k]);
+    const pos = [], E = (p, z) => [p[0], z, -p[1]];
+    for (let i = 0; i < pts.length; i++) {
+      const j = (i + 1) % pts.length;
+      pos.push(...E(pts[i], zEave), ...E(pts[j], zEave), ...E(top[j], zt), ...E(pts[i], zEave), ...E(top[j], zt), ...E(top[i], zt));
+    }
+    for (const [a, b, c] of THREE.ShapeUtils.triangulateShape(top.map(p => v2(p[0], p[1])), [])) pos.push(...E(top[a], zt), ...E(top[b], zt), ...E(top[c], zt));
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, mat); m.castShadow = m.receiveShadow = true; return m;
   }
   function extrudeMulti(pts, mats, h) {
     const g = new THREE.ExtrudeGeometry(shapeFrom(pts), { depth: h, bevelEnabled: false });
@@ -1422,13 +2019,13 @@ const View3D = (() => {
     const day = smooth(p.el, -5, 8);
     sun.position.copy(sun.target.position).addScaledVector(dir, 180);
     sun.intensity = 3.2 * smooth(p.el, -0.5, 10);
-    sun.color.setHSL(0.09, 0.75, 0.62 + 0.3 * smooth(p.el, 2, 35));
+    sun.color.setHSL(0.085, 0.85, 0.6 + 0.28 * smooth(p.el, 4, 45));
     hemi.intensity = 0.12 + 0.36 * day;
     moon.intensity = 0.55 * (1 - day);
     const night = 1 - smooth(p.el, -3, 6);
-    M.glass.emissiveIntensity = M.siteGlass.emissiveIntensity = 0.85 * night;
+    M.glass.emissiveIntensity = M.siteGlass.emissiveIntensity = 0.28 + 0.85 * night;
     M.lamp.emissiveIntensity = 2.4 * night;
-    renderer.toneMappingExposure = 0.52 + 0.25 * (1 - day);
+    renderer.toneMappingExposure = 0.62 + 0.3 * (1 - day);
     envDue = performance.now() + 120;
     const rs = SUN.riseSet(st.y, st.m, st.d, SITE.geo.lat, SITE.geo.lon);
     if (ui.info) ui.info.innerHTML =
@@ -1527,7 +2124,7 @@ const View3D = (() => {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.55;
+    renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 0.62;
     renderer.localClippingEnabled = true;
     scene = new THREE.Scene();
     scene.environmentIntensity = 0.75;
@@ -1565,15 +2162,16 @@ const View3D = (() => {
 })();
 
 window.View3D = View3D;</script>
-<script type="module">// Bedienung: Tabs, 3D-Steuerung, Ansichten, Lageplan-Ebenen, Kennzahlen.
+<script type="module">// Bedienung: Tabs, 3D-Steuerung, Ansichten, Grundrisse, Lageplan-Ebenen, Kennzahlen.
 (() => {
   const noop = () => {};
   const View3D = window.View3D || { ready: false, init() { throw new Error("three.js konnte nicht geladen werden"); }, show: noop, goTo: noop, rotate: noop, setDate: noop, setTime: noop, play: noop, setLayer: noop, setCut: noop, snapshot: () => "" };
   const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
-  const VIEWS = ['modell', 'ansichten', 'lageplan', 'daten'];
+  const VIEWS = ['modell', 'ansichten', 'grundrisse', 'lageplan', 'daten'];
   const ELEV = { sued: 'S', nord: 'N', ost: 'E', west: 'W', schnitt: 'A' };
-  const elevOpt = { mass: true, koten: true, recht: true };
-  let elevView = 'S', elevHome = [0, 0, 10, 10], elevPZ = null, siteReady = false;
+  const PLAN = { ug: 'UG', eg: 'EG', og: 'OG', dg: 'DG' };
+  const elevOpt = { mass: true, koten: true, recht: true }, planOpt = { moebel: true, flaechen: true };
+  let elevView = 'S', elevHome = [0, 0, 10, 10], planFloor = 'EG', planHome = [0, 0, 10, 10], siteReady = false;
   const num = Site.num;
 
   function show(name, push = true) {
@@ -1590,12 +2188,14 @@ window.View3D = View3D;</script>
       if (View3D.ready) View3D.show(true);
     } else if (View3D.ready) View3D.show(false);
     if (name === 'ansichten') renderElev();
+    if (name === 'grundrisse') renderPlan();
     if (name === 'lageplan' && !siteReady) {
       Site.init($('#stageSite'), $('#siteSvg'), $('#siteTip'));
       siteReady = true;
       for (const cb of $$('[data-site-layer]')) Site.setLayer(cb.dataset.siteLayer, cb.checked);
     }
-    if (push) try { history.replaceState(null, '', `#${name === 'ansichten' ? Object.keys(ELEV).find(k => ELEV[k] === elevView) : name}`); } catch (e) { /* eingebettete Ansicht */ }
+    const token = name === 'ansichten' ? Object.keys(ELEV).find(k => ELEV[k] === elevView) : name === 'grundrisse' ? planFloor.toLowerCase() : name;
+    if (push) try { history.replaceState(null, '', `#${token}`); } catch (e) { /* eingebettete Ansicht */ }
   }
   $$('[role="tab"]').forEach((t, i, all) => {
     t.addEventListener('click', () => show(t.dataset.view));
@@ -1606,6 +2206,34 @@ window.View3D = View3D;</script>
     });
   });
   const press = (group, btn) => { for (const b of $$('button', group)) b.setAttribute('aria-pressed', String(b === btn)); };
+
+  // Vollbild für jede Zeichenfläche (wichtig am Handy)
+  for (const b of $$('[data-max]')) b.addEventListener('click', () => {
+    const stage = $(b.dataset.max), on = !stage.classList.contains('max');
+    stage.classList.toggle('max', on); document.body.classList.toggle('noscroll', on);
+    b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Schließen' : 'Vollbild';
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const m = $('.stage.max'); if (m) $(`[data-max="#${m.id}"]`).click();
+  });
+
+  // Hinweisfeld beim Darüberfahren oder Antippen
+  function attachTips(stage, svg, tip) {
+    let downAt = null;
+    const showTip = e => {
+      const el = e.target.closest && e.target.closest('[data-tip]');
+      if (!el) { tip.hidden = true; return; }
+      const r = stage.getBoundingClientRect();
+      tip.textContent = el.dataset.tip; tip.hidden = false;
+      tip.style.left = `${Math.max(8, Math.min(e.clientX - r.left + 14, r.width - tip.offsetWidth - 8))}px`;
+      tip.style.top = `${Math.max(8, e.clientY - r.top - tip.offsetHeight - 12)}px`;
+    };
+    svg.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+    svg.addEventListener('pointermove', e => { if (e.buttons) tip.hidden = true; else showTip(e); });
+    svg.addEventListener('pointerup', e => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) showTip(e); });
+    svg.addEventListener('pointerleave', () => { tip.hidden = true; });
+  }
 
   // ---- 3D ----
   $('#camChips').addEventListener('click', e => {
@@ -1648,8 +2276,7 @@ window.View3D = View3D;</script>
   else snap.hidden = true;
 
   // ---- Ansichten ----
-  const elevSvg = $('#elevSvg');
-  elevPZ = PanZoom(elevSvg, () => elevHome);
+  const elevSvg = $('#elevSvg'), elevPZ = PanZoom(elevSvg, () => elevHome);
   function renderElev() {
     const res = Elev.render(elevView, elevOpt);
     elevSvg.innerHTML = res.svg; elevHome = res.vb; elevPZ.home();
@@ -1668,6 +2295,32 @@ window.View3D = View3D;</script>
   if (BUILD.downloads) $('#elevDl').addEventListener('click', () => svgDl(elevSvg, `ansicht-${elevView}.svg`));
   else $('#elevDl').hidden = true;
 
+  // ---- Grundrisse ----
+  const planSvg = $('#planSvg'), planPZ = PanZoom(planSvg, () => planHome);
+  attachTips($('#stagePlan'), planSvg, $('#planTip'));
+  const kote = v => (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + num(Math.abs(v));
+  function renderPlan() {
+    const res = Plans.render(planFloor, planOpt);
+    planSvg.innerHTML = res.svg; planHome = res.vb; planPZ.home();
+    $('#planTitle').textContent = `${Plans.FL[planFloor].titel} · Fußboden ${kote(Plans.FL[planFloor].ffb)} m`;
+    const t = Plans.table(planFloor), dg = planFloor === 'DG';
+    $('#planRooms').innerHTML = t.rows.map(r => `<tr><th scope="row">${r.n}</th><td>${num(r.a)} m²${dg && Math.abs(r.wf - r.a) > 0.2 ? ` · WoFl. ${num(r.wf)}` : ''}</td></tr>`).join('') +
+      `<tr class="sum"><th scope="row">Summe Nutzfläche</th><td>${num(t.sum)} m²</td></tr>`;
+  }
+  const wf = Plans.wohnflaeche();
+  $('#planWfl').innerHTML = [['Erdgeschoss', wf.eg], ['Obergeschoss', wf.og], ['Dachgeschoss (WoFlV)', wf.dg], ['Balkon und Dachterrasse (¼)', wf.aussen]]
+    .map(([n, a]) => `<tr><th scope="row">${n}</th><td>${num(a)} m²</td></tr>`).join('') + `<tr class="sum"><th scope="row">Wohnfläche gesamt</th><td>${num(wf.sum)} m²</td></tr>`;
+  $('#planChips').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    press($('#planChips'), b); planFloor = b.dataset.plan; show('grundrisse');
+  });
+  for (const cb of $$('[data-plan-opt]')) cb.addEventListener('change', () => { planOpt[cb.dataset.planOpt] = cb.checked; renderPlan(); });
+  $('#planZoomIn').addEventListener('click', () => planPZ.zoom(0.7));
+  $('#planZoomOut').addEventListener('click', () => planPZ.zoom(1.4));
+  $('#planHome').addEventListener('click', () => planPZ.home());
+  if (BUILD.downloads) $('#planDl').addEventListener('click', () => svgDl(planSvg, `grundriss-${planFloor}.svg`));
+  else $('#planDl').hidden = true;
+
   // ---- Lageplan ----
   for (const cb of $$('[data-site-layer]')) cb.addEventListener('change', () => { if (siteReady) Site.setLayer(cb.dataset.siteLayer, cb.checked); });
   $('#siteZoomIn').addEventListener('click', () => Site.zoom(0.7));
@@ -1684,8 +2337,8 @@ window.View3D = View3D;</script>
     `<tr class="sum"><th scope="row">Garten ohne Unterbauung</th><td>${num(S.gruenOhneTG, 1)} m² · ${pct(S.gruenOhneTG)}</td></tr>`;
   for (const el of $$('[data-stat]')) {
     const v = { west0: S.west[0], west1: S.west[1], north0: S.north[0], north1: S.north[1], east: S.east, ew: S.AB.ew, ns: S.AB.ns, H: S.AB.H,
-      grz: 186.4 / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG }[el.dataset.stat];
-    el.textContent = num(v, { grz: 3, versiegelt: 1, tg: 1, plot: 1 }[el.dataset.stat] ?? 2);
+      grz: 186.4 / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG, wohnfl: wf.sum }[el.dataset.stat];
+    el.textContent = num(v, { grz: 3, versiegelt: 1, tg: 1, plot: 1, wohnfl: 0 }[el.dataset.stat] ?? 2);
   }
 
   function svgFile(svg) {
@@ -1697,18 +2350,14 @@ window.View3D = View3D;</script>
   }
   function download(href, name) { const a = document.createElement('a'); a.href = href; a.download = name; document.body.append(a); a.click(); a.remove(); }
 
-  function fromHash() {
+  function fromHash(push) {
     const k = (location.hash || '').slice(1);
-    if (ELEV[k]) { elevView = ELEV[k]; press($('#elevChips'), $(`#elevChips [data-elev="${elevView}"]`)); show('ansichten', false); }
-    else if (VIEWS.includes(k)) show(k, false);
+    if (ELEV[k]) { elevView = ELEV[k]; press($('#elevChips'), $(`#elevChips [data-elev="${elevView}"]`)); show('ansichten', push); }
+    else if (PLAN[k]) { planFloor = PLAN[k]; press($('#planChips'), $(`#planChips [data-plan="${planFloor}"]`)); show('grundrisse', push); }
+    else show(VIEWS.includes(k) ? k : 'modell', push);
   }
-  window.addEventListener('hashchange', fromHash);
-  const h = (location.hash || '').slice(1);
-  if (ELEV[h]) {
-    elevView = ELEV[h];
-    press($('#elevChips'), $(`#elevChips [data-elev="${elevView}"]`));
-    show('ansichten', false);
-  } else show(h || 'modell', false);
+  window.addEventListener('hashchange', () => fromHash(false));
+  fromHash(false);
 })();
 </script>
 </body>

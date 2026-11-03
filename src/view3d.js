@@ -90,7 +90,7 @@ const View3D = (() => {
       tile: std(0x8fcbe0, 0.35, 0, { side: THREE.BackSide }),
       water: std(0x2f86ad, 0.05, 0.1, { transparent: true, opacity: 0.8 }),
       site: std(0xeadbbd), siteHell: std(0xf3e9d6, 0.85), siteGlass: glass(),
-      nb: std(0xd3cdc2, 0.95), nbRoof: std(0x8b7d72, 0.9, 0, { side: THREE.DoubleSide }), nb2: std(0xbfbaaf, 0.95),
+      nb: std(0xd3cdc2, 0.95), nbWall: std(0xe1dbcf, 0.95, 0, { side: THREE.DoubleSide }), nbRoof: std(0x8b7d72, 0.9, 0, { side: THREE.DoubleSide }), nb2: std(0xbfbaaf, 0.95),
       trunk: std(0x5c4938, 0.95), crowns: [0x527a37, 0x466c30, 0x5f8540].map(c => std(c, 0.95)),
       plants: { lavendel: std(0x8c72b8, 0.9), hortensie: std(0xf1ede2, 0.85), buchs: std(0x3d6a2a, 0.95), gruen: std(0x4f7a34, 0.95) },
       tg: new THREE.MeshStandardMaterial({ color: 0xe0892c, transparent: true, opacity: 0.3, depthWrite: false, roughness: 1 }),
@@ -383,16 +383,28 @@ const View3D = (() => {
     g.add(baeume); L.baeume = baeume;
     // Nachbarschaft
     const nb = new THREE.Group();
-    // Nachbarhäuser: Grundriss aus der Flurkarte, Dachform und -farbe nach Daniels Luftbild, Höhen als EG + Dachgeschoss
-    for (const b of SITE.neighbors) {
-      const st = neighborStyle(b.pts), rm = nbRoofMat(st.color);
-      if (st.roof === 'walm') { nb.add(extrudeMulti(b.pts, [M.nb, M.nb], st.wall)); nb.add(roofOver(b.pts, st.wall, rm)); }
-      else {
-        nb.add(extrudeMulti(b.pts, [rm, M.nb], st.wall));
-        if (st.roof === 'staffel') { const top = extrudeMulti(scalePts(b.pts, 0.7), [rm, M.nb], st.top - st.wall); top.position.y = st.wall; nb.add(top); }
+    if (typeof LOD2 !== 'undefined') {
+      // Nachbarhäuser aus dem amtlichen 3D-Gebäudemodell (LoD2) mit echten Dachformen und Höhen; Dachfarbe nach Luftbild
+      const walls = [], roofs = new Map();
+      for (const b of LOD2.b) {
+        const rm = nbRoofMat((NB_STYLE[b.nr] || {}).color || 0x777b83);
+        if (!roofs.has(rm)) roofs.set(rm, []);
+        for (const [k, ring] of b.s) (k === 'R' ? roofs.get(rm) : walls).push(...triangulate3D(ring));
       }
+      nb.add(meshFrom(walls, M.nbWall));
+      for (const [m, pos] of roofs) if (pos.length) nb.add(meshFrom(pos, m));
+    } else {
+      // Ersatz ohne LoD2: Grundriss aus der Flurkarte, Dachform nach Luftbild
+      for (const b of SITE.neighbors) {
+        const st = neighborStyle(b.pts), rm = nbRoofMat(st.color);
+        if (st.roof === 'walm') { nb.add(extrudeMulti(b.pts, [M.nb, M.nb], st.wall)); nb.add(roofOver(b.pts, st.wall, rm)); }
+        else {
+          nb.add(extrudeMulti(b.pts, [rm, M.nb], st.wall));
+          if (st.roof === 'staffel') { const top = extrudeMulti(scalePts(b.pts, 0.7), [rm, M.nb], st.top - st.wall); top.position.y = st.wall; nb.add(top); }
+        }
+      }
+      for (const b of SITE.secondary) nb.add(extrudeMulti(b.pts, [M.nbRoof, M.nb2], b.h));
     }
-    for (const b of SITE.secondary) nb.add(extrudeMulti(b.pts, [M.nbRoof, M.nb2], b.h));
     const seg = []; for (const [a, b, c, e] of SITE.parcelLines) seg.push(P(a, b, 0.03), P(c, e, 0.03));
     nb.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), new THREE.LineBasicMaterial({ color: 0x5b6168 })));
     g.add(nb); L.nachbarn = nb;
@@ -464,6 +476,23 @@ const View3D = (() => {
     let best = null, dBest = 1e9;
     for (const l of SITE.labels) { const d = Math.hypot(l.p[0] - cx, l.p[1] - cy); if (d < dBest) { dBest = d; best = l.t; } }
     return NB_STYLE[best] || { roof: 'walm', color: 0x777b83, wall: 3.9 };
+  }
+  // Ebenes 3D-Polygon (Plan-Koordinaten x, y, z) in Dreiecke zerlegen; Rückgabe als Weltkoordinaten
+  function triangulate3D(ring) {
+    let nx = 0, ny = 0, nz = 0;
+    for (let i = 0; i < ring.length; i++) {
+      const [x1, y1, z1] = ring[i], [x2, y2, z2] = ring[(i + 1) % ring.length];
+      nx += (y1 - y2) * (z1 + z2); ny += (z1 - z2) * (x1 + x2); nz += (x1 - x2) * (y1 + y2);
+    }
+    const ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz);
+    const pr = az >= ax && az >= ay ? p => v2(p[0], p[1]) : ax >= ay ? p => v2(p[1], p[2]) : p => v2(p[0], p[2]);
+    const out = [];
+    for (const [a, b, c] of THREE.ShapeUtils.triangulateShape(ring.map(pr), [])) for (const k of [a, b, c]) { const p = ring[k]; out.push(p[0], p[2], -p[1]); }
+    return out;
+  }
+  function meshFrom(pos, mat) {
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, mat); m.castShadow = m.receiveShadow = true; return m;
   }
   const nbRoofMats = new Map();
   function nbRoofMat(c) {

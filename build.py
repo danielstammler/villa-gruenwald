@@ -7,7 +7,7 @@ read = lambda n: (src / n).read_text(encoding="utf-8")
 
 page = read("page.html")
 css = read("style.css")
-base = "\n".join(read(n) for n in ["data.js", "sun.js", "house.js", "elevation.js", "siteplan.js", "floorplan.js"])
+base = "\n".join(read(n) for n in ["data.js", "lod2.js", "sun.js", "house.js", "elevation.js", "siteplan.js", "floorplan.js"])
 view3d = "\n".join([
     "import * as THREE from 'three';",
     "import { OrbitControls } from 'three/addons/controls/OrbitControls.js';",

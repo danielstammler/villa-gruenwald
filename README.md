@@ -2,7 +2,7 @@
 
 Maßstäbliche Konzeptstudie für den Neubau an der Ebertstraße 14 in Grünwald: 3D-Modell mit Sonnenstand, Ansichten und Schnitt sowie ein vollständiger Lageplan.
 
-**Ansehen:** `docs/index.html` im Browser öffnen (braucht Internet für three.js und die Schriften).
+**Ansehen:** https://danielstammler.github.io/villa-gruenwald/ (oder `docs/index.html` im Browser öffnen; braucht Internet für three.js und die Schriften).
 
 ## Ansichten
 
@@ -19,6 +19,7 @@ Maßstäbliche Konzeptstudie für den Neubau an der Ebertstraße 14 in Grünwald
 - Konzept EG mit TG, Chaline Deutsch, 28.10.2026, M 1:100: Grundstück, Haus 16,00 × 11,65 m, Fensterachsen Süd, Freisitz, Terrasse, Podest, Zuwegung, Zufahrt, Pool, Poolhaus, Tiefgarage.
 - Skizze Baurecht, Vogel+Partner Architekten, 30.10.2026, M 1:500: Wandhöhe 7,25 m, Firsthöhe 11,12 m, Bäume, Abstandsflächen-Ansatz.
 - Flurkarte BayernAtlas, © Bayerische Vermessungsverwaltung 2026: Nachbarhäuser, Grenzen, Straße.
+- 3D-Gebäudemodell LoD2, Kachel 688_5324, © Bayerische Vermessungsverwaltung 2026, CC BY 4.0: Dachformen und Höhen der Nachbarhäuser (`src/lod2.js`, auf die Flurkarte eingepasst, mittlere Abweichung 0,55 m).
 - Rendering als Gestaltungsvorlage für Fassade und Dach.
 
 Die Pläne selbst liegen nicht im Repo, nur die daraus gemessenen Koordinaten (`src/data.js`). Geschosshöhen, Dachneigungen sowie Nord-, Ost- und Westfassade sind Annahmen. Überschlägige Rekonstruktion ohne Gewähr; baurechtliche Fragen klärt der Architekt.

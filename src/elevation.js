@@ -27,9 +27,14 @@ const Elev = (() => {
     const w = o.u1 - o.u0, fw = 0.07, g = 0.02, sill = o.kind === 'fenster' ? g : 0;
     let s = r(o.u0, o.z0, o.u1, o.z1, 'e-reveal');
     if (o.kind === 'eingang') {
-      s += r(o.u0 + g, o.z0, o.u1 - g, o.z1 - g, 'e-frame');
-      const lw = (w - 2 * g) / 2;
-      for (let i = 0; i < 2; i++) { const a = o.u0 + g + i * lw; s += r(a + 0.16, o.z0 + 1.0, a + lw - 0.16, o.z1 - 0.22, 'e-glass'); }
+      // Haustür mit hohen Glasfeldern und Stoßgriffen, verglaste Seitenteile, darüber ein Oberlicht
+      const zt = o.z1 - 0.32, sd = o.side || 0, a0 = o.u0 + g + sd, lw = (w - 2 * g - 2 * sd) / 2;
+      s += r(o.u0 + g, o.z0, o.u1 - g, o.z1 - g, 'e-frame') + r(o.u0 + 0.05, zt + 0.06, o.u1 - 0.05, o.z1 - 0.05, 'e-glass');
+      if (sd) for (const b0 of [o.u0 + g, o.u1 - g - sd]) s += r(b0 + 0.05, o.z0 + 0.55, b0 + sd - 0.05, zt, 'e-glass');
+      for (let i = 0; i < 2; i++) {
+        const a = a0 + i * lw, gx = i ? a + 0.08 : a + lw - 0.08;
+        s += r(a + 0.18, o.z0 + 0.7, a + lw - 0.18, zt - 0.18, 'e-glass') + r(gx - 0.015, o.z0 + 0.75, gx + 0.015, o.z0 + 1.65, 'e-handle');
+      }
       return s;
     }
     s += r(o.u0 + g, o.z0 + sill, o.u1 - g, o.z1 - g, 'e-frame');
@@ -43,7 +48,7 @@ const Elev = (() => {
     return s;
   }
   function dormer(d) {
-    const zb = d.loggia ? Z.gesimsO : HOUSE.roofZ(d.front);
+    const zb = d.zwerch ? Z.gesimsU : HOUSE.roofZ(d.front);
     let s = r(d.u0, zb, d.u1, d.top, d.clad === 'putz' ? 'e-wall' : 'e-zinkf');
     if (d.clad === 'putz') {
       s += r(d.u0, zb, d.u0 + 0.22, d.top - 0.34, 'e-pil') + r(d.u1 - 0.22, zb, d.u1, d.top - 0.34, 'e-pil');
@@ -66,20 +71,51 @@ const Elev = (() => {
     s += r(ua, fz.slab[0], ub, fz.slab[1], 'e-pil');
     return s + rail(ua + 0.06, ub - 0.06, fz.slab[1], fz.rail);
   }
-  // Toskanische Säule von der Terrasse bis unter die Balkonplatte
-  function column(u, cr) {
-    const z0 = HOUSE.terrasse.z, z1 = HOUSE.balkon.slab[0];
-    return r(u - cr * 1.35, z0, u + cr * 1.35, z0 + 0.12, 'e-pil') + r(u - cr * 1.2, z0 + 0.12, u + cr * 1.2, z0 + 0.2, 'e-pil') +
-      poly([[u - cr, z0 + 0.2], [u + cr, z0 + 0.2], [u + cr * 0.86, z1 - 0.2], [u - cr * 0.86, z1 - 0.2]], 'e-pil') +
-      r(u - cr * 1.15, z1 - 0.2, u + cr * 1.15, z1 - 0.1, 'e-pil') + r(u - cr * 1.3, z1 - 0.1, u + cr * 1.3, z1, 'e-pil');
+  // Quadratischer Pfeiler mit schlichtem Sockel und Kapitell von der Terrasse bis unter die Balkonplatte
+  function column(u, w) {
+    const z0 = HOUSE.terrasse.z, z1 = HOUSE.balkon.slab[0], h = w / 2;
+    return r(u - h - 0.05, z0, u + h + 0.05, z0 + 0.14, 'e-pil') + r(u - h, z0 + 0.14, u + h, z1 - 0.16, 'e-pil') +
+      r(u - h - 0.04, z1 - 0.16, u + h + 0.04, z1 - 0.06, 'e-pil') + r(u - h - 0.07, z1 - 0.06, u + h + 0.07, z1, 'e-pil');
   }
   function balkon(side) {
-    const b = HOUSE.balkon, D = HOUSE.D;
-    const slab = (a, c) => r(a, b.slab[0], c, b.slab[1] - 0.12, 'e-pil') + r(a - 0.06, b.slab[1] - 0.12, c + 0.06, b.slab[1], 'e-pil') + rail(a + 0.05, c - 0.05, b.slab[1], b.rail);
-    if (side === 'S') return b.cols.map(x => column(x, b.colR)).join('') + slab(b.x0, b.x1);
-    if (side === 'E') return column(b.colY + D, b.colR) + slab(b.y0 + D, b.y1 + D);
-    if (side === 'W') return column(-b.colY, b.colR) + slab(-b.y1, -b.y0);
+    const b = HOUSE.balkon, bd = HOUSE.balkonDG, D = HOUSE.D;
+    const slab = (B, a, c) => r(a, B.slab[0], c, B.slab[1] - 0.12, 'e-pil') + r(a - 0.06, B.slab[1] - 0.12, c + 0.06, B.slab[1], 'e-pil') + rail(a + 0.05, c - 0.05, B.slab[1], B.rail);
+    // Konsolen unter dem DG-Balkon: von vorn als Stütze, von der Seite gestuft
+    const consoleFront = u => r(u - 0.11, bd.slab[0] - 0.62, u + 0.11, bd.slab[0], 'e-pil');
+    const consoleSide = (uw, dir) => r(uw, bd.slab[0] - 0.3, uw + dir * 0.7, bd.slab[0], 'e-pil') + r(uw, bd.slab[0] - 0.62, uw + dir * 0.38, bd.slab[0] - 0.3, 'e-pil');
+    if (side === 'S') return b.cols.map(x => column(x, b.colW)).join('') + slab(b, b.x0, b.x1) + bd.consoles.map(consoleFront).join('') + slab(bd, bd.x0, bd.x1);
+    if (side === 'E') return column(b.colY + D, b.colW) + slab(b, b.y0 + D, b.y1 + D) + consoleSide(0, -1) + slab(bd, bd.y0 + D, bd.y1 + D);
+    if (side === 'W') return column(-b.colY, b.colW) + slab(b, -b.y1, -b.y0) + consoleSide(D, 1) + slab(bd, -bd.y1, -bd.y0);
     return '';
+  }
+  // Eingangsportikus der Nordseite: von vorn Pfeiler, Gebälk und Türrahmung, von Osten und Westen im Profil
+  function portikus(side) {
+    const p = HOUSE.fas.N.portikus, D = HOUSE.D, zp = HOUSE.podest.z, h = p.pw / 2;
+    if (!p) return '';
+    const roof = (a, c) => r(a, p.z0, c, p.z1 - 0.12, 'e-pil') + r(a - 0.08, p.z1 - 0.12, c + 0.08, p.z1, 'e-pil') + r(a - 0.04, p.z1, c + 0.04, p.z1 + 0.03, 'e-cap');
+    const pillar = u => r(u - h - 0.05, zp, u + h + 0.05, zp + 0.14, 'e-pil') + r(u - h, zp + 0.14, u + h, p.z0 - 0.14, 'e-pil') + r(u - h - 0.04, p.z0 - 0.14, u + h + 0.04, p.z0, 'e-pil');
+    if (side === 'N') {
+      const d = HOUSE.fas.N.open.find(q => q.kind === 'eingang');
+      return r(d.u0 - 0.22, Z.ffbEG, d.u0 - 0.04, d.z1 + 0.18, 'e-pil') + r(d.u1 + 0.04, Z.ffbEG, d.u1 + 0.22, d.z1 + 0.18, 'e-pil') + r(d.u0 - 0.3, d.z1 + 0.04, d.u1 + 0.3, d.z1 + 0.22, 'e-pil') +
+        p.pillars.map(pillar).join('') + roof(p.u0, p.u1);
+    }
+    if (side === 'E') return pillar(D + p.py) + roof(D, D + p.depth);
+    if (side === 'W') return pillar(-p.py) + roof(-p.depth, 0);
+    return '';
+  }
+  // Dachfenster in der steilen Dachfläche und Kamine über dem Dach
+  function roofItems(side) {
+    const F = HOUSE.fas[side], sinA = Math.sin(Math.atan(HOUSE.tan1)), W = HOUSE.W, D = HOUSE.D;
+    let s = '';
+    for (const w of F.roofWindows || []) {
+      const z0 = HOUSE.traufe + w.v0 * sinA, z1 = HOUSE.traufe + w.v1 * sinA;
+      s += r(w.u0 - 0.07, z0 - 0.07, w.u1 + 0.07, z1 + 0.07, 'e-frame') + r(w.u0, z0, w.u1, z1, 'e-glass');
+    }
+    for (const k of HOUSE.kamine) {
+      const u = { S: k.x, N: W - k.x, E: k.y + D, W: -k.y }[side], hw = (side === 'S' || side === 'N' ? k.w : k.d) / 2;
+      s += r(u - hw, Z.knick, u + hw, k.top - 0.12, 'e-wall') + r(u - hw - 0.05, k.top - 0.32, u + hw + 0.05, k.top - 0.22, 'e-pil') + r(u - hw - 0.06, k.top - 0.12, u + hw + 0.06, k.top, 'e-cap');
+    }
+    return s;
   }
   function flatwork(side) {
     const t = HOUSE.terrasse, p = HOUSE.podest, W = HOUSE.W, D = HOUSE.D;
@@ -112,28 +148,19 @@ const Elev = (() => {
     let s = r(x0 + 0.3, -0.55, x1 - 0.3, 0, 'e-earth');
     if (side === 'N') s += freisitz('N');
     s += r(0, Z.sockel, L, Z.gesimsU, 'e-wall');
-    for (let z = 0.5; z < Z.gurtU; z += 0.3) s += ln(0, z, L, z, 'e-rust');
     for (const op of F.open) s += opening(op);
     for (const [a, b] of F.pil) s += r(a, Z.sockel, b, Z.gesimsU, 'e-pil');
     s += r(-0.04, 0, L + 0.04, Z.sockel, 'e-sockel');
     s += r(-0.1, Z.gurtU, L + 0.1, Z.gurtO, 'e-pil');
-    s += r(-0.18, Z.gesimsU, L + 0.18, 6.69, 'e-pil') + r(-o, 6.69, L + o, Z.gesimsO, 'e-pil');
+    s += r(-0.18, Z.gesimsU, L + 0.18, 6.69, 'e-pil') + r(-0.35, 6.69, L + 0.35, Z.gesimsO, 'e-pil');
     const lower = [[-o, HOUSE.traufe], [L + o, HOUSE.traufe], [L - r1, Z.knick], [r1, Z.knick]];
     const upper = L > 13 ? [[r1, Z.knick], [L - r1, Z.knick], [L - r1 - r2, Z.first], [r1 + r2, Z.first]] : [[r1, Z.knick], [L - r1, Z.knick], [L / 2, Z.first]];
     s += poly(lower, 'e-roofo') + poly(upper, 'e-roofo e-roofup');
     if (L > 13) s += r(r1 + r2 - 0.05, Z.first - 0.03, L - r1 - r2 + 0.05, Z.first + 0.05, 'e-cap');
+    s += roofItems(side);
     for (const d of F.dormers || []) s += dormer(d);
-    if (F.eaveRail) {
-      const e = F.eaveRail;
-      s += rail(e.u0, e.u1, e.z0, e.z1);
-      for (const [a, b] of F.piers) s += r(a, Z.gesimsO, b, 7.92, 'e-pil') + r(a - 0.05, 7.92, b + 0.05, 8.0, 'e-pil');
-    }
     for (const c of F.lamps || []) s += r(c - 0.07, 2.0, c + 0.07, 2.34, 'e-frame') + r(c - 0.045, 2.05, c + 0.045, 2.29, 'e-lamp');
-    if (F.portal) {
-      const p = F.portal;
-      s += r(p.u0, Z.ffbEG, p.u0 + 0.25, p.z1, 'e-pil') + r(p.u1 - 0.25, Z.ffbEG, p.u1, p.z1, 'e-pil') + r(p.u0, 2.85, p.u1, p.z1, 'e-pil');
-    }
-    if (F.canopy) { const c = F.canopy; s += r(c.u0, c.z0, c.u1, c.z1, 'e-frame'); }
+    s += portikus(side);
     for (const rl of F.rails || []) s += r(rl.u0 - 0.05, rl.z0 - 0.1, rl.u1 + 0.05, rl.z0, 'e-pil') + rail(rl.u0, rl.u1, rl.z0, rl.z1);
     if (side === 'S' || side === 'E') s += freisitz(side);
     s += flatwork(side) + balkon(side);
@@ -166,11 +193,12 @@ const Elev = (() => {
   // Schnitt A–A durch die Hausmitte (x = 8,00), Blick nach Westen: links Süden, rechts Norden.
   function section(opt) {
     const D = HOUSE.D, t = HOUSE.wall, tan1 = HOUSE.tan1;
-    const S1 = HOUSE.fas.S.dormers[1], N1 = HOUSE.fas.N.dormers[1];
+    const S1 = HOUSE.fas.S.dormers.find(d => d.zwerch), N1 = HOUSE.fas.N.dormers.find(d => d.zwerch), b = HOUSE.balkon, bd = HOUSE.balkonDG, pk = HOUSE.fas.N.portikus;
     const sB = (S1.top - Z.wand) / tan1, nB = (N1.top - Z.wand) / tan1;
-    const southPart = S1.loggia ? [[-o, HOUSE.traufe], [0, HOUSE.traufe], [0, S1.loggia], [S1.front, S1.loggia]] : [[-o, HOUSE.traufe], [S1.front, HOUSE.roofZ(S1.front)]];
+    // Im Süden schneidet die Ebene das Zwerchhaus: Fassade läuft bis unter dessen Dach durch
+    const southPart = [[0, Z.gesimsU]];
     const prof = [...southPart, [S1.front, S1.top], [sB, S1.top], [r1, Z.knick], [D / 2, Z.first],
-      [D - r1, Z.knick], [D - nB, N1.top], [D - N1.front, N1.top], [D - N1.front, HOUSE.roofZ(N1.front)], [D + o, HOUSE.traufe]];
+      [D - r1, Z.knick], [D - nB, N1.top], [D, N1.top], [D, Z.gesimsU]];
     const inner = offsetPolyline(prof, 0.3);
     const x0 = -6.4, x1 = D + 6.8;
     let s = r(x0 + 0.3, -4.1, x1 - 0.3, 0, 'e-earth');
@@ -179,13 +207,19 @@ const Elev = (() => {
     for (const [z0, z1] of [[-0.15, Z.ffbEG], [Z.gurtU, Z.ffbOG], [Z.deckeDG, Z.ffbDG]]) s += r(t, z0, D - t, z1, 'e-cut');
     for (const [a, b] of [[0, t], [D - t, D]]) for (const [z0, z1] of [[-3.4, Z.ffbEG], [2.85, Z.ffbOG], [Z.sturzOG, 7.0]]) s += r(a, z0, b, z1, 'e-cut');
     for (const [a, b] of [[0, t], [D - t, D]]) for (const [z0, z1] of [[Z.ffbEG, 2.85], [Z.ffbOG, Z.sturzOG]]) s += r(a, z0, b, z1, 'e-beyond') + ln((a + b) / 2, z0, (a + b) / 2, z1, 'e-glassline');
-    s += poly([[-0.18, Z.gesimsU], [0, Z.gesimsU], [0, Z.gesimsO], [-o, Z.gesimsO], [-o, 6.69], [-0.18, 6.69]], 'e-cut');
-    s += poly([[D + 0.18, Z.gesimsU], [D, Z.gesimsU], [D, Z.gesimsO], [D + o, Z.gesimsO], [D + o, 6.69], [D + 0.18, 6.69]], 'e-cut');
     s += poly([...prof, ...inner.slice().reverse()], 'e-cutroof');
-    const sw = S1.win[1];
-    s += r(S1.front, sw.z0, S1.front + 0.3, sw.z1, 'e-beyond') + ln(S1.front + 0.12, sw.z0, S1.front + 0.12, sw.z1, 'e-glassline');
-    if (S1.loggia) s += rail(0.08, 0.16, Z.gesimsO, 7.72).replace(/class="e-bar"/g, 'class="e-bar"') + tx(0.75, S1.loggia + 0.25, 'Balkon', 'e-dimtxt');
-    s += r(D - N1.front - 0.3, 7.65, D - N1.front, 9.05, 'e-beyond') + ln(D - N1.front - 0.12, 7.65, D - N1.front - 0.12, 9.05, 'e-glassline');
+    // Balkontüren im Zwerchhaus (geschnitten) und Gaubenfenster im Norden (dahinter)
+    const sw = S1.win.find(w => w.u0 < 8 && w.u1 > 8) || S1.win[1];
+    s += r(0, sw.z0, 0.3, sw.z1, 'e-room') + ln(0.15, sw.z0, 0.15, sw.z1, 'e-glassline');
+    const nw = N1.win.find(w => w.u0 < 8 && w.u1 > 8) || N1.win[1];
+    s += r(D - 0.3, nw.z0, D, nw.z1, 'e-room') + ln(D - 0.15, nw.z0, D - 0.15, nw.z1, 'e-glassline') + rail(D + 0.02, D + 0.06, nw.z0 + 0.05, nw.rail);
+    // Portikus vor dem Eingang: Dach geschnitten, Pfeiler dahinter
+    s += r(D, pk.z0, D + pk.depth, pk.z1 - 0.12, 'e-cut') + r(D, pk.z1 - 0.12, D + pk.depth + 0.08, pk.z1, 'e-cut') + r(D + pk.py - pk.pw / 2, HOUSE.podest.z, D + pk.py + pk.pw / 2, pk.z0, 'e-beyond');
+    // OG-Balkon und DG-Balkon: Platten geschnitten, seitliches Geländer, Pfeiler und Konsolen dahinter
+    s += r(b.y0 + D, b.slab[0], 0, b.slab[1], 'e-cut') + rail(b.y0 + D + 0.06, -0.02, b.slab[1], b.rail) + r(b.colY + D - b.colW / 2, HOUSE.terrasse.z, b.colY + D + b.colW / 2, b.slab[0], 'e-beyond');
+    s += r(bd.y0 + D, bd.slab[0], 0, bd.slab[1], 'e-cut') + rail(bd.y0 + D + 0.06, -0.02, bd.slab[1], bd.rail);
+    s += r(-0.7, bd.slab[0] - 0.3, 0, bd.slab[0], 'e-beyond') + r(-0.38, bd.slab[0] - 0.62, 0, bd.slab[0] - 0.3, 'e-beyond');
+    s += tx((bd.y0 + D) / 2, bd.slab[1] + 1.25, 'Balkon', 'e-dimtxt') + tx((b.y0 + D) / 2, b.slab[1] + 1.25, 'Balkon', 'e-dimtxt');
     // 2,30 m lichte Höhe im DG
     const zc = Z.ffbDG + 2.3, xs = [];
     for (let i = 0; i < inner.length - 1; i++) {

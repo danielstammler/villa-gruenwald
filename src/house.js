@@ -1,27 +1,33 @@
 // Parametrisches Hausmodell in Metern.
 // Grundriss, Fensterachsen Süd, Freisitz, Terrasse und Podest: Konzeptplan Chaline Deutsch (M 1:100).
-// Wandhöhe 7,25 m und Firsthöhe 11,12 m: Proportionen des Renderings (Hausbreite 16,00 m als Maßstab). Gliederung der Fassade: Rendering.
+// Wandhöhe 7,25 m und Firsthöhe 11,12 m: Proportionen des Renderings (Hausbreite 16,00 m als Maßstab). Gliederung der Fassade: Rendering
+// und Daniels Referenzbild (weißer Glattputz, schwarze Rahmen, Zwerchhaus mit Balkon, eckige Pfeiler, Kamine).
 // Alles andere (Geschosshöhen, Dachneigungen, Nord-/Ost-/Westfassade) ist eine plausible Annahme.
 const HOUSE = (() => {
   const W = 16.0, D = 11.65, wall = 0.36;
   const Z = {
     ffbUG: -3.1, gelaende: 0, sockel: 0.2, ffbEG: 0.2, gurtU: 3.2, gurtO: 3.45, ffbOG: 3.55,
-    sturzOG: 6.05, deckeDG: 6.3, ffbDG: 6.65, gesimsU: 6.55, gesimsO: 6.83, wand: 7.25, knick: 10.25, first: 11.12,
+    sturzOG: 6.05, deckeDG: 6.3, ffbDG: 6.65, gesimsU: 6.55, gesimsO: 6.83, wand: 7.25, knick: 10.35, first: 11.12,
   };
-  const run1 = 2.52, ueberstand = 0.35;
-  const tan1 = (Z.knick - Z.wand) / run1;              // untere Dachfläche ~50°
-  const run2 = (D - 2 * run1) / 2;                     // 3,305 m bis zum First
-  const tan2 = (Z.first - Z.knick) / run2;             // obere Dachfläche ~15°
+  // Klassisches Mansarddach wie im Rendering: unten steil (~70°), oben flach (~9°)
+  const run1 = 1.15;
+  const tan1 = (Z.knick - Z.wand) / run1;              // untere Dachfläche
+  const ueberstand = (Z.wand - Z.gesimsO) / tan1;      // Traufe genau auf der Oberkante des Gesimses
+  const run2 = (D - 2 * run1) / 2;                     // bis zum First
+  const tan2 = (Z.first - Z.knick) / run2;             // obere Dachfläche
   const roofZ = s => Z.wand + s * tan1;                // Höhe der Dachhaut s Meter hinter der Außenwand
-  const traufe = roofZ(-ueberstand);                   // Traufkante 6,83 m (Oberkante Gesims)
+  const roofIn = s => roofZ(s) - 0.3 / Math.cos(Math.atan(tan1));   // Unterseite des 30 cm starken Dachaufbaus
+  const traufe = roofZ(-ueberstand);                   // Traufkante 6,83 m
   const dachwinkel = [Math.atan(tan1) * 180 / Math.PI, Math.atan(tan2) * 180 / Math.PI];
 
   const ax7 = [[0.9, 1.9], [2.8, 3.8], [5.2, 6.2], [7.0, 9.0], [9.8, 10.8], [12.2, 13.2], [14.1, 15.1]];
   const pilLang = [[0, 0.5], [4.4, 4.95], [11.05, 11.6], [15.5, 16]];
   const pilKurz = [[0, 0.5], [11.15, 11.65]];
   const op = (u0, u1, z0, z1, kind, extra = {}) => ({ u0, u1, z0, z1, kind, leaves: u1 - u0 > 1.5 ? 2 : 1, ...extra });
-  const gaube = (u0, u1, win, extra = {}) => ({ u0, u1, top: 9.4, clad: 'zink', front: 0.2, win, ...extra });
-  const gWin = (c, w = 0.9, z1 = 9.05) => ({ u0: c - w / 2, u1: c + w / 2, z0: 7.65, z1, leaves: w > 1.5 ? 2 : 1 });
+  const gaube = (u0, u1, win, extra = {}) => ({ u0, u1, top: 9.4, clad: 'putz', front: 0.2, win, ...extra });
+  const gWin = (c, w = 0.9, z1 = 9.05) => ({ u0: c - w / 2, u1: c + w / 2, z0: 7.9, z1, leaves: w > 1.5 ? 2 : 1 });
+  // Dachfenster in der steilen Dachfläche: Mitte c entlang der Traufe, v0..v1 die Fläche hinauf (Meter ab Traufe)
+  const dachfenster = (c, w = 0.9) => ({ u0: c - w / 2, u1: c + w / 2, v0: 1.15, v1: 2.6 });
 
   // u läuft von links nach rechts, so wie man vor der jeweiligen Fassade steht.
   const fas = {
@@ -32,27 +38,30 @@ const HOUSE = (() => {
         ...ax7.map(([a, b], i) => i >= 2 && i <= 4 ? op(a, b, Z.ffbOG, Z.sturzOG, 'tuer') : op(a, b, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 })),
       ],
       dormers: [
-        gaube(2.65, 3.95, [gWin(3.3)]),
-        // Zurückversetzter Balkon (Dachloggia) vor der Mittelgaube: Gaubenfront 1,50 m hinter der Fassade, Boden auf DG-Höhe
-        { u0: 4.95, u1: 11.05, top: 9.75, clad: 'putz', front: 1.5, loggia: 6.7,
-          win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.7, z1: 9.0, leaves: b - a > 1.5 ? 2 : 1, kind: 'tuer' })) },
-        gaube(12.05, 13.35, [gWin(12.7)]),
+        // Zwerchhaus in der Fassadenflucht über den Pilastern der Mittelachse; davor tritt der DG-Balkon nach vorne (siehe balkonDG)
+        { u0: 4.45, u1: 11.55, top: 9.75, clad: 'putz', front: 0, zwerch: true,
+          win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.75, z1: 9.0, leaves: b - a > 1.5 ? 2 : 1, kind: 'tuer' })) },
       ],
-      eaveRail: { u0: 4.95, u1: 11.05, z0: Z.gesimsO, z1: 7.72 }, piers: [[4.45, 4.95], [11.05, 11.55]],
+      // Links und rechts keine Gauben, sondern flache Dachfenster wie im Rendering
+      roofWindows: [dachfenster(3.3), dachfenster(12.7)],
       lamps: [4.675, 11.325],
     },
     N: {
       name: 'Nord', titel: 'Ansicht Nord · Eingang', len: W, pil: pilLang, quelle: 'annahme',
       open: [
-        op(7.1, 8.9, Z.ffbEG, 2.85, 'eingang'),
+        // Haustür 1,80 m mit zwei verglasten Seitenteilen je 0,50 m und durchgehendem Oberlicht
+        op(6.6, 9.4, Z.ffbEG, 2.85, 'eingang', { side: 0.5 }),
         ...[0, 1, 5, 6].map(i => op(ax7[i][0], ax7[i][1], 1.1, 2.85, 'fenster')),
-        op(5.4, 6.0, 1.65, 2.85, 'fenster'), op(10.0, 10.6, 1.65, 2.85, 'fenster'),
         ...[0, 1, 2, 4, 5, 6].map(i => op(ax7[i][0], ax7[i][1], 4.25, Z.sturzOG, 'fenster')),
         op(7.0, 9.0, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 }),
       ],
-      dormers: [gaube(2.65, 3.95, [gWin(3.3)]), gaube(7.35, 8.65, [gWin(8.0)]), gaube(12.05, 13.35, [gWin(12.7)])],
-      portal: { u0: 6.85, u1: 9.15, z1: 3.05 }, canopy: { u0: 6.6, u1: 9.4, z0: 3.05, z1: 3.17, depth: 1.2 },
-      lamps: [6.45, 9.55],
+      // Auch hinten ein Zwerchhaus in der Mitte (französische Fenster mit Geländer), daneben Dachfenster wie im Süden
+      dormers: [{ u0: 4.45, u1: 11.55, top: 9.75, clad: 'putz', front: 0, zwerch: true,
+        win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.9, z1: 9.0, leaves: b - a > 1.5 ? 2 : 1, kind: 'franz', rail: 7.85 })) }],
+      roofWindows: [dachfenster(3.3), dachfenster(12.7)],
+      // Eingang: Portikus auf zwei quadratischen Pfeilern vor dem Podest, Laterne unter dem Vordach statt Wandleuchten
+      portikus: { u0: 5.4, u1: 10.6, depth: 1.15, z0: 3.02, z1: 3.38, pillars: [5.75, 10.25], pw: 0.35, py: 0.8 },
+      lamps: [],
     },
     E: {
       name: 'Ost', titel: 'Ansicht Ost · Freisitz', len: D, pil: pilKurz, quelle: 'annahme',
@@ -84,8 +93,12 @@ const HOUSE = (() => {
   const freisitz = { x0: 16, x1: 19, y0: -10.825, y1: -5.825, z: 0.18, slab: [3.0, 3.45], rail: 4.45, col: 0.35 };
   const terrasse = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, z: 0.18 };
   const podest = { x0: 5.5, x1: 10.5, y0: 0, y1: 1.0, z: 0.18 };
-  // Balkon über der Terrasse, getragen von vier Säulen in den Achsen der Fensterpfeiler
-  const balkon = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, slab: [3.1, 3.5], rail: 4.5, cols: [4.75, 6.6, 9.4, 11.25], colY: -14.35, colR: 0.17 };
+  // Balkon über der Terrasse, vorne nur auf den beiden äußeren, quadratischen Pfeilern
+  const balkon = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, slab: [3.1, 3.5], rail: 4.5, cols: [4.75, 11.25], colY: -14.38, colW: 0.4 };
+  // Balkon im DG vor dem Zwerchhaus: tritt 1,00 m nach vorne, gleiche Breite wie Terrasse und OG-Balkon, auf Konsolen
+  const balkonDG = { x0: 4.5, x1: 11.5, y0: -12.65, y1: -11.65, slab: [6.45, 6.75], rail: 7.75, consoles: [4.75, 6.6, 9.4, 11.25] };
+  // Zwei Kamine auf der oberen Dachfläche, wie im Referenzbild links und rechts der Mitte
+  const kamine = [{ x: 4.0, y: -D / 2, w: 0.75, d: 0.55, top: 11.9 }, { x: 12.0, y: -D / 2, w: 0.75, d: 0.55, top: 11.9 }];
 
   // Offene Rampe in der Zufahrt, so wie Zufahrt, Poolhaus und Tiefgarage im Konzept aneinanderstoßen: beginnt knapp 2 m hinter der Grenze,
   // läuft zwischen Betonwänden nach Norden, unter dem Poolhaus hindurch und erreicht im Anschluss der Tiefgarage deren Boden.
@@ -99,5 +112,5 @@ const HOUSE = (() => {
   };
   rampe.lichte = rampe.decke - rampe.z(rampe.yPortal);
 
-  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, rampe };
+  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe };
 })();

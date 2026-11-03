@@ -47,10 +47,23 @@
             <button data-cam="west">West</button>
             <button data-cam="ueberblick" data-label="Überblick von Südwesten">Überblick</button>
             <button data-cam="zufahrt" data-label="Zufahrt mit Rampe zur Tiefgarage">Zufahrt</button>
+            <button data-cam="innen" data-label="Innen · Essen und Wohnen">Innen</button>
             <button data-cam="oben" data-label="Draufsicht">Draufsicht</button>
             <button data-cam="front" data-label="Frontansicht Süd, orthogonal">Frontal maßstäblich</button>
           </div>
           <label class="switch"><input type="checkbox" id="optRotate"> Langsam ums Haus fahren</label>
+          <p class="hint-text">Mit dem Mausrad oder zwei Fingern lässt sich direkt durch Fenster und Türen ins Haus zoomen.</p>
+        </section>
+        <section class="group">
+          <h2>Geschoss</h2>
+          <div class="chips" id="levelChips">
+            <button data-level="alle" aria-pressed="true">Ganzes Haus</button>
+            <button data-level="DG">DG</button>
+            <button data-level="OG">OG</button>
+            <button data-level="EG">EG</button>
+            <button data-level="UG" data-label="Keller und Tiefgarage">UG + Tiefgarage</button>
+          </div>
+          <p class="hint-text">Blendet alles über dem Geschoss aus und zeigt es mit Möbeln von oben, beim UG auch Tiefgarage und Rampe.</p>
         </section>
         <section class="group">
           <h2>Sonnenstand Grünwald</h2>
@@ -109,8 +122,8 @@
         </section>
         <section class="group">
           <h2>So ist die Ansicht entstanden</h2>
-          <p>Breite, Fensterachsen und Anbauten stammen exakt aus Chalines Konzeptplan im Maßstab 1:100. Die Höhen folgen aus den Proportionen des Renderings, mit der Hausbreite von 16,00 m als Maßstab: Wandhöhe 7,25 m, First 11,12 m. Gesimse, Pilaster, Geländer und Gauben folgen ebenfalls dem Rendering.</p>
-          <p>Das Traufgesims sitzt bei 6,83 m, weil die Wandhöhe bis zur Dachhaut an der Außenwand gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach (unten 50°, oben 15°).</p>
+          <p>Breite, Fensterachsen und Anbauten stammen exakt aus Chalines Konzeptplan im Maßstab 1:100. Die Höhen folgen aus den Proportionen des Renderings, mit der Hausbreite von 16,00 m als Maßstab: Wandhöhe 7,25 m, First 11,12 m. Die Gestaltung folgt dem Rendering und dem Referenzbild: weißer Glattputz, schwarze Rahmen, Gesimse, Kamine und Geländer.</p>
+          <p>Das Traufgesims sitzt bei 6,83 m, weil die Wandhöhe bis zur Dachhaut an der Außenwand gemessen wird. Das Dachgeschoss liegt im steilen Mansarddach (unten rund 70°, oben rund 9°). Süd- und Nordseite haben in der Mitte ein Zwerchhaus in der Fassadenflucht, daneben flache Dachfenster; Ost und West je eine Gaube. Vor dem Zwerchhaus im Süden ragt der DG-Balkon 1,00 m nach vorn.</p>
           <p>„Schnitt Rampe“ zeigt die Zufahrt von der Straße bis in die Tiefgarage, mit Neigungen und der Durchfahrtshöhe unter dem Poolhaus.</p>
         </section>
         <button class="btn" id="elevDl">Zeichnung speichern (SVG)</button>
@@ -152,8 +165,8 @@
         </section>
         <section class="group">
           <h2>So ist der Vorschlag aufgebaut</h2>
-          <p>Der Vorschlag stammt von mir, nicht vom Architekten. Er passt zu Fensterachsen, Eingang, Terrasse, Balkon und Freisitz des Konzepts: unten Wohnen, Essen und Küche zum Garten, hinter der Küche die Backkitchen, oben die Elternsuite mit Balkon.</p>
-          <p>Treppe und Aufzug liegen im Kern hinter dem Eingang. Der Aufzug (Kabine 1,10 × 1,40 m, rollstuhlgerecht) fährt vom UG bis ins DG. Er sitzt so weit innen, dass der Schachtkopf unter das Mansarddach passt. Eine Schleuse verbindet das UG mit der Tiefgarage. Autos fahren über die offene Rampe in der Zufahrt nach unten; das letzte Stück liegt unter dem Poolhaus, am Fuß der Rampe schließt ein Tor die Tiefgarage. Im DG liegt vor dem Gastzimmer ein zurückversetzter Balkon.</p>
+          <p>Der Vorschlag stammt von mir, nicht vom Architekten. Er passt zu Fensterachsen, Eingang, Terrasse, Balkon und Freisitz des Konzepts: unten Wohnen, Essen und Küche zum Garten, hinter der Küche die Backkitchen. Im OG liegen vier Kinderzimmer mit zwei Bädern und ein Familienraum zum Balkon. Im DG sitzt das Büro im Zwerchhaus nach Süden, daneben der Elternbereich mit Schlafzimmer, Ankleide und Bad sowie eine Lounge.</p>
+          <p>Treppe und Aufzug liegen im Kern hinter dem Eingang. Der Aufzug (Kabine 1,10 × 1,40 m, rollstuhlgerecht) fährt vom UG bis ins DG. Er sitzt so weit innen, dass der Schachtkopf unter das Mansarddach passt. Eine Schleuse verbindet das UG mit der Tiefgarage. Autos fahren über die offene Rampe in der Zufahrt nach unten; das letzte Stück liegt unter dem Poolhaus, am Fuß der Rampe schließt ein Tor die Tiefgarage. Vor dem Büro im DG ragt ein Balkon 1,00 m aus der Fassade, auf Konsolen über dem OG-Balkon. Auf der Terrasse steht eine Lounge, auf dem Freisitz ein Esstisch für sechs.</p>
         </section>
         <button class="btn" id="planDl">Grundriss speichern (SVG)</button>
       </aside>
@@ -200,7 +213,7 @@
         <section>
           <h2>Kurz gesagt</h2>
           <ul class="notes">
-            <li class="info"><span><b>Haus, Außenanlagen und Zufahrt kommen aus Chalines Konzept.</b> Von Vogel+Partner stammen nur Grundstück, Bäume und die Nachbarbebauung. Breite 16,00 m und Gesamthöhe 11,12 m passen zu den Proportionen des Renderings. Das Traufgesims sitzt bei 6,83 m, weil die Wandhöhe von 7,25 m bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt ganz im Mansarddach und bekommt Licht über Gauben.</span></li>
+            <li class="info"><span><b>Haus, Außenanlagen und Zufahrt kommen aus Chalines Konzept.</b> Von Vogel+Partner stammen nur Grundstück, Bäume und die Nachbarbebauung. Breite 16,00 m und Gesamthöhe 11,12 m passen zu den Proportionen des Renderings. Das Traufgesims sitzt bei 6,83 m, weil die Wandhöhe von 7,25 m bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt im steilen Mansarddach und bekommt Licht über die Zwerchhäuser im Süden und Norden, Dachfenster und zwei Gauben. Der Eingang im Norden hat ein Vordach auf zwei Pfeilern und eine Haustür mit verglasten Seitenteilen.</span></li>
             <li class="info"><span><b>Offene Rampe in der Zufahrt.</b> Die Rampe beginnt knapp 2 m hinter der Grenze und läuft zwischen Betonwänden mit Geländer nach Norden: 2,80 m breit, oben und unten 3 m mit 8 %, dazwischen 16 %. Das letzte Stück liegt unter dem Poolhaus, dort bleiben gut 2,00 m lichte Höhe. Am Fuß der Rampe schließt ein Tor die Tiefgarage. Darin haben vier Autos an einer 6 m breiten Fahrgasse Platz; unter der Terrasse ist Raum für Fahrräder und Lager. Der Personenaufzug im Haus verbindet Tiefgarage und alle Geschosse.</span></li>
             <li class="warn"><span><b>Schutzbäume der Nachbarn.</b> Der große Baum im Nordosten (Krone etwa 16 m) und der Baum im Südosten haben Wurzelschutzbereiche (Krone plus 1,50 m), die in Zuwegung und Zufahrt reichen. Der Schutzbereich im Südosten erfasst auch die ersten Meter der Rampe. Dort ist wurzelschonendes Bauen nötig.</span></li>
           </ul>
@@ -229,10 +242,10 @@
               <li>Grundstück mit sieben Grenzpunkten; Konzeptplan und Skizze Vogel+Partner stimmen darin überein</li><li>Bäume und Wurzelschutzbereiche</li>
               <li>Nachbarhäuser, Grenzen und Straße aus der Flurkarte; Dachformen und Höhen der Nachbarn aus dem amtlichen 3D-Gebäudemodell (LoD2)</li></ul></div>
             <div><h3>Aus dem Rendering oder angenommen</h3><ul>
-              <li>Wandhöhe 7,25 m und First 11,12 m nach den Proportionen des Renderings; Gestaltung, Materialien und der zurückversetzte Balkon im DG nach dem Rendering</li>
-              <li>Geschosshöhen: EG 3,35 m, OG 3,10 m, Fußboden EG 0,20 m über Gelände; Dachneigung unten 50°, oben 15°</li><li>Nord-, Ost- und Westfassade, Gauben</li>
-              <li>Untergeschoss, Grundrisse, Innenwände und Möbel als Vorschlag, Hecken an West-, Nord- und Ostgrenze</li>
-              <li>Längsprofil der Rampe, Höhen der Tiefgarage und Stellplätze</li><li>Dachfarben der Nachbarn nach Luftbild, Baumhöhen</li></ul></div>
+              <li>Wandhöhe 7,25 m und First 11,12 m nach den Proportionen des Renderings; Gestaltung und Materialien nach Rendering und Referenzbild, Zwerchhaus mit 1,00 m tiefem Balkon im DG</li>
+              <li>Geschosshöhen: EG 3,35 m, OG 3,10 m, Fußboden EG 0,20 m über Gelände; Dachneigung unten rund 70°, oben rund 9°</li><li>Nord-, Ost- und Westfassade, Zwerchhaus im Norden, Eingang mit Vordach, Dachfenster und Gauben</li>
+              <li>Untergeschoss, Grundrisse, Innenwände, Möbel und Außenmöbel als Vorschlag, Hecken an West-, Nord- und Ostgrenze</li>
+              <li>Längsprofil der Rampe, Höhen der Tiefgarage und Stellplätze</li><li>Dachfarben der Nachbarn, Bäume in den Nachbargärten und Ziegelmauer an der Straßenecke nach Luftbildern; Baumhöhen</li></ul></div>
           </div>
         </section>
         <section>

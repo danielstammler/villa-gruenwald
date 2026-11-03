@@ -4,7 +4,7 @@
   --accent: #295a83; --accent-ink: #ffffff; --limit: #c0392b; --linie: #2c5fc6; --tg: #cf7a23;
   --lawn: #bcd3a1; --lawn-2: #7f9f62; --water: #9ccbe3; --stone: #dfd8cb; --pave: #e3e0d8; --street: #e2e2df;
   --nb: #c6c3bc; --nb-2: #dcd9d3; --house: #39414a; --house-ink: #ffffff;
-  --m-putz: #ecdfc4; --m-putz-hell: #f5ebd8; --m-putz-2: #d2bf9c; --m-reveal: #c9b693; --m-sockel: #dfd1b4;
+  --m-putz: #f4f2ed; --m-putz-hell: #fbfaf7; --m-putz-2: #dcd8d0; --m-reveal: #cdc8bf; --m-sockel: #e2ded6;
   --m-roof: #25282c; --m-roof-line: #3c4146; --m-zink: #2a2e32; --m-glass: #d6a466; --m-curtain: #f4ecdd; --m-frame: #121416; --m-lamp: #f5d9a8;
   --font-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
   --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
@@ -17,7 +17,7 @@
     --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --linie: #7ea6ff; --tg: #f0a04f;
     --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
     --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
-    --m-putz: #d8cbb0; --m-putz-hell: #e3d8c3; --m-putz-2: #bba984; --m-reveal: #a8977a; --m-sockel: #c3b597;
+    --m-putz: #e6e3dd; --m-putz-hell: #efede8; --m-putz-2: #c9c5bd; --m-reveal: #b3aea5; --m-sockel: #cfcbc3;
     --m-roof: #1e2124; --m-roof-line: #363b40; --m-zink: #24282b; --m-glass: #b88d58; --m-curtain: #d9d0c0; --m-frame: #0b0c0e; --m-lamp: #e9c98d;
     color-scheme: dark;
   }
@@ -27,7 +27,7 @@
   --accent: #86b7e0; --accent-ink: #0c1317; --limit: #ff7d6e; --linie: #7ea6ff; --tg: #f0a04f;
   --lawn: #3e5733; --lawn-2: #7da666; --water: #3a7594; --stone: #57534b; --pave: #4a4842; --street: #262e34;
   --nb: #3b444c; --nb-2: #323a41; --house: #d2d9de; --house-ink: #11161a;
-  --m-putz: #d8cbb0; --m-putz-hell: #e3d8c3; --m-putz-2: #bba984; --m-reveal: #a8977a; --m-sockel: #c3b597;
+  --m-putz: #e6e3dd; --m-putz-hell: #efede8; --m-putz-2: #c9c5bd; --m-reveal: #b3aea5; --m-sockel: #cfcbc3;
   --m-roof: #1e2124; --m-roof-line: #363b40; --m-zink: #24282b; --m-glass: #b88d58; --m-curtain: #d9d0c0; --m-frame: #0b0c0e; --m-lamp: #e9c98d;
   color-scheme: dark;
 }
@@ -142,7 +142,6 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 /* ---------- Zeichnungen: Ansichten ---------- */
 .e-wall { fill: var(--m-putz); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 .e-pil { fill: var(--m-putz-hell); stroke: var(--ink); stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
-.e-rust { stroke: var(--m-putz-2); stroke-width: 0.02; }
 .e-reveal { fill: var(--m-reveal); }
 .e-frame { fill: var(--m-frame); }
 .e-glass { fill: url(#gGlass); }
@@ -156,6 +155,7 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .e-cap { fill: var(--m-zink); stroke: var(--ink); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
 .e-bar { fill: var(--m-frame); }
 .e-lamp { fill: var(--m-lamp); }
+.e-handle { fill: #b9b4aa; }
 .e-stone { fill: var(--stone); stroke: var(--ink); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
 .e-shade { fill: var(--ink); opacity: 0.09; }
 .e-ground { stroke: var(--ink); stroke-width: 2.2px; vector-effect: non-scaling-stroke; }
@@ -306,6 +306,7 @@ body.noscroll { overflow: hidden; }
 .g-areatxt.g-sm { font-size: 0.22px; }
 @media (max-width: 860px) { .g-roomtxt.g-sm { font-size: 0.34px; } .g-areatxt.g-sm { font-size: 0.28px; } }
 .g-ramp { fill: var(--pave); }
+.g-skylight { fill: color-mix(in srgb, var(--water) 55%, transparent); stroke: var(--ink-2); stroke-width: 0.7px; stroke-dasharray: 3 2; vector-effect: non-scaling-stroke; }
 .g-above { fill: none; stroke: var(--ink-2); stroke-width: 0.9px; stroke-dasharray: 6 3; vector-effect: non-scaling-stroke; }
 .s-ramp { fill: none; stroke: var(--tg); stroke-width: 1.2px; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
 .g-gate { fill: var(--ink-2); }
@@ -317,3 +318,4 @@ body.noscroll { overflow: hidden; }
 .e-railx { fill: var(--ink-2); }
 .g-grenze { fill: none; stroke: var(--ink); stroke-width: 1.4px; stroke-dasharray: 10 3 2 3; vector-effect: non-scaling-stroke; }
 .s-hedge { fill: none; stroke: var(--lawn-2); stroke-width: 0.6; stroke-linejoin: round; opacity: 0.9; }
+.hint-text { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); margin: 8px 0 0; }

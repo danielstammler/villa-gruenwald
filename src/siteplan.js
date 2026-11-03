@@ -82,16 +82,23 @@ const Site = (() => {
     s.push(poly([[rc - 0.5, -38.2], [rc + 0.5, -38.2], [rc, -36.9]], 's-ramparrow') + text([rc + 0.25, -43.4], `Rampe ${num(rp.s * 100, 0)} %`, 's-lbl s-tiny', -90));
     const PL = SITE.plot, hk = [[25.059, -44.0], PL[4], PL[5], PL[6], PL[0]];
     s.push(`<polyline points="${pts(hk.map(([x, y], i) => [x + (i === 0 || i === 1 ? -0.45 : 0), y]))}" class="s-hedge" data-tip="Hecke · ca. 1,30 m hoch · West-, Nord- und Ostgrenze"/>`);
-    s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m · darüber Balkon auf vier Säulen'));
+    s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m · Lounge-Möbel, darüber Balkon auf zwei Pfeilern'));
     s.push(poly(C.podest, 's-stone', 'Podest am Eingang · 5,00 × 1,00 m'));
-    s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · überdacht, darüber Dachterrasse'));
+    s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · Esstisch für sechs, überdacht, darüber Dachterrasse'));
     s.push(poly(C.pool, 's-coping', 'Pool · 4,00 × 12,00 m'));
     s.push(poly(C.poolWasser, 's-water', 'Pool · Wasserfläche ca. 3,50 × 11,50 m'));
     s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m · darunter führt die Rampe in die Tiefgarage'));
     s.push(poly(C.haus, 's-house', 'Wohnhaus · 16,00 × 11,65 m · 186,4 m² · Wandhöhe 7,25 m · First 11,12 m'));
     for (const o of HOUSE.fas.S.open.filter(q => q.z0 < 1)) s.push(poly(rect(o.u0, -HOUSE.D, o.u1, -HOUSE.D + 0.2), 's-win'));
     const bk = HOUSE.balkon;
-    s.push(poly(rect(bk.x0, bk.y0, bk.x1, bk.y1), 's-balkon', 'Balkon im OG · 7,00 × 3,00 m · auf vier Säulen') + bk.cols.map(x => circ([x, bk.colY], bk.colR, 's-col')).join(''));
+    const sq = (x, y, w) => poly(rect(x - w / 2, y - w / 2, x + w / 2, y + w / 2), 's-col');
+    s.push(poly(rect(bk.x0, bk.y0, bk.x1, bk.y1), 's-balkon', 'Balkon im OG · 7,00 × 3,00 m · auf zwei Pfeilern') + bk.cols.map(x => sq(x, bk.colY, bk.colW)).join(''));
+    const bd = HOUSE.balkonDG;
+    s.push(poly(rect(bd.x0, bd.y0, bd.x1, bd.y1), 's-balkon', 'Balkon im DG · 7,00 × 1,00 m · auf Konsolen vor dem Zwerchhaus'));
+    // Vordach über dem Eingang (Nordfassade: Plan-x = Hausbreite − u)
+    const pk = HOUSE.fas.N.portikus;
+    s.push(poly(rect(HOUSE.W - pk.u1, 0, HOUSE.W - pk.u0, pk.depth), 's-balkon', `Vordach über dem Eingang · ${num(pk.u1 - pk.u0)} × ${num(pk.depth)} m · zwei Pfeiler`) +
+      pk.pillars.map(u => sq(HOUSE.W - u, pk.py, pk.pw)).join(''));
     s.push(text([8, -4.6], 'Wohnhaus', 's-houselabel') + text([8, -6.0], '16,00 × 11,65', 's-houselabel s-small') + text([8, -7.2], '186,4 m²', 's-houselabel s-small'));
     s.push(text([8, -13.4], 'Terrasse', 's-lbl s-small') + text([17.5, -8.6], 'Freisitz', 's-lbl s-small', -90) + text([8, 0.35], 'Podest', 's-lbl s-tiny'));
     s.push(poly([[8, 1.1], [7.55, 2.05], [8.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));

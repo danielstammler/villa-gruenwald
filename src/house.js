@@ -33,10 +33,12 @@ const HOUSE = (() => {
       ],
       dormers: [
         gaube(2.65, 3.95, [gWin(3.3)]),
-        { u0: 4.95, u1: 11.05, top: 9.75, clad: 'putz', front: 0.2, win: [gWin(5.7, 0.8, 9.35), gWin(8.0, 1.8, 9.35), gWin(10.3, 0.8, 9.35)] },
+        // Zurückversetzter Balkon (Dachloggia) vor der Mittelgaube: Gaubenfront 1,50 m hinter der Fassade, Boden auf DG-Höhe
+        { u0: 4.95, u1: 11.05, top: 9.75, clad: 'putz', front: 1.5, loggia: 6.7,
+          win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.7, z1: 9.0, leaves: b - a > 1.5 ? 2 : 1, kind: 'tuer' })) },
         gaube(12.05, 13.35, [gWin(12.7)]),
       ],
-      eaveRail: { u0: 4.95, u1: 11.05, z0: Z.gesimsO, z1: 7.6 }, piers: [[4.45, 4.95], [11.05, 11.55]],
+      eaveRail: { u0: 4.95, u1: 11.05, z0: Z.gesimsO, z1: 7.72 }, piers: [[4.45, 4.95], [11.05, 11.55]],
       lamps: [4.675, 11.325],
     },
     N: {
@@ -85,8 +87,8 @@ const HOUSE = (() => {
   // Balkon über der Terrasse, getragen von vier Säulen in den Achsen der Fensterpfeiler
   const balkon = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, slab: [3.1, 3.5], rail: 4.5, cols: [4.75, 6.6, 9.4, 11.25], colY: -14.35, colR: 0.17 };
 
-  // Rampe zur Tiefgarage in der Zufahrt: beginnt 1,70 m hinter der Grenze, läuft unter dem Poolhaus bis zur Tiefgarage (ca. 14 %)
-  const rampe = { x0: 19.73, x1: 22.53, y0: -48.8, yPH: -33.65, y1: -27.65, gefaelle: 0.142 };
+  // Zufahrt bleibt eben bis zum Poolhaus; dort beginnt die Rampe (ca. 14,5 %) und führt unterirdisch nach Norden in die Tiefgarage
+  const rampe = { x0: 19.73, x1: 22.53, y0: -33.65, y1: -12.95, wandEnde: -17.65, gefaelle: 0.145 };
 
   return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, rampe };
 })();

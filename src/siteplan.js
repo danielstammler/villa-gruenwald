@@ -45,7 +45,7 @@ const Site = (() => {
     ['Poolhaus', area(C.poolhaus)], ['Pool', area(C.pool)], ['Zuwegung', area(C.zuwegung)], ['Zufahrt', area(C.zufahrt)],
   ];
   const befestigt = FL.reduce((s, [, a]) => s + a, 0);
-  const tgGarten = area(C.tg) - tgUnterZuwegung;
+  const tgGarten = area(C.tg) - tgUnterZuwegung - area(C.terrasse);
   const STATS = { plotArea, befestigt, tgGarten, tg: area(C.tg), gruen: plotArea - befestigt, gruenOhneTG: plotArea - befestigt - tgGarten, FL, AB,
     west: [westX(0), westX(-HOUSE.D)].map(x => -x), north: [northY(0.01), northY(HOUSE.W)], east: eastX(-HOUSE.D / 2) - HOUSE.W };
 
@@ -81,7 +81,9 @@ const Site = (() => {
     s.push('<g data-layer="konzept">');
     s.push(poly(SITE.plot, 's-lawn', `Garten · ${num(STATS.gruen, 0)} m² unversiegelt`));
     s.push(poly(C.zuwegung, 's-pave', `Zuwegung · 1,50 m breit · ${num(area(C.zuwegung), 1)} m²`));
-    s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · mit Rampe zur Tiefgarage`));
+    s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · eben bis zum Poolhaus`));
+    const PL = SITE.plot, hk = [[25.059, -44.0], PL[4], PL[5], PL[6], PL[0]];
+    s.push(`<polyline points="${pts(hk.map(([x, y], i) => [x + (i === 0 || i === 1 ? -0.45 : 0), y]))}" class="s-hedge" data-tip="Hecke · ca. 1,30 m hoch · West-, Nord- und Ostgrenze"/>`);
     s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m · darüber Balkon auf vier Säulen'));
     s.push(poly(C.podest, 's-stone', 'Podest am Eingang · 5,00 × 1,00 m'));
     s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · überdacht, darüber Dachterrasse'));
@@ -101,7 +103,7 @@ const Site = (() => {
     s.push(`<g data-layer="bestand">${SITE.bestand.map(b => poly(b.pts, 's-bestand', b.kind === 'haus' ? 'Bestandshaus Nr. 14 · Abriss' : 'Bestandsgarage · Abriss')).join('')}</g>`);
     const rp = HOUSE.rampe;
     s.push(`<g data-layer="tg">${poly(C.tg, 's-tg', `Tiefgarage (unterirdisch) · ${num(STATS.tg, 1)} m² außerhalb des Hauses`)}${text([17.6, -18.2], 'Tiefgarage (unterirdisch)', 's-tglabel')}` +
-      `${poly(rect(rp.x0, rp.y0, rp.x1, rp.y1), 's-ramp', 'Rampe zur Tiefgarage · ca. 14 % · läuft unter dem Poolhaus durch')}${text([21.13, -40.5], 'Rampe', 's-tglabel', -90)}</g>`);
+      `${poly(rect(rp.x0, rp.y0, rp.x1, rp.y1), 's-ramp', 'Rampe zur Tiefgarage · beginnt im Poolhaus · ca. 14,5 % · unterirdisch')}${text([21.13, -22.5], 'Rampe', 's-tglabel', -90)}</g>`);
     // Vogel
     const V = SITE.vogel, vb = (o, side) => {
       const [a, b] = o[side];

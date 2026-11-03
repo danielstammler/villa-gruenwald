@@ -13,6 +13,7 @@ const Plans = (() => {
   const El = (x, y, rx, ry, cls) => `<ellipse cx="${f(x)}" cy="${f(-y)}" rx="${f(rx)}" ry="${f(ry)}" class="${cls}"/>`;
   const pts = P => P.map(p => `${f(p[0])},${f(-p[1])}`).join(' ');
   const area = r => (r[1] - r[0]) * (r[3] - r[2]);
+  const area2 = P => Math.abs(P.reduce((t, p, i) => { const q = P[(i + 1) % P.length]; return t + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
   const STAIR = [9.0, 11.28, -3.9, -0.36], LIFT = [4.72, 6.72, -4.88, -2.88];
   const CORE = area(STAIR) + area(LIFT);
 
@@ -75,6 +76,9 @@ const Plans = (() => {
     desk(x0, x1, y0, y1, chair) {
       const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, o = { N: [0, 1], S: [0, -1], E: [1, 0], W: [-1, 0] }[chair];
       return R(x0, x1, y0, y1, 'g-furn') + Ci(cx + o[0] * ((x1 - x0) / 2 + 0.35), cy + o[1] * ((y1 - y0) / 2 + 0.35), 0.24, 'g-furn');
+    },
+    carH(cx, cy) {
+      return RR(cx - 2.3, cx + 2.3, cy - 0.92, cy + 0.92, 0.35, 'g-car') + L(cx + 0.9, cy - 0.8, cx + 0.9, cy + 0.8, 'g-furn-l') + L(cx - 1.5, cy - 0.8, cx - 1.5, cy + 0.8, 'g-furn-l');
     },
     car(cx, cy) {
       return RR(cx - 0.92, cx + 0.92, cy - 2.3, cy + 2.3, 0.35, 'g-car') + L(cx - 0.8, cy + 0.9, cx + 0.8, cy + 0.9, 'g-furn-l') + L(cx - 0.8, cy - 1.5, cx + 0.8, cy - 1.5, 'g-furn-l');
@@ -165,7 +169,7 @@ const Plans = (() => {
     DG: {
       titel: 'Dachgeschoss', ffb: HOUSE.Z.ffbDG,
       rooms: [
-        { n: 'Gast', r: [4.72, 11.28, -11.29, -6.24], at: [8.0, -9.2] }, { n: 'Hobby', r: [0.36, 4.48, -11.29, -4.88], at: [2.4, -6.3] },
+        { n: 'Gast', r: [4.72, 11.28, -10.03, -6.24], at: [8.0, -8.9] }, { n: 'Hobby', r: [0.36, 4.48, -11.29, -4.88], at: [2.4, -6.3] },
         { n: 'Abstellraum', r: [0.36, 4.48, -4.76, -0.36], wf: 0, at: [2.5, -3.2] }, { n: 'Flur', r: [4.72, 11.28, -6.0, -0.36], core: true, at: [8.0, -5.25] },
         { n: 'Bibliothek', r: [11.52, 15.64, -11.29, -5.0], at: [13.4, -8.6] }, { n: 'Duschbad', r: [11.52, 15.64, -4.88, -0.36], at: [13.0, -1.7] },
       ],
@@ -173,9 +177,11 @@ const Plans = (() => {
         { x: 4.6, y: -2.3, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 4.6, y: -5.95, w: 0.9, o: 'v', s: -1, h: 0 },
         { x: 5.4, y: -6.12, w: 0.9, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -5.95, w: 0.85, o: 'v', s: 1, h: 0 },
         { x: 11.4, y: -4.8, w: 0.85, o: 'v', s: 1, h: 0 },
+        ...[[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ x: a, y: -10.09, w: b - a, o: 'h', s: 1, h: 0, t: 0.2 })),
       ],
       furn: () => [
-        fu.bed(7.1, 8.9, -8.24, -6.24, 'N'), fu.box(6.5, 6.98, -6.72, -6.24), fu.box(9.02, 9.5, -6.72, -6.24), fu.sofa(6.2, 9.8, -10.75, -9.85, 'S'),
+        fu.bed(7.1, 8.9, -8.24, -6.24, 'N'), fu.box(6.5, 6.98, -6.72, -6.24), fu.box(9.02, 9.5, -6.72, -6.24),
+        fu.table(7.5, 8.5, -11.25, -10.75, 1, false),
         fu.table(1.4, 3.2, -8.6, -7.6, 2), fu.sofa(1.5, 3.5, -10.6, -9.75, 'S'),
         fu.shelf(1.2, 3.9, -1.65, -1.15),
         fu.shelf(12.0, 15.1, -10.6, -10.1), fu.sofa(12.6, 14.6, -7.0, -6.1, 'N'), fu.box(13.1, 14.1, -8.3, -7.5),
@@ -255,18 +261,20 @@ const Plans = (() => {
   }
   function tiefgarage() {
     const tg = C.tg, ph = C.poolhaus, rp = HOUSE.rampe, len = -(rp.y0 - rp.y1);
-    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(162.3)} m² · vier Stellplätze"/>`;
-    s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · 2,80 m breit · ${num(len)} m lang · ca. ${Math.round(rp.gefaelle * 100)} % Gefälle`);
+    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · vier Stellplätze, einer davon längs unter der Terrasse"/>`;
+    s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · beginnt im Poolhaus · 2,80 m breit · ${num(len)} m lang · ca. ${num(rp.gefaelle * 100)} % Gefälle`);
     for (let y = rp.y0 + 0.5; y < rp.y1 - 0.2; y += 1.0) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
-    s += `<polygon points="${pts(tg)}" class="g-tgwall"/>` + R(rp.x0 - 0.2, rp.x0, rp.y0, rp.y1, 'g-wall') + R(rp.x1, rp.x1 + 0.2, rp.y0, rp.y1, 'g-wall');
-    s += `<polygon points="${pts(ph)}" class="g-above" data-tip="Poolhaus darüber · 3,50 × 6,00 m · die Rampe läuft darunter durch"/>`;
-    s += `<polygon points="${pts([[21.13 - 0.35, -38.8], [21.13 + 0.35, -38.8], [21.13, -37.9]])}" class="g-walkhead"/>`;
-    s += `<text x="21.13" y="43" class="g-ftxt" transform="rotate(-90 21.13 43)">Rampe ca. ${Math.round(rp.gefaelle * 100)} %</text>` + T(21.13, -30.7, 'Poolhaus darüber', 'g-ftxt');
-    for (let i = 0; i <= 4; i++) s += L(12.0 + 2.5 * i, -17.6, 12.0 + 2.5 * i, -12.6, 'g-park');
-    s += L(12.0, -17.6, 22.0, -17.6, 'g-park');
-    for (let i = 0; i < 4; i++) s += fu.car(13.25 + 2.5 * i, -15.1) + T(13.25 + 2.5 * i, -17.25, `P${i + 1}`, 'g-ftxt');
-    s += fu.box(22.25, 23.3, -17.4, -12.8, 'Räder') + T(17.6, -21.2, 'Fahrgasse 6,50 m', 'g-ftxt');
-    s += T(17.6, -22.6, 'Tiefgarage', 'g-roomtxt') + T(17.6, -23.3, '162,3 m² · 4 Stellplätze', 'g-areatxt');
+    s += `<polygon points="${pts(tg)}" class="g-tgwall"/><polygon points="${pts(ph)}" class="g-tgwall"/>` + R(rp.x0 - 0.2, rp.x0, rp.wandEnde, rp.y0, 'g-wall');
+    s += R(19.95, 22.31, rp.y0 - 0.05, rp.y0 + 0.05, 'g-gate', 'Garagentor im Poolhaus');
+    s += `<polygon points="${pts([[21.13 - 0.35, -21.4], [21.13 + 0.35, -21.4], [21.13, -20.5]])}" class="g-walkhead"/>`;
+    s += `<text x="21.13" y="26.5" class="g-ftxt" transform="rotate(-90 21.13 26.5)">Rampe ca. ${num(rp.gefaelle * 100)} %</text>` + T(21.13, -32.4, 'Einfahrt im Poolhaus', 'g-ftxt');
+    for (let i = 0; i <= 3; i++) s += L(11.9 + 2.5 * i, -22.65, 11.9 + 2.5 * i, -17.65, 'g-park');
+    s += L(11.9, -17.65, 19.4, -17.65, 'g-park');
+    for (let i = 0; i < 3; i++) s += fu.car(13.15 + 2.5 * i, -20.15) + T(13.15 + 2.5 * i, -22.95, `P${i + 1}`, 'g-ftxt');
+    s += L(5.4, -14.5, 10.8, -14.5, 'g-park') + L(5.4, -14.5, 5.4, -11.95, 'g-park') + L(10.8, -14.5, 10.8, -11.95, 'g-park');
+    s += fu.carH(8.1, -13.2) + T(8.1, -14.25, 'P4 · unter der Terrasse', 'g-ftxt');
+    s += fu.box(11.9, 12.9, -16.9, -12.4, 'Räder') + T(15.6, -14.2, 'Fahrgasse', 'g-ftxt');
+    s += T(15.6, -15.6, 'Tiefgarage', 'g-roomtxt') + T(15.6, -16.3, `${num(area2(tg))} m² · 4 Stellplätze`, 'g-areatxt');
     return s;
   }
   function context(fl) {
@@ -278,6 +286,7 @@ const Plans = (() => {
       L(b.x0 + 0.06, b.y0 + 0.06, b.x0 + 0.06, b.y1, 'g-railing') + L(b.x1 - 0.06, b.y0 + 0.06, b.x1 - 0.06, b.y1, 'g-railing') + T(8, -13.25, 'Balkon', 'g-ftxt') +
       fu.table(7.4, 8.6, -13.6, -12.9, 1, false) +
       R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', 'Dachterrasse auf dem Freisitz · 3,00 × 5,00 m') + T(17.5, -8.4, 'Dachterrasse', 'g-ftxt');
+    if (fl === 'DG') return R(4.95, 11.05, -11.65, -10.15, 'g-outside', 'Zurückversetzter Balkon im DG · 6,10 × 1,50 m') + T(8, -11.05, 'Balkon', 'g-ftxt');
     return '';
   }
   function heightLines() {
@@ -311,7 +320,7 @@ const Plans = (() => {
       `<text x="-0.75" y="${f(D / 2)}" class="g-dimtxt" transform="rotate(-90 -0.75 ${f(D / 2)})">11,65</text></g>`;
     const na = (rot => { const a = rot * Math.PI / 180, c = [-1.6, 1.9], Rt = p => [c[0] + p[0] * Math.cos(a) - p[1] * Math.sin(a), c[1] + p[0] * Math.sin(a) + p[1] * Math.cos(a)]; return `<polygon points="${pts([[0, 0.9], [0.32, -0.55], [-0.32, -0.55]].map(Rt))}" class="g-north"/>` + T(...Rt([0, 1.35]), 'N', 'g-ntxt'); })(SITE.north.grid);
     s += na;
-    const vb = fl === 'UG' ? [-2.6, -1.4, 28.6, 50.8] : [-2.6, -1.6, 22.2, 17.2];
+    const vb = fl === 'UG' ? [-2.6, -1.4, 28.6, 36.0] : [-2.6, -1.6, 22.2, 17.2];
     return { svg: s, vb };
   }
   function table(fl) {
@@ -320,7 +329,7 @@ const Plans = (() => {
   }
   function wohnflaeche() {
     const part = ['EG', 'OG', 'DG'].map(fl => table(fl).wf);
-    const aussen = 0.25 * (area([HOUSE.balkon.x0, HOUSE.balkon.x1, HOUSE.balkon.y0, HOUSE.balkon.y1]) + 15.0);
+    const aussen = 0.25 * (area([HOUSE.balkon.x0, HOUSE.balkon.x1, HOUSE.balkon.y0, HOUSE.balkon.y1]) + 15.0 + 6.1 * 1.5);
     return { eg: part[0], og: part[1], dg: part[2], aussen, sum: part[0] + part[1] + part[2] + aussen };
   }
   return { render, table, wohnflaeche, FL, num };

@@ -43,14 +43,14 @@ const Elev = (() => {
     return s;
   }
   function dormer(d) {
-    const zb = HOUSE.roofZ(d.front);
+    const zb = d.loggia ? Z.gesimsO : HOUSE.roofZ(d.front);
     let s = r(d.u0, zb, d.u1, d.top, d.clad === 'putz' ? 'e-wall' : 'e-zinkf');
     if (d.clad === 'putz') {
       s += r(d.u0, zb, d.u0 + 0.22, d.top - 0.34, 'e-pil') + r(d.u1 - 0.22, zb, d.u1, d.top - 0.34, 'e-pil');
       s += r(d.u0 - 0.12, d.top - 0.34, d.u1 + 0.12, d.top - 0.12, 'e-pil');
     }
     s += r(d.u0 - 0.06, d.top - 0.06, d.u1 + 0.06, d.top + 0.03, 'e-cap');
-    for (const w of d.win) s += opening({ ...w, kind: 'dg' });
+    for (const w of d.win) s += opening({ ...w, z0: Math.max(w.z0, zb), kind: 'dg' });
     return s;
   }
   function freisitz(side) {
@@ -173,7 +173,8 @@ const Elev = (() => {
     const D = HOUSE.D, t = HOUSE.wall, tan1 = HOUSE.tan1;
     const S1 = HOUSE.fas.S.dormers[1], N1 = HOUSE.fas.N.dormers[1];
     const sB = (S1.top - Z.wand) / tan1, nB = (N1.top - Z.wand) / tan1;
-    const prof = [[-o, HOUSE.traufe], [S1.front, HOUSE.roofZ(S1.front)], [S1.front, S1.top], [sB, S1.top], [r1, Z.knick], [D / 2, Z.first],
+    const southPart = S1.loggia ? [[-o, HOUSE.traufe], [0, HOUSE.traufe], [0, S1.loggia], [S1.front, S1.loggia]] : [[-o, HOUSE.traufe], [S1.front, HOUSE.roofZ(S1.front)]];
+    const prof = [...southPart, [S1.front, S1.top], [sB, S1.top], [r1, Z.knick], [D / 2, Z.first],
       [D - r1, Z.knick], [D - nB, N1.top], [D - N1.front, N1.top], [D - N1.front, HOUSE.roofZ(N1.front)], [D + o, HOUSE.traufe]];
     const inner = offsetPolyline(prof, 0.3);
     const x0 = -6.4, x1 = D + 6.8;
@@ -186,7 +187,9 @@ const Elev = (() => {
     s += poly([[-0.18, Z.gesimsU], [0, Z.gesimsU], [0, Z.gesimsO], [-o, Z.gesimsO], [-o, 6.69], [-0.18, 6.69]], 'e-cut');
     s += poly([[D + 0.18, Z.gesimsU], [D, Z.gesimsU], [D, Z.gesimsO], [D + o, Z.gesimsO], [D + o, 6.69], [D + 0.18, 6.69]], 'e-cut');
     s += poly([...prof, ...inner.slice().reverse()], 'e-cutroof');
-    s += r(S1.front, 7.65, S1.front + 0.3, 9.35, 'e-beyond') + ln(S1.front + 0.12, 7.65, S1.front + 0.12, 9.35, 'e-glassline');
+    const sw = S1.win[1];
+    s += r(S1.front, sw.z0, S1.front + 0.3, sw.z1, 'e-beyond') + ln(S1.front + 0.12, sw.z0, S1.front + 0.12, sw.z1, 'e-glassline');
+    if (S1.loggia) s += rail(0.08, 0.16, Z.gesimsO, 7.72).replace(/class="e-bar"/g, 'class="e-bar"') + tx(0.75, S1.loggia + 0.25, 'Balkon', 'e-dimtxt');
     s += r(D - N1.front - 0.3, 7.65, D - N1.front, 9.05, 'e-beyond') + ln(D - N1.front - 0.12, 7.65, D - N1.front - 0.12, 9.05, 'e-glassline');
     // 2,30 m lichte Höhe im DG
     const zc = Z.ffbDG + 2.3, xs = [];

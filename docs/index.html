@@ -2241,12 +2241,13 @@ const View3D = (() => {
   const PRESETS = {
     garten: { pos: [8.6, 1.7, 38.5], tgt: [9.2, 5.0, 5.8] },
     eingang: { pos: [14.5, 2.2, -21], tgt: [8, 4.8, 5.8] },
-    ost: { pos: [45, 3, 1], tgt: [12, 4.6, 5.8] },
-    west: { pos: [-27, 2.5, 13], tgt: [8, 4.8, 5.8] },
+    // Ost und West aus den Nachbargärten, so gewählt, dass kein Nachbarhaus und keine Baumkrone die Fassade verdeckt
+    ost: { pos: [38, 3.2, 17], tgt: [13.5, 4.6, 6.2] },
+    west: { pos: [-21.8, 2.5, -4.3], tgt: [2.5, 4.8, 6.0] },
     ueberblick: { pos: [-31, 37, 60], tgt: [10, 0, 18] },
     zufahrt: { pos: [24.2, 4.4, 58.5], tgt: [20.6, -0.6, 35.5] },
     oben: { pos: [10.4, 98, 20.32], tgt: [10.4, 0, 20.3] },
-    schnitt: { pos: [40, 7.5, 7], tgt: [8, 5, 5.8] },
+    schnitt: { pos: [28.2, 7.5, 9.3], tgt: [8, 5, 5.8] },
   };
   function goTo(name) {
     if (name === 'front') { setOrtho(true); return; }

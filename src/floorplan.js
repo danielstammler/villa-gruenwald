@@ -133,14 +133,14 @@ const Plans = (() => {
         { x: 7.1, y: -0.18, w: 0.9, o: 'h', s: -1, h: 0, t: 0.5 }, { x: 8.0, y: -0.18, w: 0.9, o: 'h', s: -1, h: 1, t: 0.5 },
       ],
       furn: () => [
-        fu.box(0.36, 0.86, -8.2, -6.95, 'Kamin'), fu.sofa(2.9, 3.85, -8.9, -6.3, 'E'), fu.box(1.45, 2.35, -8.15, -7.05),
-        fu.box(1.25, 2.05, -9.55, -8.75), fu.box(1.25, 2.05, -6.45, -5.65),
+        fu.box(0.36, 0.86, -8.2, -6.95, 'Kamin'), fu.sofa(2.9, 3.85, -8.9, -6.3, 'E'), fu.box(1.45, 2.35, -8.15, -7.05, '', 'couchtisch'),
+        fu.box(1.25, 2.05, -9.55, -8.75, '', 'sessel-S'), fu.box(1.25, 2.05, -6.45, -5.65, '', 'sessel-N'),
         fu.table(8.47, 9.53, -9.5, -6.9, 3),
-        fu.box(13.3, 15.64, -5.77, -5.12), fu.box(14.99, 15.64, -7.15, -5.77), fu.hob(14.3, -5.45),
+        fu.box(13.3, 15.64, -5.77, -5.12, '', 'zeile'), fu.box(14.99, 15.64, -7.15, -5.77, '', 'zeile'), fu.hob(14.3, -5.45),
         fu.box(12.6, 14.6, -8.85, -7.85, 'Insel'),
         fu.shelf(1.8, 3.1, -2.95, -2.35), fu.box(3.95, 4.48, -1.25, -0.5, 'Bank'),
         fu.wc(3.65, -4.88, 'S'), fu.basin(2.74, -3.95, 0.45, 'W'), fu.shelf(0.36, 0.81, -4.7, -3.2),
-        fu.box(11.8, 15.64, -1.0, -0.36), fu.box(12.6, 13.4, -0.95, -0.42, 'Spüle'), fu.box(15.0, 15.64, -4.6, -1.0),
+        fu.box(11.8, 15.64, -1.0, -0.36, '', 'zeile'), fu.box(12.6, 13.4, -0.95, -0.42, 'Spüle'), fu.box(15.0, 15.64, -4.6, -1.0, '', 'hochschrank'),
         fu.shelf(11.52, 12.1, -3.85, -1.1), fu.box(13.0, 14.4, -3.2, -2.4, 'Arbeitsfläche'),
       ],
     },
@@ -158,7 +158,7 @@ const Plans = (() => {
         { x: 12.85, y: -7.36, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -5.0, w: 0.85, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
-        fu.bed(7.1, 8.9, -8.34, -6.24, 'N'), fu.box(6.5, 6.98, -6.72, -6.24), fu.box(9.02, 9.5, -6.72, -6.24), fu.box(4.72, 5.22, -10.4, -8.6),
+        fu.bed(7.1, 8.9, -8.34, -6.24, 'N'), fu.box(6.5, 6.98, -6.72, -6.24, '', 'nacht'), fu.box(9.02, 9.5, -6.72, -6.24, '', 'nacht'), fu.box(4.72, 5.22, -10.4, -8.6, '', 'kommode'),
         fu.bed(3.38, 4.38, -8.9, -6.9, 'N'), fu.desk(0.36, 1.06, -8.4, -6.9, 'E'), fu.shelf(0.5, 3.2, -5.48, -4.88),
         fu.tub(0.5, 2.3, -1.16, -0.36), fu.shower(0.36, 1.56, -4.76, -3.56), fu.basin(4.48, -3.2, 1.4, 'E'), fu.wc(0.36, -2.6, 'W'),
         fu.shelf(12.4, 15.64, -5.84, -5.24), fu.shelf(12.4, 15.64, -7.3, -6.7),
@@ -180,11 +180,11 @@ const Plans = (() => {
         ...[[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ x: a, y: -10.09, w: b - a, o: 'h', s: 1, h: 0, t: 0.2 })),
       ],
       furn: () => [
-        fu.bed(7.1, 8.9, -8.24, -6.24, 'N'), fu.box(6.5, 6.98, -6.72, -6.24), fu.box(9.02, 9.5, -6.72, -6.24),
+        fu.bed(7.1, 8.9, -8.24, -6.24, 'N'), fu.box(6.5, 6.98, -6.72, -6.24, '', 'nacht'), fu.box(9.02, 9.5, -6.72, -6.24, '', 'nacht'),
         fu.table(7.5, 8.5, -11.25, -10.75, 1, false),
         fu.table(1.4, 3.2, -8.6, -7.6, 2), fu.sofa(1.5, 3.5, -10.6, -9.75, 'S'),
         fu.shelf(1.2, 3.9, -1.65, -1.15),
-        fu.shelf(12.0, 15.1, -10.6, -10.1), fu.sofa(12.6, 14.6, -7.0, -6.1, 'N'), fu.box(13.1, 14.1, -8.3, -7.5),
+        fu.shelf(12.0, 15.1, -10.6, -10.1), fu.sofa(12.6, 14.6, -7.0, -6.1, 'N'), fu.box(13.1, 14.1, -8.3, -7.5, '', 'couchtisch'),
         fu.shower(12.0, 13.2, -3.3, -2.1), fu.basin(13.6, -4.88, 0.6, 'S'), fu.wc(14.6, -4.88, 'S'),
       ],
     },
@@ -337,10 +337,17 @@ const Plans = (() => {
     const rows = FL[fl].rooms.map(rm => ({ n: rm.n, ...roomArea(fl, rm) }));
     return { rows, sum: rows.reduce((t, r) => t + r.a, 0), wf: rows.reduce((t, r) => t + r.wf, 0) };
   }
+  // Möbel als Daten für das 3D-Modell: dieselben Aufrufe wie im Grundriss, nur mitgeschrieben statt gezeichnet
+  function items(fl) {
+    const out = [], saved = { ...fu };
+    for (const k of Object.keys(fu)) fu[k] = (...a) => { out.push({ t: k, a }); return ''; };
+    try { FL[fl].furn(); } finally { Object.assign(fu, saved); }
+    return out;
+  }
   function wohnflaeche() {
     const part = ['EG', 'OG', 'DG'].map(fl => table(fl).wf);
     const aussen = 0.25 * (area([HOUSE.balkon.x0, HOUSE.balkon.x1, HOUSE.balkon.y0, HOUSE.balkon.y1]) + 15.0 + 6.1 * 1.5);
     return { eg: part[0], og: part[1], dg: part[2], aussen, sum: part[0] + part[1] + part[2] + aussen };
   }
-  return { render, table, wohnflaeche, FL, num };
+  return { render, table, wohnflaeche, items, FL, num };
 })();

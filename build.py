@@ -12,7 +12,9 @@ view3d = "\n".join([
     "import * as THREE from 'three';",
     "import { OrbitControls } from 'three/addons/controls/OrbitControls.js';",
     "import { Sky } from 'three/addons/objects/Sky.js';",
-    "import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';",
+    "import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';",
+    "import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';",
+    "import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';",
     read("view3d.js"),
     "window.View3D = View3D;",
 ])

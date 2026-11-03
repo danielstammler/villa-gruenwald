@@ -8,7 +8,7 @@ Maßstäbliche Konzeptstudie für den Neubau an der Ebertstraße 14 in Grünwald
 
 | Bereich | Inhalt |
 | --- | --- |
-| 3D-Modell | Haus, Grundstück, Nachbarhäuser, Bäume, offene Rampe zur Tiefgarage. Blick Garten, Eingang, Ost, West, Überblick, Draufsicht und orthogonale Frontansicht mit Maßstab. Sonnenstand für jedes Datum und jede Uhrzeit mit Schatten, Tagesverlauf als Animation, Nachtansicht. Ebenen für Tiefgarage und Keller, Schnitt durchs Haus. |
+| 3D-Modell | Haus mit eingerichteten Innenräumen, Grundstück, Nachbarhäuser mit Fenstern und Ziegeldächern, Laubbäume, Hecken und Beete, offene Rampe zur Tiefgarage. Fotorealistisches Licht mit weichen Schatten, Umgebungsverdeckung und Wolken. Blick Garten, Eingang, Ost, West, Überblick, Draufsicht und orthogonale Frontansicht mit Maßstab. Sonnenstand für jedes Datum und jede Uhrzeit mit Schatten, Tagesverlauf als Animation, Nachtansicht. Ebenen für Tiefgarage und Keller, Schnitt durchs Haus. |
 | Ansichten & Schnitt | Süd, Nord, Ost, West, Schnitt A–A durchs Haus und Längsschnitt der Rampe im Maßstab, mit Maßketten und Höhenkoten. |
 | Grundrisse | Vorschlag für UG mit Tiefgarage und Rampe, EG mit Backkitchen, OG mit Elternsuite und Balkon, DG mit Dachschrägen; Personenaufzug vom UG bis ins DG, Raumflächen und Wohnfläche. |
 | Lageplan | Konzept mit offener Rampe, Tiefgarage, Bäume mit Wurzelschutzbereichen, Grenzlängen, Grenzabstände, 5-m-Linie, Nachbarschaft aus der Flurkarte. Flächenbilanz. |

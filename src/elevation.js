@@ -44,6 +44,8 @@ const Elev = (() => {
       const a = o.u0 + g + fw + i * (lw + mull), b = a + lw, z0 = o.z0 + fw + sill, z1 = o.z1 - g - fw, c = Math.min(0.14, lw * 0.22);
       s += r(a, z0, b, z1, 'e-glass') + r(a, z0, a + c, z1, 'e-curtain') + r(b - c, z0, b, z1, 'e-curtain');
     }
+    // einflügelige Tür mit aufgesetzter Sprosse: schmaler als der Stoß zweier Flügel, aber dieselbe senkrechte Teilung
+    if (o.sprosse) { const c = (o.u0 + o.u1) / 2; s += r(c - 0.025, o.z0 + fw + sill, c + 0.025, o.z1 - g - fw, 'e-frame'); }
     if (o.kind === 'fenster') s += r(o.u0 - 0.05, o.z0 - 0.05, o.u1 + 0.05, o.z0, 'e-sill');
     if (o.rail) s += rail(o.u0 + 0.03, o.u1 - 0.03, o.z0 + 0.04, o.rail);
     return s;
@@ -233,20 +235,23 @@ const Elev = (() => {
     // OG-Balkon und DG-Balkon: Platten geschnitten, seitliches Geländer, Pfeiler und Konsolen dahinter
     s += r(b.y0 + D, b.slab[0], 0, b.slab[1], 'e-cut') + rail(b.y0 + D + 0.06, -0.02, b.slab[1], b.rail) + r(b.colY + D - b.colW / 2, HOUSE.terrasse.z, b.colY + D + b.colW / 2, b.slab[0], 'e-beyond');
     s += r(bd.y0 + D, bd.slab[0], 0, bd.slab[1], 'e-cut') + rail(bd.y0 + D + 0.06, -0.02, bd.slab[1], bd.rail);
+    // DG-Balkon 10 cm unter FFB DG: vor der Türschwelle die Rinne mit Gitterrost, geschnitten
+    s += r(-bd.rinne[2], bd.slab[1] - 0.1, 0, bd.slab[1], 'e-room') + r(-bd.rinne[2], bd.slab[1] - 0.02, 0, bd.slab[1], 'e-sill');
     s += r(bd.colY + D - bd.colW / 2, b.slab[1], bd.colY + D + bd.colW / 2, bd.slab[0], 'e-beyond');
     s += tx((bd.y0 + D) / 2, bd.slab[1] + 1.25, 'Balkon', 'e-dimtxt') + tx((b.y0 + D) / 2, b.slab[1] + 1.25, 'Balkon', 'e-dimtxt');
-    // 2,30 m lichte Höhe im DG
-    const zc = Z.ffbDG + 2.3, xs = [];
+    // Flache Decke im DG wie im 3D-Modell (lichte Höhe 2,60 m, in den Zwerchhäusern bis an die Front), darüber der Spitzboden;
+    // sie reicht bis an die Innenseite des Dachs. Die Linie für 2,30 m lichte Höhe unter dem offenen Dach entfällt damit.
+    const zD = Z.deckeSpitz, xs = [];
     for (let i = 0; i < inner.length - 1; i++) {
       const [a, b] = inner[i], [c, e] = inner[i + 1];
-      if ((b - zc) * (e - zc) < 0) xs.push(a + (c - a) * (zc - b) / (e - b));
+      if ((b - zD) * (e - zD) < 0) xs.push(a + (c - a) * (zD - b) / (e - b));
     }
-    if (xs.length >= 2) s += ln(Math.min(...xs), zc, Math.max(...xs), zc, 'e-dim e-dash e-h230') + tx(D / 2, zc + 0.12, 'lichte Höhe 2,30 m', 'e-dimtxt');
+    if (xs.length >= 2) s += r(Math.min(...xs), zD, Math.max(...xs), zD + 0.12, 'e-cut') + tx(D / 2, zD + 0.6, 'Spitzboden', 'e-label');
     s += tx(D / 2, -1.75, 'UG · Annahme', 'e-label') + tx(D / 2, 1.5, 'EG · lichte Höhe ≈ 3,00 m', 'e-label') +
-      tx(D / 2, 4.85, 'OG · lichte Höhe ≈ 2,75 m', 'e-label') + tx(D / 2, 7.7, 'DG', 'e-label');
+      tx(D / 2, 4.85, 'OG · lichte Höhe ≈ 2,75 m', 'e-label') + tx(D / 2, 7.7, `DG · lichte Höhe ${num(zD - Z.ffbDG)} m`, 'e-label');
     s += ln(x0 + 0.3, 0, x1 - 0.3, 0, 'e-ground');
     if (opt.mass) s += chain([0, D], -4.8 + 0.4);
-    if (opt.koten) s += koten([[Z.ffbUG, 'FFB UG'], ...LEVELS], -4.6, -0.4);
+    if (opt.koten) s += koten([[Z.ffbUG, 'FFB UG'], ...LEVELS, [zD, 'Decke über DG']], -4.6, -0.4);
     return { svg: s, vb: [x0, -12.6, x1 - x0, 17.9] };
   }
   // Schnitt B–B in der Achse der Rampe, Blick nach Westen: links Straße und Zufahrt, rechts die Tiefgarage.

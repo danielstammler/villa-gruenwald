@@ -55,15 +55,18 @@
       return;
     }
     const f0 = face - gl - 0.04, f1 = face - gl + 0.03;
+    // Aufgesetzte Sprosse (einflügelige Türen, sprosse: true): 5 cm breite Leiste außen und innen auf dem Glas, wirkt wie die Mittelsprosse
+    const sprosse = (c, z0, z1) => { for (const [d0, d1] of [[face - gl, face - gl + 0.018], [face - gl - 0.03, face - gl - 0.012]]) addBox(M.frame, mx, c - 0.025, c + 0.025, z0, z1, d0, d1); };
     if (o.kind === 'tuer' || o.kind === 'franz') addBox(M.stairMat, mx, o.u0, o.u1, o.z0 - 0.06, o.z0 + 0.008, face - depth - 0.01, face + 0.03);
     if (o.move && parent) {
-      // Gartentür bzw. Balkontür mit zwei beweglichen Flügeln: feste Zarge, Flügel mit Glas, Rahmen und Griff
+      // Gartentür bzw. Balkontür mit beweglichen Flügeln (zwei, bei leaves: 1 einer mit Angel links): feste Zarge, Flügel mit Glas, Rahmen und Griff
       for (const [p, q, r0, r1] of [[o.u0, o.u0 + fw, o.z0, o.z1], [o.u1 - fw, o.u1, o.z0, o.z1], [o.u0, o.u1, o.z1 - fw, o.z1], [o.u0, o.u1, o.z0, o.z0 + 0.03]]) addBox(M.frame, mx, p, q, r0, r1, f0, f1);
       const c = (o.u0 + o.u1) / 2, za = o.z0 + 0.03, zb = o.z1 - fw, center = at(c, o.z0 + 1.1, face);
-      for (const [a, b, h, sg] of [[o.u0 + fw, c, o.u0 + fw, 1], [c, o.u1 - fw, o.u1 - fw, -1]]) {
+      for (const [a, b, h, sg] of o.leaves === 1 ? [[o.u0 + fw, o.u1 - fw, o.u0 + fw, 1]] : [[o.u0 + fw, c, o.u0 + fw, 1], [c, o.u1 - fw, o.u1 - fw, -1]]) {
         leaf(parent, at(h, 0, (f0 + f1) / 2), sg, center, () => {
           addBox(M.glass, mx, a + 0.05, b - 0.05, za + 0.05, zb - 0.05, face - gl - 0.012, face - gl);
           for (const [p, q, r0, r1] of [[a, a + 0.055, za, zb], [b - 0.055, b, za, zb], [a, b, za, za + 0.09], [a, b, zb - 0.055, zb]]) addBox(M.frame, mx, p + (sg < 0 && p === a ? 0.003 : 0), q, r0, r1, f0 + 0.005, f1 - 0.005);
+          if (o.sprosse) sprosse((a + b) / 2, za + 0.09, zb - 0.055);
           const gx = sg > 0 ? b - 0.1 : a + 0.1;
           addBox(M.metal, mx, gx - 0.012, gx + 0.012, o.z0 + 0.95, o.z0 + 1.12, f0 - 0.05, f0);
         });
@@ -75,6 +78,7 @@
       addBox(M.frame, mx, o.u0, o.u1, o.z1 - fw, o.z1, f0, f1);
       addBox(M.frame, mx, o.u0, o.u1, o.z0, o.z0 + fw, f0, f1);
       if (o.leaves === 2) { const c = (o.u0 + o.u1) / 2; addBox(M.frame, mx, c - 0.045, c + 0.045, o.z0, o.z1, f0, f1); }
+      else if (o.sprosse) sprosse((o.u0 + o.u1) / 2, o.z0 + fw, o.z1 - fw);
     }
     if (o.kind === 'fenster') addBox(M.sockel, mx, o.u0 - 0.05, o.u1 + 0.05, o.z0 - 0.05, o.z0, face - gl, face + 0.05);
     if (o.rail) railing(M.metal, mx, o.u0 + 0.04, o.u1 - 0.04, o.z0 + 0.05, o.rail, face + 0.02);
@@ -210,13 +214,17 @@
       const sl = extrude([[0.3, -11.35], [15.7, -11.35], [15.7, -0.3], [0.3, -0.3]], M.slab, z0, z1 - z0, holes); sl.castShadow = false; g.add(sl);
     }
     buildInterior();
-    // Balkon im DG vor dem Zwerchhaus: Platte mit Kante und Belag auf zwei quadratischen Pfeilern über dem OG-Balkon, Geländer an drei Seiten
-    const bd = HOUSE.balkonDG;
-    boxPlan(M.putzHell, bd.x0, bd.x1, bd.y0, bd.y1, bd.slab[0], bd.slab[1] - 0.1);
-    boxPlan(M.putzHell, bd.x0 - 0.06, bd.x1 + 0.06, bd.y0 - 0.06, bd.y1, bd.slab[1] - 0.1, bd.slab[1]);
-    boxPlan(M.stone, bd.x0, bd.x1, bd.y0, bd.y1, bd.slab[1], bd.slab[1] + 0.02);
+    // Balkon im DG vor dem Zwerchhaus: Platte mit Kante auf zwei quadratischen Pfeilern über dem OG-Balkon, Geländer an drei Seiten.
+    // Belag bündig mit der Plattenoberkante (10 cm unter FFB DG); vor den Türen eine Rinne mit Gitterrost, die Schwellen kragen darüber
+    const bd = HOUSE.balkonDG, zr = bd.slab[1], [ra, rb, rw] = bd.rinne, yr = bd.y1 - rw;
+    boxPlan(M.putzHell, bd.x0, bd.x1, bd.y0, bd.y1, bd.slab[0], zr - 0.02);
+    boxPlan(M.putzHell, bd.x0 - 0.06, bd.x1 + 0.06, bd.y0 - 0.06, bd.y1, zr - 0.12, zr - 0.02);
+    for (const [a, b, c, e] of [[bd.x0, bd.x1, bd.y0, yr], [bd.x0, ra, yr, bd.y1], [rb, bd.x1, yr, bd.y1]]) boxPlan(M.stone, a, b, c, e, zr - 0.02, zr);
+    // Rinne: dunkler Kasten, darüber der Rost aus zwei Randwinkeln und Querstäben alle 3 cm, oben bündig mit dem Belag
+    boxPlan(M.frame, ra, rb, yr, bd.y1, zr - 0.1, zr - 0.016);
+    for (const [c, e] of [[yr, yr + 0.012], [bd.y1 - 0.012, bd.y1]]) boxPlan(M.zink, ra, rb, c, e, zr - 0.02, zr);
+    for (let x = ra + 0.015; x < rb; x += 0.03) boxPlan(M.zink, x - 0.004, x + 0.004, yr + 0.012, bd.y1 - 0.012, zr - 0.016, zr - 0.002);
     for (const x of bd.cols) column(x, bd.colY, HOUSE.balkon.slab[1], bd.slab[0], bd.colW);
-    const zr = bd.slab[1] + 0.02;
     railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -bd.y0 - 0.06), bd.x0 + 0.06, bd.x1 - 0.06, zr, bd.rail, 0);
     for (const xr of [bd.x0 + 0.06, bd.x1 - 0.06]) {
       railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(xr, 0, 0)), bd.y0 + 0.06, bd.y1 - 0.02, zr, bd.rail, 0);
@@ -231,9 +239,14 @@
       // senkrechte Sprosse wie bei allen Fenstern
       const c = (w.u0 + w.u1) / 2; addBox(M.frame, m, c - 0.03, c + 0.03, w.v0, w.v1, -0.03, 0.03);
     }
-    // Flache Decke im DG unter dem oberen Dach (dort, wo die steile Dachfläche sie nicht schneidet)
-    const sD = (Zh.ffbDG + 2.6 - HOUSE.roofIn(0)) / HOUSE.tan1;
-    boxPlan(M.slab, sD, HOUSE.W - sD, -HOUSE.D + sD, -sD, Zh.ffbDG + 2.6, Zh.ffbDG + 2.72);
+    // Flache Decke im DG unter dem Spitzboden (dort, wo die steile Dachfläche sie nicht schneidet); in den Zwerchhäusern bis an die Front
+    // (innen 0,12 m hinter der Fassade, seitlich knapp innerhalb der Wangen), so wie im Schnitt A–A
+    const zD = Zh.deckeSpitz, sD = (zD - HOUSE.roofIn(0)) / HOUSE.tan1;
+    boxPlan(M.slab, sD, HOUSE.W - sD, -HOUSE.D + sD, -sD, zD, zD + 0.12);
+    for (const side of ['S', 'N']) for (const d of (HOUSE.fas[side].dormers || []).filter(q => q.zwerch)) {
+      const [a, b] = side === 'S' ? [d.u0, d.u1] : [HOUSE.W - d.u1, HOUSE.W - d.u0], [c, e] = side === 'S' ? [-HOUSE.D + 0.12, -HOUSE.D + sD] : [-sD, -0.12];
+      boxPlan(M.slab, a + 0.035, b - 0.035, c, e, zD, zD + 0.12);
+    }
     // Kamine: weiß verputzt mit dunkler Abdeckung
     for (const k of HOUSE.kamine) {
       boxPlan(M.putzHell, k.x - k.w / 2, k.x + k.w / 2, k.y - k.d / 2, k.y + k.d / 2, Zh.knick - 0.2, k.top - 0.12);

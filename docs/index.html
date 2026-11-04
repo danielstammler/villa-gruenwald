@@ -1330,6 +1330,9 @@ const Site = (() => {
     s.push(`<polyline points="${pts([onB(Z0.tor[0]), onB(Z0.tor[1])])}" class="s-gate" data-tip="Einfahrtstor · zweiflügelig, schwarzer Stahl · 3,60 m breit · flacher Bogen bis ${num(Z0.hoehe)} m · Leuchten vorn an den Torpfeilern"/>`);
     s.push(`<polyline points="${pts([onB(Z0.tuer[0]), onB(Z0.tuer[1])])}" class="s-gate" data-tip="Gartentür für Fußgänger mit Klingel und Briefkasten im Pfeiler · ${num(Z0.stab)} m hoch"/>`);
     s.push(poly(C.haus, 's-house', 'Wohnhaus · 16,00 × 11,65 m · 186,4 m² · Wandhöhe 7,25 m · First 11,12 m'));
+    // Lichthof vor dem Gym an der Westseite, bis zum UG-Boden, oben mit Geländer
+    const LH = HOUSE.lichthof;
+    s.push(poly(rect(-LH.tief, -LH.u1, 0, -LH.u0), 's-stone', `Lichthof vor dem Gym · ${num(LH.u1 - LH.u0, 2)} × ${num(LH.tief, 2)} m · bis zum UG-Boden, Geländer ringsum`));
     for (const o of HOUSE.fas.S.open.filter(q => q.z0 < 1)) s.push(poly(rect(o.u0, -HOUSE.D, o.u1, -HOUSE.D + 0.2), 's-win'));
     const bk = HOUSE.balkon;
     const sq = (x, y, w) => poly(rect(x - w / 2, y - w / 2, x + w / 2, y + w / 2), 's-col');

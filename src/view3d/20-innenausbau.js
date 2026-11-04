@@ -31,8 +31,8 @@
     for (const [y0, y1] of [[-D + 0.12, -D + 0.36], [-0.36, -0.12]]) boxPlan(M.floorOak, 4.45, 11.55, y0, y1, Zh.ffbDG - 0.11, Zh.ffbDG + 0.005);
     for (const fl of ['UG', 'EG', 'OG', 'DG']) {
       const F = Plans.FL[fl], [z0, z1] = lv[fl];
-      for (const rm of F.rooms) for (const q of minus(rm.r, openings[fl])) boxPlan(nass.test(rm.n) ? M.floorTile : halle.test(rm.n) ? M.floorHall : M.floorOak, q[0], q[1], q[2], q[3], z0 - 0.02, z0 + 0.005);
-      const free = [...F.rooms.map(r => r.r), ...(F.open || []), ...F.doors.map(doorRect)];
+      for (const rm of F.rooms) for (const rr of [rm.r, ...(rm.ext || [])]) for (const q of minus(rr, openings[fl])) boxPlan(nass.test(rm.n) ? M.floorTile : halle.test(rm.n) ? M.floorHall : M.floorOak, q[0], q[1], q[2], q[3], z0 - 0.02, z0 + 0.005);
+      const free = [...F.rooms.flatMap(r => [r.r, ...(r.ext || [])]), ...(F.open || []), ...F.doors.map(doorRect)];
       const xs = uniq([0.36, 15.64, ...free.flatMap(r => [r[0], r[1]])]).filter(v => v >= 0.36 && v <= 15.64);
       const ys = uniq([-11.29, -0.36, ...free.flatMap(r => [r[2], r[3]])]).filter(v => v >= -11.29 && v <= -0.36);
       for (let j = 0; j < ys.length - 1; j++) {
@@ -212,10 +212,8 @@
           else if (k === 'wm' || k === 'tr') { B(M.fWhite, x0, x1, y0, y1, 0, 0.85); B(M.fDark, cx - 0.17, cx + 0.17, y0 - 0.005, y0, 0.3, 0.64); }
           else if (k === 'insel' || k === 'arbeitsfläche') {
             B(M.fOak, x0 + 0.05, x1 - 0.05, y0 + 0.05, y1 - 0.05, 0, 0.88); B(M.fStone, x0, x1, y0, y1, 0.88, 0.92);
-            if (k === 'insel') {
-              for (let i = 0; i < 3; i++) { const sx = x0 + (i + 0.5) * (x1 - x0) / 3; C(M.fDark, sx, y0 - 0.38, 0, 0.62, 0.025); C(M.fOak, sx, y0 - 0.38, 0.62, 0.67, 0.19); }
-              for (const px of [x0 + 0.5, x1 - 0.5]) pendant(px, (y0 + y1) / 2, 1.75);
-            }
+            // Insel ohne Barhocker (Daniel, 4.11.2026), darüber zwei Pendelleuchten
+            if (k === 'insel') for (const px of [x0 + 0.5, x1 - 0.5]) pendant(px, (y0 + y1) / 2, 1.75);
           } else if (k === 'spüle') { B(M.fDark, x0 + 0.05, x1 - 0.05, y0 + 0.05, y1 - 0.05, 0.86, 0.905); C(M.metal, (x0 + x1) / 2, f === 'S' ? y1 - 0.06 : y0 + 0.06, 0.9, 1.2, 0.015); }
           else if (k === 'hochschrank') B(M.fWhite, x0, x1, y0, y1, 0, cap(x0, x1, y0, y1, 2.2));
           else if (k === 'kamin') {

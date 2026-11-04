@@ -29,8 +29,12 @@
       [8.0, -26.9, -1.4, { eye: 0.15, label: 'Im Pool' }], [8.0, -28.2, -1.4, { eye: -0.55, label: 'Abtauchen' }], [8.0, -33.4, -1.4, { eye: -0.75, v: 1.2 }],
       [8.0, -35.6, -1.4, { eye: 0.12, label: 'Aufgetaucht', wait: 3.2, look: [8.0, 3.0, 4.5] }],
     ],
+    // Start am Garteneingang an der Straße, über die Zufahrt die Rampe hinunter (Höhen nach dem Längsprofil) und durchs Tor
     garage: [
-      [20.8, -23.3, UG, { label: 'Tiefgarage', wait: 1.8, look: [14.0, -19.5, UG + 0.8] }], [19.2, -19.0, UG, { label: 'Ferrari F8 · Cayenne Coupé · V-Klasse' }],
+      [24.25, -53.0, 0, { label: 'Garteneingang', wait: 1.4, look: [22.0, -40.0, 0.6] }], [24.25, -50.6, 0.016], [22.6, -50.1, 0.016],
+      [21.13, -49.4, 0.016, { label: 'Rampe zur Tiefgarage' }],
+      ...[-48.8, -45.8, -39.0, -33.65, -30.6, -27.55, -24.55].map(y => [21.13, y, HOUSE.rampe.z(y), { v: 1.8, ...(y === -33.65 ? { label: 'Unter dem Poolhaus' } : {}) }]),
+      [21.0, -23.3, UG, { label: 'Tiefgarage', wait: 1.8, look: [14.0, -19.5, UG + 0.8] }], [19.2, -19.0, UG, { label: 'Ferrari F8 · Cayenne Coupé · V-Klasse' }],
       [18.4, -14.4, UG], [17.9, -13.65, UG, { label: 'Eingangsschleuse' }], [16.2, -13.65, UG], [13.6, -12.4, UG, { wait: 1.4, look: [13.6, -11.0, UG + 1.3] }],
       [13.6, -10.6, UG, { label: 'Foyer' }], [13.2, -6.6, UG], [12.45, -5.57, UG], [11.0, -5.57, UG, { label: 'Untergeschoss' }],
       [8.6, -5.45, UG], [8.6, -4.6, UG], [9.545, -4.4, UG, { label: 'Treppe' }], ...stairUp(UG, -1.6, EG),
@@ -42,8 +46,8 @@
     eg: [
       [8.0, -0.9, EG, { label: 'Halle', wait: 1.5, look: [9.8, -2.2, 3.6] }], [8.0, -3.2, EG], [8.0, -5.0, EG, { label: 'Essen' }], [7.4, -6.2, EG],
       [6.6, -7.2, EG, { label: 'Wohnen' }], [5.2, -7.4, EG, { wait: 1.6, look: [0.6, -7.6, 1.0] }], [6.6, -8.8, EG], [7.6, -10.5, EG], [10.4, -10.3, EG],
-      [11.4, -9.9, EG, { label: 'Küche' }], [12.15, -9.1, EG, { wait: 1.6, look: [13.6, -10.1, 0.8] }], [12.2, -6.3, EG], [12.75, -5.6, EG],
-      [12.8, -4.2, EG, { label: 'Backkitchen', wait: 1.2, look: [14.0, -2.2, 1.0] }], [12.1, -4.35, EG], [10.9, -4.55, EG, { label: 'Halle' }], [8.4, -4.6, EG],
+      [11.4, -9.9, EG, { label: 'Küche' }], [12.15, -9.1, EG, { wait: 1.6, look: [13.6, -10.1, 0.8] }], [12.2, -6.3, EG], [12.75, -4.7, EG],
+      [12.75, -3.3, EG, { label: 'Backkitchen', wait: 1.2, look: [14.0, -1.8, 1.0] }], [12.75, -4.55, EG], [12.1, -4.5, EG], [10.9, -4.55, EG, { label: 'Halle' }], [8.4, -4.6, EG],
       [8.0, -3.5, EG], [8.0, -1.4, EG, { wait: 2.0, look: [8.0, 0.5, 1.8] }],
     ],
     garten: [

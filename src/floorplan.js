@@ -126,31 +126,32 @@ const Plans = (() => {
       titel: 'Erdgeschoss', ffb: HOUSE.Z.ffbEG,
       rooms: [
         { n: 'Wohnen', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Essen', r: [6.72, 11.28, -11.29, -5.12], at: [9.0, -10.6] },
-        { n: 'Küche', r: [11.52, 15.64, -11.29, -5.12], at: [13.6, -10.4] },
+        // Küche L-förmig: 1 m weiter nach Norden, dafür ist die Backkitchen kleiner (Daniel, 4.11.2026)
+        { n: 'Küche', r: [11.52, 15.64, -11.29, -5.12], ext: [[11.92, 15.64, -5.12, -4.12]], at: [13.6, -10.4] },
         { n: 'Halle', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.8, -4.15] },
         { n: 'Garderobe', r: [0.36, 4.48, -2.95, -0.36], at: [2.4, -1.75] }, { n: 'Gäste-WC', r: [2.74, 4.48, -4.88, -3.07], at: [3.6, -3.75] },
         { n: 'Abstellraum', r: [0.36, 2.62, -4.88, -3.07], at: [1.5, -3.75] },
-        { n: 'Backkitchen', r: [11.92, 15.64, -4.88, -0.36], at: [13.75, -1.9] },
+        { n: 'Backkitchen', r: [11.92, 15.64, -3.88, -0.36], at: [13.75, -1.65] },
       ],
       open: [[7.0, 9.0, -5.12, -4.88], [6.48, 6.72, -10.4, -5.9], [11.28, 11.52, -10.4, -6.2]],
       doors: [
         { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 3.2, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 },
-        { x: 0.95, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.8, y: -4.78, w: 0.85, o: 'v', s: 1, h: 0 },
-        { x: 12.3, y: -5.0, w: 0.9, o: 'h', s: 1, h: 0 },
+        { x: 0.95, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.8, y: -4.84, w: 0.7, o: 'v', s: 1, h: 0 },
+        { x: 12.3, y: -4.0, w: 0.9, o: 'h', s: 1, h: 1 },
         { x: 7.35, y: -0.18, w: 1.3, o: 'h', s: -1, h: 0, t: 0.5 },
       ],
       furn: () => [
         fu.box(0.36, 0.86, -8.2, -6.95, 'Kamin'), fu.sofa(2.9, 3.85, -8.9, -6.3, 'E'), fu.box(1.45, 2.35, -8.15, -7.05, '', 'couchtisch'),
         fu.box(1.25, 2.05, -9.55, -8.75, '', 'sessel-S'), fu.box(1.25, 2.05, -6.45, -5.65, '', 'sessel-N'),
         fu.table(8.47, 9.53, -9.5, -6.9, 3),
-        fu.box(13.3, 15.64, -5.77, -5.12, '', 'zeile'), fu.box(14.99, 15.64, -7.15, -5.77, '', 'zeile'), fu.hob(14.3, -5.45),
-        fu.box(12.6, 14.6, -8.3, -7.3, 'Insel'),
+        fu.box(13.3, 15.64, -4.77, -4.12, '', 'zeile'), fu.box(14.99, 15.64, -6.15, -4.77, '', 'zeile'), fu.hob(14.3, -4.45),
+        fu.box(12.6, 14.6, -7.2, -6.2, 'Insel'),
         // kleiner Esstisch für vier vor den Gartentüren der Küche
         fu.table(12.75, 13.95, -10.45, -9.65, 2, false),
         fu.shelf(1.8, 3.1, -2.95, -2.35), fu.box(3.95, 4.48, -2.9, -2.15, 'Bank'),
         fu.wc(3.65, -4.88, 'S'), fu.basin(2.74, -3.95, 0.45, 'W'), fu.shelf(0.36, 0.81, -4.7, -3.2),
-        fu.box(12.2, 15.64, -1.0, -0.36, '', 'zeile'), fu.box(12.8, 13.6, -0.95, -0.42, 'Spüle'), fu.box(15.0, 15.64, -4.6, -1.0, '', 'hochschrank'),
-        fu.shelf(11.92, 12.5, -3.85, -1.4), fu.box(13.2, 14.6, -3.4, -2.6, 'Arbeitsfläche'),
+        fu.box(12.2, 15.64, -1.0, -0.36, '', 'zeile'), fu.box(12.8, 13.6, -0.95, -0.42, 'Spüle'), fu.box(15.0, 15.64, -3.6, -1.0, '', 'hochschrank'),
+        fu.shelf(11.92, 12.5, -3.85, -1.4), fu.box(13.2, 14.6, -2.9, -2.1, 'Arbeitsfläche'),
         // Halle: Konsole mit Spiegel an der Nordwand neben dem Eingang
         fu.box(5.0, 6.4, -0.76, -0.36, '', 'konsole'),
         // draußen: Lounge mittig unter dem Balkon (Blick in den Garten, vor der Fassade bleibt ein Gang), Esstisch auf dem Freisitz;
@@ -234,7 +235,8 @@ const Plans = (() => {
   }));
   const tall = (r, inner) => clip(r, inner) + ZWERCH.reduce((t, z) => t + clip(r, z) - clip(r, inter(inner, z)), 0);
   function roomArea(fl, rm) {
-    let a = area(rm.r);
+    // ext: weitere Rechtecke desselben Raums (L-förmige Räume, z. B. die Küche)
+    let a = area(rm.r) + (rm.ext || []).reduce((t, q) => t + area(q), 0);
     if (rm.core) a -= coreIn(fl, rm.r);
     if (fl !== 'DG') return { a, wf: fl === 'UG' ? 0 : (rm.wf ?? 1) * a };
     // Wohnfläche nach WoFlV: unter 1 m lichter Höhe 0 %, 1–2 m 50 %, ab 2 m 100 %; Zwerchhäuser zählen voll, Gauben nicht (eher zu niedrig)
@@ -405,7 +407,7 @@ const Plans = (() => {
     let s = fl === 'UG' ? tiefgarage() : '';
     s += context(fl);
     s += R(0, W, -D, 0, 'g-wall');
-    for (const rm of F.rooms) s += R(...rm.r, 'g-room', `${rm.n} · ${num(rm.r[1] - rm.r[0], 2)} × ${num(rm.r[3] - rm.r[2], 2)} m`);
+    for (const rm of F.rooms) for (const q of [rm.r, ...(rm.ext || [])]) s += R(...q, 'g-room', `${rm.n} · ${num(rm.r[1] - rm.r[0], 2)} × ${num(rm.r[3] - rm.r[2], 2)} m`);
     for (const o of F.open || []) s += R(...o, 'g-room');
     s += outerOpenings(fl);
     for (const d of F.doors) s += door(d);

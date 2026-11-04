@@ -19,7 +19,9 @@
       post.op.renderToScreen = true;
     } catch (e) { console.warn('Bildaufbau ohne Umgebungsverdeckung:', e); post = null; }
   }
+  let skipDraw = false;
   function renderFrame() {
+    if (skipDraw) return;
     if (post && cam === camP) {
       renderer.setRenderTarget(post.rt); renderer.render(scene, cam);
       post.ao.render(renderer, post.out, post.rt);
@@ -73,7 +75,7 @@
     let moved = false;
     for (const d of doors) {
       const want = cam === camP && Math.hypot(q.x - d.c.x, q.z - d.c.z) < 2.4 && Math.abs(q.y - d.c.y) < 2.2 ? 1 : 0;
-      if (d.open !== want) { d.open = want > d.open ? Math.min(1, d.open + dt * 1.4) : Math.max(0, d.open - dt * 1.4); d.grp.rotation.y = d.sign * d.max * d.open * d.open * (3 - 2 * d.open); moved = true; }
+      if (d.open !== want) { d.open = want > d.open ? Math.min(1, d.open + dt * 1.4) : Math.max(0, d.open - dt * 1.4); d.grp.rotation[d.axis || 'y'] = d.sign * d.max * d.open * d.open * (3 - 2 * d.open); moved = true; }
     }
     return moved;
   }
@@ -200,6 +202,7 @@
     _step(sec) { for (let k = 0; k < sec * 30 && tour; k++) { stepTour(1 / 30); updateDoors(1 / 30); } renderFrame(); return tour ? tour.label : 'Ende'; },
     _view(p, t) { stopTour(false); setOrtho(false); tween = { t0: performance.now(), dur: 10, fp: camP.position.clone(), ft: controls.target.clone(), tp: new THREE.Vector3(...p), tt: new THREE.Vector3(...t) }; },
     // Bildschleife n Schritte von Hand weiterlaufen lassen (Headless-Browser ohne Bildwechsel, tools/houseshot.sh)
-    _frame(n = 1) { for (let i = 0; i < n; i++) { cancelAnimationFrame(raf); loop(Math.max(performance.now(), last) + 1000 / 30); } return camP.position.toArray(); },
+    // nur rechnen, nicht zeichnen (das Bild entsteht danach mit snapshot) – im Software-Rendering sonst sehr langsam
+    _frame(n = 1) { skipDraw = true; try { for (let i = 0; i < n; i++) { cancelAnimationFrame(raf); loop(Math.max(performance.now(), last) + 1000 / 30); } } finally { skipDraw = false; } return camP.position.toArray(); },
   };
 })();

@@ -19,9 +19,14 @@
     boxPlan(M.beton, wx0 + 0.01, wx1 - 0.01, R0.yPortal, R0.yPH, R0.decke, 0);
     const G = HOUSE.tg;
     boxPlan(M.beton, wx0 + 0.01, wx1 - 0.01, R0.yPH, R0.yTor, G.decke, G.decke + G.platte);
-    // Sektionaltor in Anthrazit mit waagrechten Fugen
-    boxPlan(M.tor, R0.x0, R0.x1, R0.yTor - 0.06, R0.yTor, R0.zTG, G.decke);
-    for (let z = R0.zTG + 0.5; z < G.decke - 0.1; z += 0.5) boxPlan(M.tgSockel, R0.x0 + 0.02, R0.x1 - 0.02, R0.yTor - 0.07, R0.yTor - 0.055, z - 0.012, z + 0.012);
+    // Tor in Anthrazit mit waagrechten Fugen; schwingt beim Herankommen nach innen unter die Decke (Drehachse oben, quer)
+    const tx = (R0.x0 + R0.x1) / 2, zTop = G.decke - 0.06;
+    boxPlan(M.tor, R0.x0, R0.x1, R0.yTor - 0.08, R0.yTor + 0.02, zTop, G.decke);
+    leaf(g, new THREE.Vector3(tx, zTop, -R0.yTor), 1, new THREE.Vector3(tx, R0.zTG + 1.1, -R0.yTor), () => {
+      boxPlan(M.tor, R0.x0, R0.x1, R0.yTor - 0.06, R0.yTor, R0.zTG, zTop);
+      for (let z = R0.zTG + 0.5; z < zTop - 0.1; z += 0.5) boxPlan(M.tgSockel, R0.x0 + 0.02, R0.x1 - 0.02, R0.yTor - 0.07, R0.yTor - 0.055, z - 0.012, z + 0.012);
+    }, Math.PI / 2);
+    doors[doors.length - 1].axis = 'x';
     for (const xr of [R0.x0 - R0.wand / 2, R0.x1 + R0.wand / 2]) {
       railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(xr, 0, 0)), R0.y0 + 0.3, R0.yPortal - 0.06, 0.15, 1.05, 0);
     }

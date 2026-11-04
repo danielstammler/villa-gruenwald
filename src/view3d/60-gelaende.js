@@ -28,8 +28,11 @@
     boxPlan(M.stone, PW.x0, PW.x1, PW.y0 - 0.02, PW.y1 - 0.36, 0, 0.03);
     buildPoolhaus(g);
     gardenFurniture();
+    buildSpielplatz(g);
     buildFence(g);
     g.add(hedges());
+    // Zufallsfolge ab hier fest (Stand vor den neuen Hecken): Bäume, Beete und Nachbargrün bleiben gleich, wenn sich Zaun, Hecken oder Spielplatz ändern
+    seed = 334129586;
     // Grenze
     const pts = [...SITE.plot, SITE.plot[0]].map(q => P(q[0], q[1], 0.05));
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0x24292e, dashSize: 0.9, gapSize: 0.45 }));

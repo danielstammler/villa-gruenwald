@@ -335,6 +335,13 @@ body.noscroll { overflow: hidden; }
 .s-hedge { fill: none; stroke: var(--lawn-2); stroke-width: 0.6; stroke-linejoin: round; opacity: 0.9; }
 .s-fence { fill: none; stroke: var(--ink); stroke-width: 0.22; stroke-dasharray: 0.9 0.25; }
 .s-gate { fill: none; stroke: var(--accent); stroke-width: 0.32; stroke-linecap: round; }
+.s-trog { fill: none; stroke: var(--ink-2); stroke-width: 0.8px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.s-spiel { fill: color-mix(in srgb, #b08655 36%, var(--lawn)); stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.s-spielgeraet { fill: var(--surface); stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.s-spielnetz { fill: color-mix(in srgb, var(--surface) 55%, transparent); stroke: var(--ink); stroke-width: 0.7px; stroke-dasharray: 2 1.5; vector-effect: non-scaling-stroke; }
+.s-spiellinie { stroke: var(--ink); stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
+.s-spielbalken { stroke: var(--ink); stroke-width: 0.1; }
+.s-hit { fill: transparent; }
 .hint-text { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); margin: 8px 0 0; }
 </style>
 </head>
@@ -542,7 +549,7 @@ body.noscroll { overflow: hidden; }
           <h2>Auffälligkeiten</h2>
           <ul class="notes">
             <li class="info"><span>Die Rampe zur Tiefgarage beginnt knapp 2 m hinter der Grenze und liegt offen in der Zufahrt (oben und unten 8 %, dazwischen 16 %). Das letzte Stück führt unter dem Poolhaus hindurch in die Tiefgarage.</span></li>
-            <li class="info"><span>An der Straße steht ein Zaun aus weißem Sockel, schwarzen Stäben und Pfeilern mit zweiflügeligem Einfahrtstor und Gartentür. Die Terrasse läuft über die ganze Gartenseite. Rund um den Pool liegt eine Natursteinterrasse, die bis an die Veranda des Poolhauses reicht.</span></li>
+            <li class="info"><span>An der Straße steht ein Zaun aus weißem Sockel, schwarzen Stäben und Pfeilern mit zweiflügeligem Einfahrtstor und Gartentür. Hecken säumen Straße, Rampe und Grenzen, im Vorgarten steht ein Spielturm mit Rutsche und Doppelschaukel. Die Terrasse läuft über die ganze Gartenseite. Rund um den Pool liegt eine Natursteinterrasse, die bis an die Veranda des Poolhauses reicht.</span></li>
             <li class="warn"><span>Die Wurzelschutzbereiche der Nachbarbäume im Nordosten und Südosten reichen in Zuwegung und Zufahrt. Der Schutzbereich im Südosten erfasst auch den Anfang der Rampe.</span></li>
           </ul>
         </section>
@@ -819,16 +826,67 @@ const HOUSE = (() => {
   // Poolhaus auf der Fläche aus dem Konzept (3,50 × 6,00 m) im Stil des Hauses: weißer Putz, Gesims, flaches Walmdach mit Schiefer.
   // Zum Pool ganz offen: eine 5,40 m breite Glas-Schiebewand (zwei Flügel zur Seite geschoben), nach Norden ein großes Fenster,
   // davor eine überdachte Veranda auf zwei Pfeilern. Darunter führt die Rampe in die Tiefgarage.
-  const poolhaus = { x0: 19.384, x1: 22.885, y0: -33.651, y1: -27.652, z: 0.05, wand: 0.25, gesims: 2.75, traufe: 2.95, neigung: 27,
-    veranda: 1.8, pfeiler: 0.3, front: [0.3, 5.7], fenster: [20.75, 22.45] };
-  // Zaun an der Straße: weißer Sockel mit schwarzen Stäben zwischen Pfeilern; Einfahrtstor zweiflügelig, daneben die Gartentür
-  const zaun = { hoehe: 1.65, sockel: 0.45, pfeiler: 0.42, tor: [19.732, 23.33], tuer: [23.75, 24.73] };
+  // Boden eine Stufe über der Poolterrasse (+0,15, vor der Schiebewand eine Stufe aus Naturstein): über der Durchfahrt (Unterkante −0,15)
+  // bleiben 30 cm für Decke und Belag. Gesims und Traufe bleiben auf ihrer Höhe, innen wird es 10 cm niedriger.
+  const poolhaus = { x0: 19.384, x1: 22.885, y0: -33.651, y1: -27.652, z: 0.15, wand: 0.25, gesims: 2.75, traufe: 2.95, neigung: 27,
+    veranda: 1.8, pfeiler: 0.3, front: [0.3, 5.7], fenster: [20.75, 22.45], stufe: 0.32 };
+  // Zaun über die ganze Straßenseite (an Stämmen auf der Grenze eng vorbei): weißer Sockel mit schwarzen Stäben zwischen Pfeilern;
+  // Einfahrtstor zweiflügelig, daneben die Gartentür. Alles höchstens 1,60 m über dem Pflaster (Ortsgestaltungssatzung Grünwald § 9 Abs. 4):
+  // Pfeiler mit Abdeckung 1,60 m, Stäbe mit Spitzen 1,55 m, Torbogen bis 1,60 m, Leuchten vorn an den Torpfeilern statt obenauf.
+  // Hecken und Spielplatz in HOUSE.garten (unten).
+  const zaun = { hoehe: 1.6, stab: 1.55, sockel: 0.3, pfeiler: 0.42, tor: [19.732, 23.33], tuer: [23.75, 24.73] };
 
   // Lichthof vor dem Gym im UG (Westseite, u wie in der Westansicht von Norden gemessen): bis zum UG-Boden, Fenster bis zum Boden.
   // Ortsgestaltungssatzung Grünwald § 8: Lichtschächte höchstens 1,50 m tief und höchstens ein Drittel der Ansichtsbreite (11,65 / 3 = 3,88 m)
   const lichthof = { side: 'W', u0: 6.6, u1: 10.45, tief: 1.5, win: [[6.9, 8.4], [8.65, 10.15]] };
   return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe,
     tg, pool, poolDeck, poolWeg, poolhaus, zaun, lichthof };
+})();
+
+// Garten (Daniel, 4.11.2026): Hecken an allen Grenzen und an der Rampe, Spielplatz im Vorgarten. Gemeinsame Daten für 3D-Modell und Lageplan.
+HOUSE.garten = (() => {
+  const P0 = SITE.plot;
+  // Hecken als Läufe entlang der Punkte: Mitte off Meter links der Laufrichtung (innen), Breite b, Höhe h bis h + dh über z0, t0 und t1 kürzen
+  // Anfang und Ende. Seitlich hoch als Sichtschutz, im Norden niedrig (Blick auf den Eingang), an der Straße hinter dem Zaun, an der Rampe.
+  const hecken = [
+    { name: 'Hecke', tip: 'Sichtschutz an der Westgrenze', pts: [P0[6], P0[0]], off: 0.5, b: 0.6, h: 2.6, dh: 0.25, t1: 0.45 },
+    { name: 'Hecke', tip: 'Sichtschutz an der Ostgrenze, entlang der Zuwegung', pts: [[25.059, -44.0], P0[4]], off: 0.45, b: 0.5, h: 2.6, dh: 0.25 },
+    // Vor dem Zaun an der Ostgrenze bis kurz hinter die Gartentür: Pflanztröge auf dem Pflaster, ohne Aushub im Wurzelschutzbereich des Schutzbaums
+    { name: 'Hecke in Pflanztrögen', tip: 'vor dem Zaun an der Ostgrenze bis zur Gartentür · Tröge auf dem Pflaster, ohne Aushub im Wurzelschutzbereich',
+      pts: [[25.058, -49.95], [25.059, -44.0]], off: 0.54, b: 0.4, h: 2.15, dh: 0.2, z0: 0.45, trog: 0.32 },
+    { name: 'Hecke', tip: 'Nordgrenze, niedrig für den Blick auf den Eingang', pts: [P0[4], P0[5], P0[6]], off: 0.5, b: 0.6, h: 1.2, dh: 0.18 },
+    { name: 'Hecke hinter dem Zaun', tip: 'über die ganze Straßenseite bis zur Rampe', pts: [P0[0], P0[1], P0[2]], off: 1.0, b: 0.7, h: 1.8, dh: 0.15, t0: 0.7 },
+    { name: 'Hecke an der Rampe', tip: 'westlich der offenen Rampe zur Tiefgarage, verdeckt Betonwand und Geländer', pts: [[18.98, -49.75], [18.98, -34.0]], off: 0, b: 0.74, h: 1.62, dh: 0.12 },
+  ];
+  // Mittellinie: Punkte um off nach links versetzt, Ecken auf Gehrung, Anfang und Ende um t0 und t1 gekürzt
+  for (const H of hecken) {
+    const P = H.pts, n = P.length, dir = i => { const dx = P[i + 1][0] - P[i][0], dy = P[i + 1][1] - P[i][1], l = Math.hypot(dx, dy); return [dx / l, dy / l]; };
+    H.linie = P.map((p, i) => {
+      const a = dir(Math.max(0, i - 1)), b = dir(Math.min(n - 2, i)), m = [-a[1] - b[1], a[0] + b[0]], ml = Math.hypot(m[0], m[1]), k = H.off / ((m[1] * a[0] - m[0] * a[1]) / ml);
+      return [p[0] + m[0] / ml * k, p[1] + m[1] / ml * k];
+    });
+    const d0 = dir(0), d1 = dir(n - 2), q0 = H.linie[0], q1 = H.linie[n - 1], t0 = H.t0 || 0, t1 = H.t1 || 0;
+    H.linie[0] = [q0[0] + d0[0] * t0, q0[1] + d0[1] * t0]; H.linie[n - 1] = [q1[0] - d1[0] * t1, q1[1] - d1[1] * t1];
+  }
+  // Spielplatz südlich der Poolterrasse zwischen drei Bäumen, mit Abstand zu den Stämmen. Spielturm mit Podest 1,50 × 1,50 m in 1,50 m Höhe
+  // (= freie Fallhöhe), Satteldach und Sandkasten; Kletterwand nach Norden, Kletternetz nach Süden, Rutsche nach Osten; im Westen eine Doppelschaukel.
+  const turm = { x: 9.55, y: -41.45, a: 0.75, podest: 1.5, traufe: 2.55, first: 3.25 };
+  const spiel = { turm, wand: { tief: 0.7, b: 0.9 }, netz: { tief: 1.2, b: 1.1 }, rutsche: { len: 2.71, b: 0.47, aus: 0.25 },
+    schaukel: { x0: 4.35, x1: 7.05, y: -41.5, h: 2.05, sitze: [5.15, 6.25], sitz: 0.42 } };
+  // Fallräume nach DIN EN 1176: Turm, Wand und Netz 1,50 m rundum, Rutsche 1,00 m seitlich und 2,00 m hinter dem Auslauf, Schaukel
+  // 0,867 × Seillänge + 1,75 m in Schwingrichtung und 1,75 m breit je Sitz. Zusammengefasst mit 12 cm Zugabe und runden Ecken; im Norden bis an die Poolterrasse.
+  // Fallschutz aus Holzhackschnitzeln, 30 cm (DIN EN 1177): wasser- und luftdurchlässig, gut für die Wurzeln.
+  const S = spiel.schaukel, T = turm, R = spiel.rutsche, lang = 0.867 * (S.h - 0.05 - S.sitz) + 1.75, by = R.b / 2 + 1.0 + 0.12;
+  const xa = S.sitze[0] - 0.875 - 0.12, xb = T.x + T.a + 1.5 + 0.12, xc = T.x + T.a + R.len + 2.0 + 0.12;
+  const yS = Math.min(S.y - lang, T.y - T.a - spiel.netz.tief - 1.5) - 0.12, yN = -38.17;
+  const rund = (P, r) => P.flatMap((p, i) => {
+    const a = P[(i + P.length - 1) % P.length], b = P[(i + 1) % P.length], la = Math.hypot(a[0] - p[0], a[1] - p[1]), lb = Math.hypot(b[0] - p[0], b[1] - p[1]);
+    const k = Math.min(r, la / 2, lb / 2), A = [0, 1].map(j => p[j] + (a[j] - p[j]) * k / la), B = [0, 1].map(j => p[j] + (b[j] - p[j]) * k / lb);
+    return [0, 0.25, 0.5, 0.75, 1].map(t => [0, 1].map(j => (1 - t) * (1 - t) * A[j] + 2 * t * (1 - t) * p[j] + t * t * B[j]));
+  });
+  spiel.flaeche = rund([[xa, yN], [xb, yN], [xb, T.y + by], [xc, T.y + by], [xc, T.y - by], [xb, T.y - by], [xb, yS], [xa, yS]], 0.5);
+  spiel.schwing = lang;
+  return { hecken, spiel };
 })();
 
 // Maßstäbliche Ansichten und Schnitt als SVG. Einheit: Meter; Höhe z wird zu SVG-y = -z.
@@ -1230,8 +1288,16 @@ const Site = (() => {
     for (let y = rp.y0 + 1; y < rp.yPortal - 0.4; y += 1) s.push(line([rp.x0, y], [rp.x1, y], 's-rampline'));
     s.push(poly(rect(rx0, rp.y0, rp.x0, rp.yPortal), 's-rampwall', 'Rampenwand mit Geländer') + poly(rect(rp.x1, rp.y0, rx1, rp.yPortal), 's-rampwall', 'Rampenwand mit Geländer'));
     s.push(poly([[rc - 0.5, -38.2], [rc + 0.5, -38.2], [rc, -36.9]], 's-ramparrow') + text([rc + 0.25, -43.4], `Rampe ${num(rp.s * 100, 0)} %`, 's-lbl s-tiny', -90));
-    const PL = SITE.plot, hk = [[25.059, -44.0], PL[4], PL[5], PL[6], PL[0]];
-    s.push(`<polyline points="${pts(hk.map(([x, y], i) => [x + (i === 0 || i === 1 ? -0.45 : 0), y]))}" class="s-hedge" data-tip="Hecke · ca. 1,30 m hoch · West-, Nord- und Ostgrenze"/>`);
+    // Hecken (HOUSE.garten.hecken) auf ihrer Mittellinie, so breit wie gepflanzt; im Osten die Pflanztröge als Umriss darüber
+    const GA = HOUSE.garten;
+    for (const H of GA.hecken) {
+      const p = H.linie[0], q = H.linie[H.linie.length - 1];
+      s.push(`<polyline points="${pts(H.linie)}" class="s-hedge" style="stroke-width:${H.b}" data-tip="${H.name} · ca. ${num(Math.round(((H.z0 || 0) + H.h + H.dh / 2) * 10) / 10)} m hoch · ${H.tip}"/>`);
+      if (H.trog) {
+        const L = Math.hypot(q[0] - p[0], q[1] - p[1]), nx = -(q[1] - p[1]) / L * H.trog / 2, ny = (q[0] - p[0]) / L * H.trog / 2;
+        s.push(poly([[p[0] + nx, p[1] + ny], [q[0] + nx, q[1] + ny], [q[0] - nx, q[1] - ny], [p[0] - nx, p[1] - ny]], 's-trog'));
+      }
+    }
     s.push(poly(T.poly, 's-stone', `Terrasse · durchgehend 19,00 × 4,00 m bis an den Freisitz · ${num(area(T.poly), 1)} m² · Lounge mittig unter dem Balkon`));
     s.push(poly(C.podest, 's-stone', 'Podest am Eingang · 5,00 × 1,00 m'));
     s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · Esstisch für sechs, überdacht, darüber Dachterrasse'));
@@ -1241,13 +1307,28 @@ const Site = (() => {
     s.push(poly(C.poolWasser, 's-water', 'Pool · Wasserfläche ca. 3,50 × 11,50 m'));
     const PH = HOUSE.poolhaus;
     s.push(poly(rect(PH.x0 - PH.veranda, PH.y0, PH.x0, PH.y1), 's-balkon', 'Veranda des Poolhauses · 1,80 × 6,00 m · überdacht, zwei Pfeiler'));
-    s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m · zum Pool offen mit Glas-Schiebewand, Fenster nach Norden, Walmdach · darunter führt die Rampe in die Tiefgarage'));
-    // Zaun an der Straße mit Einfahrtstor und Gartentür, an der Ostgrenze bis zur Hecke
+    s.push(poly(C.poolhaus, 's-annex', `Poolhaus · 3,50 × 6,00 m · zum Pool offen mit Glas-Schiebewand, Fenster nach Norden, Walmdach · Boden +${num(PH.z)} m, eine Stufe über der Poolterrasse · darunter führt die Rampe in die Tiefgarage`));
+    s.push(poly(rect(PH.x0 - PH.stufe, PH.y1 - PH.front[1] - 0.05, PH.x0, PH.y1 - PH.front[0] + 0.05), 's-stone', `Stufe vor der Glas-Schiebewand · Naturstein · ${num(PH.stufe)} m tief, ${num((PH.z - HOUSE.poolDeck.z) * 100, 0)} cm hoch`));
+    // Spielplatz im Vorgarten (HOUSE.garten.spiel): Fallschutzfläche, Turm mit Satteldach (First als Linie), Kletterwand, Netz, Rutsche, Doppelschaukel
+    const SP = GA.spiel, TU = SP.turm, ta = TU.a, RU = SP.rutsche, SW = SP.schaukel, WA = SP.wand, NE = SP.netz;
+    s.push(poly(SP.flaeche, 's-spiel', `Spielplatz · Fallschutz aus Holzhackschnitzeln, 30 cm (DIN EN 1177) · ${num(area(SP.flaeche), 1)} m² · Fallräume nach DIN EN 1176 rundum, mit Abstand zu den Stämmen`));
+    s.push(poly(rect(TU.x - WA.b / 2, TU.y + ta, TU.x + WA.b / 2, TU.y + ta + WA.tief), 's-spielgeraet', 'Kletterwand · Lärche mit Griffen und Knotenseil · hinauf zum Podest'));
+    s.push(poly(rect(TU.x - NE.b / 2, TU.y - ta - NE.tief, TU.x + NE.b / 2, TU.y - ta), 's-spielnetz', 'Kletternetz · helle Seile mit Knoten · hinauf zum Podest'));
+    s.push(poly(rect(TU.x + ta, TU.y - RU.b / 2, TU.x + ta + RU.len, TU.y + RU.b / 2), 's-spielgeraet', `Rutsche · Edelstahl · ${num(RU.len)} m lang im Grundriss · Auslauf ${num(RU.aus)} m hoch`));
+    s.push(poly(rect(TU.x - ta, TU.y - ta, TU.x + ta, TU.y + ta), 's-spielgeraet',
+      `Spielturm · Podest ${num(2 * ta)} × ${num(2 * ta)} m in ${num(TU.podest)} m Höhe (freie Fallhöhe) · schwarzer Stahl und Lärche · Satteldach bis ${num(TU.first)} m · darunter Sandkasten`) +
+      line([TU.x, TU.y - ta - 0.14], [TU.x, TU.y + ta + 0.14], 's-spiellinie'));
+    s.push(`<g data-tip="Doppelschaukel · Balken ${num(SW.h)} m hoch, schwarzer Stahl · zwei Gummisitze an Seilen · in Schwingrichtung je ${num(SP.schwing)} m frei">` +
+      poly(rect(SW.x0, SW.y - 0.95, SW.x1, SW.y + 0.95), 's-hit') + line([SW.x0 - 0.1, SW.y], [SW.x1 + 0.1, SW.y], 's-spielbalken') +
+      [SW.x0, SW.x1].map(x => line([x, SW.y - 0.95], [x, SW.y + 0.95], 's-spiellinie')).join('') +
+      SW.sitze.map(x => poly(rect(x - 0.225, SW.y - 0.085, x + 0.225, SW.y + 0.085), 's-spielgeraet')).join('') + '</g>');
+    s.push(text([(SW.x0 + SW.x1) / 2, SW.y - 2.6], 'Spielplatz', 's-lbl s-tiny'));
+    // Zaun durchgehend über die ganze Straßenseite mit Einfahrtstor und Gartentür, an der Ostgrenze bis zur Hecke
     const Z0 = HOUSE.zaun, P0 = SITE.plot, onB = x => [x, P0[2][1] + (x - P0[2][0]) * (P0[3][1] - P0[2][1]) / (P0[3][0] - P0[2][0])];
-    s.push(`<polyline points="${pts([P0[0], P0[1], P0[2], onB(Z0.tor[0])])}" class="s-fence" data-tip="Zaun · weißer Sockel mit schwarzen Stäben zwischen Pfeilern · 1,65 m hoch"/>`);
-    s.push(`<polyline points="${pts([onB(Z0.tuer[1]), P0[3], [25.059, -44.0]])}" class="s-fence" data-tip="Zaun · weißer Sockel mit schwarzen Stäben"/>`);
-    s.push(`<polyline points="${pts([onB(Z0.tor[0]), onB(Z0.tor[1])])}" class="s-gate" data-tip="Einfahrtstor · zweiflügelig, schwarzer Stahl · 3,60 m breit"/>`);
-    s.push(`<polyline points="${pts([onB(Z0.tuer[0]), onB(Z0.tuer[1])])}" class="s-gate" data-tip="Gartentür für Fußgänger mit Klingel und Briefkasten im Pfeiler"/>`);
+    s.push(`<polyline points="${pts([P0[0], P0[1], P0[2], onB(Z0.tor[0])])}" class="s-fence" data-tip="Zaun · durchgehend über die ganze Straßenseite · weißer Sockel mit schwarzen Stäben zwischen Pfeilern · höchstens ${num(Z0.hoehe)} m hoch (Ortsgestaltungssatzung § 9) · an den Stämmen auf der Grenze eng vorbei"/>`);
+    s.push(`<polyline points="${pts([onB(Z0.tuer[1]), P0[3], [25.059, -44.0]])}" class="s-fence" data-tip="Zaun · weißer Sockel mit schwarzen Stäben · höchstens ${num(Z0.hoehe)} m hoch"/>`);
+    s.push(`<polyline points="${pts([onB(Z0.tor[0]), onB(Z0.tor[1])])}" class="s-gate" data-tip="Einfahrtstor · zweiflügelig, schwarzer Stahl · 3,60 m breit · flacher Bogen bis ${num(Z0.hoehe)} m · Leuchten vorn an den Torpfeilern"/>`);
+    s.push(`<polyline points="${pts([onB(Z0.tuer[0]), onB(Z0.tuer[1])])}" class="s-gate" data-tip="Gartentür für Fußgänger mit Klingel und Briefkasten im Pfeiler · ${num(Z0.stab)} m hoch"/>`);
     s.push(poly(C.haus, 's-house', 'Wohnhaus · 16,00 × 11,65 m · 186,4 m² · Wandhöhe 7,25 m · First 11,12 m'));
     for (const o of HOUSE.fas.S.open.filter(q => q.z0 < 1)) s.push(poly(rect(o.u0, -HOUSE.D, o.u1, -HOUSE.D + 0.2), 's-win'));
     const bk = HOUSE.balkon;
@@ -3183,36 +3264,50 @@ const View3D = (() => {
     im.castShadow = im.receiveShadow = true;
     return im;
   }
-  // Hecken an West-, Nord- und Ostgrenze, 0,45 m innerhalb der Grenze: dunkler Kern, außen dicht mit Blattkarten besetzt
+  // Hecken nach HOUSE.garten.hecken, je Lauf in Stücken von etwa 1,80 m: dunkler Kern, außen dicht mit Blattkarten besetzt.
+  // Die Hecke vor dem Zaun im Osten steht in Pflanztrögen aus dunklem Stahl, je knapp 2 m lang.
   function hedges() {
-    const P0 = SITE.plot, chain = [[25.059, -44.0], P0[4], P0[5], P0[6], P0[0]], grp = new THREE.Group();
-    const boxes = [];
-    for (let i = 0; i < chain.length - 1; i++) {
-      const [ax, ay] = chain[i], [bx, by] = chain[i + 1], L0 = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L0, uy = (by - ay) / L0;
-      const nx = -uy, ny = ux, w = i === 0 ? 0.5 : 0.6, off = i === 0 ? 0.45 : 0.5, n = Math.max(1, Math.round(L0 / 1.8));
+    const grp = new THREE.Group(), boxes = [];
+    for (const H of HOUSE.garten.hecken) H.linie.slice(1).forEach((b, i) => {
+      const a = H.linie[i], L0 = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L0, uy = (b[1] - a[1]) / L0, n = Math.max(1, Math.round(L0 / 1.8)), z0 = H.z0 || 0;
       for (let k = 0; k < n; k++) {
-        const t0 = k / n, t1 = (k + 1) / n, cx = ax + ux * L0 * (t0 + t1) / 2 + nx * off, cy = ay + uy * L0 * (t0 + t1) / 2 + ny * off;
-        boxes.push({ cx, cy, len: L0 / n + 0.08, w: w + (rnd() - 0.5) * 0.08, h: 1.2 + rnd() * 0.18, ux, uy });
+        const s = L0 * (k + 0.5) / n;
+        boxes.push({ cx: a[0] + ux * s, cy: a[1] + uy * s, len: L0 / n + 0.08, w: H.b + (rnd() - 0.5) * 0.08, h: H.h + rnd() * H.dh, z0, ux, uy,
+          ende: [i === 0 && k === 0, i === H.linie.length - 2 && k === n - 1] });
       }
-    }
+      if (H.trog) {
+        const mx = frameMx({ o: a, r: [ux, uy], n: [uy, -ux] }), nt = Math.max(1, Math.round(L0 / 2));
+        for (let k = 0; k < nt; k++) addBox(M.kuebel, mx, L0 * k / nt + 0.01, L0 * (k + 1) / nt - 0.01, 0, z0, -H.trog / 2, H.trog / 2);
+      }
+    });
     const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), M.hedgeCore, boxes.length), m = new THREE.Matrix4(), q = new THREE.Quaternion();
     const cards = [], up = new THREE.Vector3(0, 1, 0);
     boxes.forEach((b, i) => {
       q.setFromAxisAngle(up, Math.atan2(b.uy, b.ux));
-      m.compose(new THREE.Vector3(b.cx, (b.h - 0.08) / 2, -b.cy), q, new THREE.Vector3(b.len, b.h - 0.08, b.w - 0.14)); im.setMatrixAt(i, m);
-      // Plan: s entlang der Hecke, t quer dazu; Welt: x = Plan-x, z = −Plan-y
-      const at = (s, t, z) => [b.cx + b.ux * s - b.uy * t, z, -(b.cy + b.uy * s + b.ux * t)];
+      m.compose(new THREE.Vector3(b.cx, b.z0 + (b.h - 0.08) / 2, -b.cy), q, new THREE.Vector3(b.len, b.h - 0.08, b.w - 0.14)); im.setMatrixAt(i, m);
+      // Plan: s entlang der Hecke, t quer dazu; Welt: x = Plan-x, z = −Plan-y; Höhe ab Fuß der Hecke (im Trog ab Trogrand)
+      const at = (s, t, z) => [b.cx + b.ux * s - b.uy * t, b.z0 + z, -(b.cy + b.uy * s + b.ux * t)];
       const side = sg => new THREE.Vector3(-b.uy * sg, 0, -b.ux * sg);
-      const add = (p, n, sz) => { const k = (0.72 + 0.32 * rnd()) * (p[1] < 0.45 ? 0.8 : 1); cards.push({ p, n: [n.x, n.y, n.z], q: faceQ(n, 1.3), w: sz, h: sz, c: [k, k * 1.02, k * 0.96], flip: rnd() < 0.5 }); };
+      const add = (p, n, sz) => { const k = (0.72 + 0.32 * rnd()) * (p[1] - b.z0 < 0.45 ? 0.8 : 1); cards.push({ p, n: [n.x, n.y, n.z], q: faceQ(n, 1.3), w: sz, h: sz, c: [k, k * 1.02, k * 0.96], flip: rnd() < 0.5 }); };
       const nTop = Math.round(b.len * b.w * 16), nSide = Math.round(b.len * b.h * 14);
       for (let k = 0; k < nTop; k++) {
         const t = (rnd() - 0.5) * b.w, n = up.clone().add(side(Math.sign(t)).multiplyScalar(Math.max(0, Math.abs(t) / (b.w / 2) - 0.5) * 1.6)).normalize();
         add(at((rnd() - 0.5) * b.len, t, b.h - 0.05 + rnd() * 0.07), n, 0.34 + rnd() * 0.16);
       }
+      // seitlich; die obersten 35 cm neigen sich zur Kante hin nach oben, auch bei hohen Hecken
       for (const sg of [-1, 1]) for (let k = 0; k < nSide; k++) {
-        const z = 0.08 + rnd() * (b.h - 0.12), n = side(sg).add(up.clone().multiplyScalar(Math.max(0, z / b.h - 0.75) * 3)).normalize();
+        const z = 0.08 + rnd() * (b.h - 0.12), n = side(sg).add(up.clone().multiplyScalar(Math.max(0, z - b.h + 0.35) * 2.2)).normalize();
         add(at((rnd() - 0.5) * b.len, sg * (b.w / 2 - 0.02 + rnd() * 0.05), z), n, 0.32 + rnd() * 0.16);
       }
+      // Stirnseite am Anfang und Ende eines Laufs, sonst sähe man dort den dunklen Kern
+      [-1, 1].forEach((sg, e) => {
+        if (!b.ende[e]) return;
+        const d = new THREE.Vector3(b.ux * sg, 0, -b.uy * sg);
+        for (let k = 0, nE = Math.round(b.w * b.h * 14); k < nE; k++) {
+          const z = 0.08 + rnd() * (b.h - 0.12), n = d.clone().add(up.clone().multiplyScalar(Math.max(0, z - b.h + 0.35) * 2.2)).normalize();
+          add(at(sg * (b.len / 2 - 0.02 + rnd() * 0.05), (rnd() - 0.5) * b.w, z), n, 0.32 + rnd() * 0.16);
+        }
+      });
     });
     im.castShadow = im.receiveShadow = true;
     grp.add(im, cardMesh(cards, M.leafHedge));
@@ -3482,6 +3577,8 @@ const View3D = (() => {
   // Bäume in den Nachbargärten nach den Luftbildern: dichter Bestand aus Laub- und Nadelbäumen, einzelne Blutbuchen.
   // Nicht auf Häusern, Straßen und dem eigenen Grundstück und nicht in den Sichtachsen der Kamerablicke.
   function neighborGreen() {
+    // feste Zufallsfolge (Stand 4.11.2026), damit Änderungen an Beeten oder Bäumen davor die Nachbarbäume nicht umwürfeln
+    seed = 523963437;
     const grp = new THREE.Group(), leaf = [], needle = [], barkParts = [], Yax = new THREE.Vector3(0, 1, 0);
     const inPoly = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
     const segDist = (x, y, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(x - a[0] - t * dx, y - a[1] - t * dy); };
@@ -3553,8 +3650,7 @@ const View3D = (() => {
     const poly = P => { s.beginPath(); P.forEach(([x, y], i) => (i ? s.lineTo(X(x), Y(y)) : s.moveTo(X(x), Y(y)))); s.closePath(); s.fill(); };
     for (const b of [...SITE.neighbors, ...SITE.secondary]) poly(b.pts);
     for (const P0 of [C.haus, C.freisitz, C.poolhaus]) poly(P0);
-    const P0 = SITE.plot, chain = [[25.059, -44.0], P0[4], P0[5], P0[6], P0[0]];
-    s.lineWidth = 0.9 * k; s.beginPath(); chain.forEach(([x, y], i) => (i ? s.lineTo(X(x), Y(y)) : s.moveTo(X(x), Y(y)))); s.stroke();
+    for (const H of HOUSE.garten.hecken) { s.lineWidth = (H.b + 0.3) * k; s.beginPath(); H.linie.forEach(([x, y], i) => (i ? s.lineTo(X(x), Y(y)) : s.moveTo(X(x), Y(y)))); s.stroke(); }
     for (const t of SITE.trees) { s.beginPath(); s.arc(X(t.c[0]), Y(t.c[1]), (0.5 + 0.05 * t.r) * k, 0, 6.2832); s.fill(); }
     const c = document.createElement('canvas'); c.width = c.height = N;
     const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, N, N); g.imageSmoothingEnabled = true;
@@ -3583,7 +3679,7 @@ const View3D = (() => {
   }
   // Poolhaus im Stil des Hauses: weiße Wände mit Sockel und Gesims, zum Pool ganz offen (5,40 m breite Glas-Schiebewand, zwei Flügel
   // zur Seite geschoben), nach Norden ein großes Fenster; Veranda auf zwei quadratischen Pfeilern, flaches Walmdach mit Schiefer.
-  // Innen Bar, Liege und Handtücher.
+  // Innen Bar, Liege und Handtücher. Boden eine Stufe über der Poolterrasse (H.z) auf der Decke der Durchfahrt; Gesims und Dach bleiben auf ihrer Höhe.
   function buildPoolhaus(g) {
     const H = HOUSE.poolhaus, { x0, x1, y0, y1, z, wand: t, gesims, traufe } = H, xv = x0 - H.veranda, ov = 0.25, len = y1 - y0;
     boxPlan(M.stone, x0, x1, y0, y1, 0, z);
@@ -3597,7 +3693,9 @@ const View3D = (() => {
     // Poolseite: eine breite Öffnung zwischen den Eckpilastern, darin drei Schiebeflügel, zwei davon hinter den dritten geschoben
     const mx = frameMx({ o: [x0, y1], r: [0, -1], n: [-1, 0] }), [oa, ob] = H.front;
     g.add(wallWithHoles(len, 0, gesims, [{ u0: oa, u1: ob, z0: z, z1: 2.45 }], t, [M.site, M.site], mx));
-    addBox(M.coping, mx, -0.04, len + 0.04, 0, 0.18, 0, 0.03);
+    for (const [a, b] of [[-0.04, oa], [ob, len + 0.04]]) addBox(M.coping, mx, a, b, 0, 0.18, 0, 0.03);
+    // vor der Öffnung eine Stufe aus Naturstein auf Bodenhöhe: der Boden liegt eine Stufe über Veranda und Poolterrasse
+    addBox(M.stone, mx, oa - 0.05, ob + 0.05, 0, z, 0, H.stufe);
     for (const [a, b] of [[0, oa], [ob, len]]) addBox(M.siteHell, mx, a, b, 0.18, gesims, 0, 0.05);
     addBox(M.siteHell, mx, oa - 0.05, ob + 0.05, 2.45, 2.6, 0, 0.06);
     for (const [r0, r1] of [[z, z + 0.03], [2.41, 2.45]]) addBox(M.siteFrame, mx, oa, ob, r0, r1, -0.2, -0.05);
@@ -3640,11 +3738,12 @@ const View3D = (() => {
     loungerAt(xv + 0.62, xv + 1.37, -33.15, -31.15, z);
     addCyl(M.fOutTop, xv + 0.37, -31.75, z + 0.45, z + 0.48, 0.24, 0.24, 18); addCyl(M.fOutMetal, xv + 0.37, -31.75, z, z + 0.45, 0.02, 0.02, 8);
   }
-  // Zaun an der Straße: weißer Sockel mit Steinabdeckung, schwarze Stäbe mit Spitzen, Pfeiler mit Abdeckplatten (an Bäumen ausgespart);
-  // zweiflügeliges Einfahrtstor mit Bogen und Gartentür, beide öffnen sich nach innen, wenn man herankommt; Laternen auf den Torpfeilern.
+  // Zaun an der Straße, durchgehend über die ganze Straßenseite: weißer Sockel mit Steinabdeckung, schwarze Stäbe mit Spitzen, Pfeiler mit
+  // Abdeckplatten; an Stämmen auf der Grenze endet das Feld mit einem schmalen Pfosten und geht hinter dem Stamm weiter.
+  // Zweiflügeliges Einfahrtstor mit flachem Bogen und Gartentür, beide öffnen sich nach innen, wenn man herankommt; Leuchten vorn an den
+  // Torpfeilern. Alles höchstens hb = 1,60 m hoch (Pfeiler mit Abdeckung, Torbogen mit Spitzen), Stäbe mit Spitzen bis 1,55 m.
   function buildFence(g) {
-    const Zn = HOUSE.zaun, P0 = SITE.plot, pw2 = Zn.pfeiler / 2, hb = Zn.hoehe, trunks = SITE.trees.map(t => t.c);
-    const segDist = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy); };
+    const Zn = HOUSE.zaun, P0 = SITE.plot, pw2 = Zn.pfeiler / 2, hb = Zn.hoehe, zt = Zn.stab - 0.07;
     const spike = (mx, s, zz) => { const c = new THREE.ConeGeometry(0.022, 0.07, 4); c.rotateY(Math.PI / 4); c.translate(s, zz + 0.035, 0); addGeo(M.fOutMetal, c, mx); };
     const bars = (mx, s0, s1, zb0, top) => {
       const n = Math.max(1, Math.round((s1 - s0) / 0.12));
@@ -3653,35 +3752,58 @@ const View3D = (() => {
       // Handlauf knapp unter den Spitzen, folgt bei den Toren dem Bogen
       for (let j = 0; j < n; j++) { const sa = s0 + (s1 - s0) * j / n, sb = s0 + (s1 - s0) * (j + 1) / n, zm = (top(sa) + top(sb)) / 2 - 0.1; addBox(M.fOutMetal, mx, sa, sb, zm - 0.02, zm + 0.02, -0.018, 0.018); }
     };
-    const pillar = (mx, s, h, lamp) => {
+    // Pfeiler bis 1,50 m, Abdeckplatte und flache Haube bis hb
+    const pillar = (mx, s) => {
+      const h = hb - 0.1;
       addBox(M.siteHell, mx, s - pw2, s + pw2, 0, h, -pw2, pw2);
       addBox(M.brickCap, mx, s - pw2 - 0.04, s + pw2 + 0.04, h, h + 0.06, -pw2 - 0.04, pw2 + 0.04);
-      if (lamp) { addBox(M.siteFrame, mx, s - 0.12, s + 0.12, h + 0.06, h + 0.1, -0.12, 0.12); addBox(M.siteLamp, mx, s - 0.09, s + 0.09, h + 0.1, h + 0.36, -0.09, 0.09); addBox(M.siteFrame, mx, s - 0.11, s + 0.11, h + 0.36, h + 0.41, -0.11, 0.11); }
-      else addBox(M.brickCap, mx, s - pw2 + 0.06, s + pw2 - 0.06, h + 0.06, h + 0.1, -pw2 + 0.06, pw2 - 0.06);
+      addBox(M.brickCap, mx, s - pw2 + 0.06, s + pw2 - 0.06, h + 0.06, hb, -pw2 + 0.06, pw2 - 0.06);
+    };
+    // Wandleuchte vorn am Pfeiler (zur Straße): schwarzer Rahmen, Milchglas, Oberkante 1,52 m
+    const lantern = (mx, s) => {
+      addBox(M.siteFrame, mx, s - 0.075, s + 0.075, 1.28, 1.52, pw2, pw2 + 0.015);
+      addBox(M.siteLamp, mx, s - 0.055, s + 0.055, 1.31, 1.49, pw2 + 0.015, pw2 + 0.11);
+      for (const [z0, z1] of [[1.29, 1.31], [1.49, 1.515]]) addBox(M.siteFrame, mx, s - 0.07, s + 0.07, z0, z1, pw2 + 0.01, pw2 + 0.125);
     };
     // Lauf von a nach b, um 15 cm nach innen versetzt; links der Laufrichtung liegt das Grundstück
     const frameOf = (a, b) => {
       const l = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / l, uy = (b[1] - a[1]) / l, o = [a[0] - uy * 0.15, a[1] + ux * 0.15];
-      return { l, ux, uy, o, mx: frameMx({ o, r: [ux, uy], n: [uy, -ux] }), at: s => [o[0] + ux * s, o[1] + uy * s], on: s => [a[0] + ux * s, a[1] + uy * s] };
+      return { l, ux, uy, o, mx: frameMx({ o, r: [ux, uy], n: [uy, -ux] }), on: s => [a[0] + ux * s, a[1] + uy * s] };
     };
+    // Stämme an der Zaunlinie (Stammradius wie im Modell und 8 cm Luft, über die ganze Zauntiefe): Abschnitte [s0, s1] ohne Zaun
+    const cuts = F => SITE.trees.map(t => {
+      const r = 0.24 + 0.035 * t.r, dx = t.c[0] - F.o[0], dy = t.c[1] - F.o[1], s = dx * F.ux + dy * F.uy, d = Math.max(0, Math.abs(dx * F.uy - dy * F.ux) - 0.17);
+      return d < r ? [s - Math.sqrt(r * r - d * d), s + Math.sqrt(r * r - d * d)] : null;
+    }).filter(Boolean);
     const run = (a, b, noStart, noEnd) => {
-      const F = frameOf(a, b), k = Math.max(1, Math.round(F.l / 2.6)), step = F.l / k;
-      for (let i = 0; i <= k; i++) if (!(i === 0 && noStart) && !(i === k && noEnd)) pillar(F.mx, i * step, hb + 0.1);
+      const F = frameOf(a, b), k = Math.max(1, Math.round(F.l / 2.6)), step = F.l / k, cut = cuts(F);
+      for (let i = 0; i <= k; i++) {
+        if ((i === 0 && noStart) || (i === k && noEnd) || cut.some(([c0, c1]) => i * step + pw2 > c0 && i * step - pw2 < c1)) continue;
+        pillar(F.mx, i * step);
+      }
       for (let i = 0; i < k; i++) {
         const s0 = i * step + pw2, s1 = (i + 1) * step - pw2;
-        if (trunks.some(c => segDist(c, F.at(s0), F.at(s1)) < 0.55)) continue;
-        addBox(M.siteHell, F.mx, s0, s1, 0, Zn.sockel, -0.14, 0.14); addBox(M.brickCap, F.mx, s0 - 0.01, s1 + 0.01, Zn.sockel, Zn.sockel + 0.04, -0.17, 0.17);
-        bars(F.mx, s0, s1, Zn.sockel + 0.04, () => hb - 0.02);
+        let u = s0;
+        for (const [c0, c1] of [...cut.filter(([c0, c1]) => c1 > s0 && c0 < s1), [s1, s1]].sort((p, q) => p[0] - q[0])) {
+          const v = Math.min(c0, s1);
+          if (v - u > 0.06) {
+            addBox(M.siteHell, F.mx, u, v, 0, Zn.sockel, -0.14, 0.14); addBox(M.brickCap, F.mx, u - 0.01, v + 0.01, Zn.sockel, Zn.sockel + 0.04, -0.17, 0.17);
+            bars(F.mx, u, v, Zn.sockel + 0.04, () => zt);
+            for (const s of [u > s0 ? u : null, v < s1 ? v : null]) if (s !== null) addBox(M.fOutMetal, F.mx, s - 0.025, s + 0.025, Zn.sockel, zt + 0.02, -0.025, 0.025);
+          }
+          u = Math.max(u, c1);
+        }
       }
       return F;
     };
     run(P0[0], P0[1]); run(P0[1], P0[2], true);
-    // an der Zufahrt: Pfeiler A, zweiflügeliges Tor, Pfeiler B mit Briefkasten und Klingel, Gartentür, Eckpfeiler C
+    // an der Zufahrt: Pfeiler A mit Leuchte, zweiflügeliges Tor, Pfeiler B mit Briefkasten, Klingel und Leuchte, Gartentür, Eckpfeiler C
     const F = frameOf(P0[2], P0[3]), sx = x => (x - F.o[0]) / F.ux, sA = sx(Zn.tor[0]) - pw2, sB = sx(Zn.tor[1]) + pw2, sC = sx(Zn.tuer[1]) + pw2;
     run(P0[2], F.on(sA), true, true);
-    pillar(F.mx, sA, hb + 0.3, true); pillar(F.mx, sB, hb + 0.3, true); pillar(F.mx, sC, hb + 0.1);
-    addBox(M.trim, F.mx, sB - 0.14, sB + 0.14, 0.95, 1.3, pw2, pw2 + 0.05); addBox(M.siteFrame, F.mx, sB - 0.06, sB + 0.06, 1.4, 1.58, pw2, pw2 + 0.02); addBox(M.siteLamp, F.mx, sB - 0.02, sB + 0.02, 1.53, 1.56, pw2 + 0.02, pw2 + 0.025);
-    const wid = sB - pw2 - (sA + pw2), arch = s => hb - 0.12 + 0.3 * Math.sin(Math.PI * Math.min(1, Math.max(0, (s - sA - pw2) / wid)));
+    pillar(F.mx, sA); pillar(F.mx, sB); pillar(F.mx, sC); lantern(F.mx, sA); lantern(F.mx, sB);
+    addBox(M.trim, F.mx, sB - 0.14, sB + 0.14, 0.72, 1.02, pw2, pw2 + 0.05); addBox(M.siteFrame, F.mx, sB - 0.06, sB + 0.06, 1.08, 1.24, pw2, pw2 + 0.02); addBox(M.siteLamp, F.mx, sB - 0.02, sB + 0.02, 1.18, 1.21, pw2 + 0.02, pw2 + 0.025);
+    // Torbogen flach: Stäbe am Pfeiler bis 1,40 m, in der Mitte bis 1,53 m, mit Spitzen höchstens hb
+    const wid = sB - pw2 - (sA + pw2), arch = s => hb - 0.2 + 0.13 * Math.sin(Math.PI * Math.min(1, Math.max(0, (s - sA - pw2) / wid)));
     const gateLeaf = (s0, s1, hinge, sg, top, center) => leaf(g, new THREE.Vector3(hinge, 0, 0).applyMatrix4(F.mx), sg, center, () => {
       for (const s of [s0 + 0.03, s1 - 0.03]) addBox(M.fOutMetal, F.mx, s - 0.03, s + 0.03, 0.06, top(s) - 0.02, -0.02, 0.02);
       addBox(M.fOutMetal, F.mx, s0, s1, 0.06, 0.12, -0.02, 0.02);
@@ -3691,8 +3813,162 @@ const View3D = (() => {
     gateLeaf(sA + pw2 + 0.02, sm - 0.01, sA + pw2 + 0.02, 1, arch, gc);
     gateLeaf(sm + 0.01, sB - pw2 - 0.02, sB - pw2 - 0.02, -1, arch, gc);
     const tc = new THREE.Vector3((sB + sC) / 2, 1.0, 0).applyMatrix4(F.mx);
-    gateLeaf(sB + pw2 + 0.02, sC - pw2 - 0.02, sC - pw2 - 0.02, -1, () => hb - 0.08, tc);
+    gateLeaf(sB + pw2 + 0.02, sC - pw2 - 0.02, sC - pw2 - 0.02, -1, () => zt, tc);
     run(P0[3], [25.059, -44.0], true);
+  }
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Spielplatz im Vorgarten, Lage und Maße in HOUSE.garten.spiel
+  // Spielturm mit Satteldach und Sandkasten, Kletterwand, Kletternetz und Rutsche, daneben eine Doppelschaukel. Schwarzer Stahl wie die
+  // Außenmöbel, Lärche und helle Seile als Akzente, Rutsche aus Edelstahl; Fallschutz aus Holzhackschnitzeln mit schmaler Stahlkante.
+  function buildSpielplatz(g) {
+    const S = HOUSE.garten.spiel, T = S.turm, a = T.a, zP = T.podest, zE = T.traufe, zF = T.first;
+    const x0 = T.x - a, x1 = T.x + a, y0 = T.y - a, y1 = T.y + a, Y = new THREE.Vector3(0, 1, 0);
+    const std = (color, r, m = 0, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: r, metalness: m, ...extra });
+    // Holzhackschnitzel: helle und dunklere Späne kreuz und quer, am Rand auch gegenüber gezeichnet (kachelbar, 1,5 m, ein Pixel knapp 6 mm)
+    const chips = canvasTex(256, 256, (c, w, h) => {
+      c.fillStyle = '#9b7d59'; c.fillRect(0, 0, w, h);
+      const pal = ['#c8a97e', '#89694a', '#b49369', '#d8c29c', '#7b5e40', '#a9895f'];
+      for (let i = 0; i < 5200; i++) {
+        const x = rnd() * w, y = rnd() * h, l = 2 + rnd() * 6, b = 1 + rnd() * 1.6, ang = rnd() * Math.PI;
+        c.fillStyle = pal[i % pal.length];
+        for (const dx of [-w, 0, w]) for (const dy of [-h, 0, h]) {
+          if (x + dx < -8 || x + dx > w + 8 || y + dy < -8 || y + dy > h + 8) continue;
+          c.save(); c.translate(x + dx, y + dy); c.rotate(ang); c.fillRect(-l / 2, -b / 2, l, b); c.restore();
+        }
+      }
+    }, [1 / 1.5, 1 / 1.5]);
+    Object.assign(M, {
+      spielStahl: std(0x1c1d1f, 0.42, 0.55), spielHolz: std(0xb98f60, 0.72), spielHolz2: std(0xa98154, 0.76), spielSeil: std(0xdcd1b8, 0.95),
+      spielRutsche: std(0xd5d8db, 0.22, 0.9), spielGummi: std(0x2a2b2e, 0.85), spielSand: std(0xe4d6b2, 1), spielBoden: std(0xffffff, 1, 0, { map: chips }),
+    });
+    const st = M.spielStahl, ho = M.spielHolz, ho2 = M.spielHolz2, se = M.spielSeil;
+    // Quader von p nach q (Welt), bw breit (waagrecht quer zur Achse) und bh hoch (senkrecht dazu)
+    const beam = (mat, p, q, bw, bh) => {
+      const d = q.clone().sub(p), len = d.length(); d.normalize();
+      const s = Math.abs(d.y) > 0.99 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3().crossVectors(d, Y).normalize(), n = new THREE.Vector3().crossVectors(s, d);
+      addBox(mat, new THREE.Matrix4().makeBasis(d, n, s).setPosition(p.clone().add(q).multiplyScalar(0.5)), -len / 2, len / 2, -bh / 2, bh / 2, -bw / 2, bw / 2);
+    };
+    const knot = (p, r) => addGeo(se, new THREE.IcosahedronGeometry(r, 0), new THREE.Matrix4().setPosition(p));
+
+    // Fallschutzfläche knapp über dem Rasen, ringsum eine Stahlkante
+    g.add(flat(S.flaeche, M.spielBoden, 0.02));
+    S.flaeche.forEach((p, i) => {
+      const q = S.flaeche[(i + 1) % S.flaeche.length], l = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      if (l < 0.01) return;
+      const ux = (q[0] - p[0]) / l, uy = (q[1] - p[1]) / l;
+      addBox(st, frameMx({ o: p, r: [ux, uy], n: [uy, -ux] }), -0.004, l + 0.004, -0.02, 0.04, -0.005, 0.005);
+    });
+
+    // Turm: vier Stahlpfosten 9 × 9 cm bis zur Traufe, Podest aus Lärchendielen auf einem Stahlrahmen
+    for (const x of [x0, x1]) for (const y of [y0, y1]) boxPlan(st, x - 0.045, x + 0.045, y - 0.045, y + 0.045, 0, zE);
+    for (const y of [y0, y1, T.y]) boxPlan(st, x0, x1, y - 0.03, y + 0.03, zP - 0.13, zP - 0.03);
+    for (const x of [x0, x1]) boxPlan(st, x - 0.03, x + 0.03, y0, y1, zP - 0.13, zP - 0.03);
+    const nd = 7, dw = (2 * a - 0.09 - (nd - 1) * 0.015) / nd;
+    for (let i = 0; i < nd; i++) { const yy = y0 + 0.045 + i * (dw + 0.015); boxPlan(i % 2 ? ho2 : ho, x0 - 0.02, x1 + 0.02, yy, yy + dw, zP - 0.03, zP); }
+    // Sandkasten unter dem Podest: Einfassung aus Lärche, heller Sand
+    const sx0 = x0 + 0.06, sx1 = x1 - 0.06, sy0 = y0 + 0.06, sy1 = y1 - 0.06;
+    boxPlan(ho2, sx0, sx1, sy0, sy0 + 0.035, 0, 0.26); boxPlan(ho2, sx0, sx1, sy1 - 0.035, sy1, 0, 0.26);
+    boxPlan(ho2, sx0, sx0 + 0.035, sy0 + 0.035, sy1 - 0.035, 0, 0.26); boxPlan(ho2, sx1 - 0.035, sx1, sy0 + 0.035, sy1 - 0.035, 0, 0.26);
+    boxPlan(M.spielSand, sx0 + 0.035, sx1 - 0.035, sy0 + 0.035, sy1 - 0.035, 0, 0.19);
+
+    // Brüstung 70 cm über dem Podest: Stäbe mit Handlauf (lichter Abstand unter 9 cm), im Westen Lärchenlatten.
+    // Öffnungen für Kletterwand (Norden), Kletternetz (Süden) und Rutsche (Osten), daneben senkrechte Haltegriffe
+    const zR = zP + 0.7, e = 0.045;
+    const gitter = (xa, ya, xb, yb) => {
+      const n = Math.max(1, Math.ceil(Math.hypot(xb - xa, yb - ya) / 0.1)), ax = Math.min(xa, xb), bx = Math.max(xa, xb), ay = Math.min(ya, yb), by = Math.max(ya, yb);
+      boxPlan(st, ax - 0.0225, bx + 0.0225, ay - 0.0225, by + 0.0225, zR - 0.045, zR);
+      boxPlan(st, ax - 0.012, bx + 0.012, ay - 0.012, by + 0.012, zP + 0.05, zP + 0.08);
+      for (let j = 1; j < n; j++) { const x = xa + (xb - xa) * j / n, y = ya + (yb - ya) * j / n; boxPlan(st, x - 0.01, x + 0.01, y - 0.01, y + 0.01, zP, zR - 0.045); }
+    };
+    const ow = 0.3, on = 0.35, orr = S.rutsche.b / 2 + 0.03;
+    gitter(x0 + e, y1, T.x - ow, y1); gitter(T.x + ow, y1, x1 - e, y1);
+    gitter(x0 + e, y0, T.x - on, y0); gitter(T.x + on, y0, x1 - e, y0);
+    gitter(x1, y0 + e, x1, T.y - orr); gitter(x1, T.y + orr, x1, y1 - e);
+    const nl = 12, lw = (2 * a - 2 * e) / nl;
+    for (let i = 0; i < nl; i++) boxPlan(i % 2 ? ho2 : ho, x0 - 0.012, x0 + 0.012, y0 + e + i * lw + 0.02, y0 + e + (i + 1) * lw - 0.02, zP, zR - 0.02);
+    boxPlan(st, x0 - 0.0225, x0 + 0.0225, y0, y1, zR - 0.03, zR + 0.01);
+    for (const [x, y] of [[T.x - ow, y1], [T.x + ow, y1], [T.x - on, y0], [T.x + on, y0], [x1, T.y - orr], [x1, T.y + orr]]) addCyl(st, x, y, zP, zP + 0.98, 0.016, 0.016, 8);
+    // Querstange über dem Rutschenstart: man setzt sich darunter hindurch
+    boxPlan(st, x1 - 0.015, x1 + 0.015, T.y - orr, T.y + orr, zP + 0.6, zP + 0.63);
+
+    // Satteldach: offene Giebel aus Stahl nach Norden und Süden (Hausform), Dachflächen aus Lärchenbrettern mit 14 cm Überstand, Firstblech
+    for (const x of [x0, x1]) boxPlan(st, x - 0.045, x + 0.045, y0 - 0.045, y1 + 0.045, zE - 0.08, zE);
+    boxPlan(st, T.x - 0.035, T.x + 0.035, y0 - 0.045, y1 + 0.045, zF - 0.07, zF);
+    for (const y of [y0, y1]) for (const x of [x0, x1]) beam(st, P(x, y, zE - 0.03), P(T.x, y, zF - 0.035), 0.07, 0.06);
+    const ang = Math.atan2(zF - zE, a), ov = 0.14, sL = Math.hypot(a, zF - zE) + ov, nb = 6;
+    for (const sg of [-1, 1]) {
+      const e1 = new THREE.Vector3(sg * Math.cos(ang), -Math.sin(ang), 0), e2 = new THREE.Vector3(sg * Math.sin(ang), Math.cos(ang), 0);
+      const mx = new THREE.Matrix4().makeBasis(e1, e2, new THREE.Vector3().crossVectors(e1, e2)).setPosition(T.x, zF, -T.y);
+      for (let i = 0; i < nb; i++) addBox(i % 2 ? ho2 : ho, mx, i * sL / nb + 0.004, (i + 1) * sL / nb - 0.004, 0, 0.025, -(a + ov), a + ov);
+    }
+    boxPlan(st, T.x - 0.06, T.x + 0.06, T.y - a - ov, T.y + a + ov, zF - 0.03, zF + 0.045);
+
+    // Kletterwand nach Norden: Lärchenplatte zwischen zwei Stahlholmen, Griffe hell und schwarz, in der Mitte ein Knotenseil
+    const W = S.wand, wa = P(T.x, y1, zP), wb = P(T.x, y1 + W.tief, 0);
+    beam(ho, wa, wb, W.b, 0.035);
+    for (const sg of [-1, 1]) { const o = new THREE.Vector3(sg * (W.b / 2 + 0.025), 0, 0); beam(st, wa.clone().add(o), wb.clone().add(o), 0.05, 0.06); }
+    const dw2 = wb.clone().sub(wa), lw2 = dw2.length(); dw2.normalize();
+    const sw = new THREE.Vector3(1, 0, 0), nw = new THREE.Vector3().crossVectors(sw, dw2), gm = new THREE.Matrix4().makeBasis(dw2, nw, sw);
+    [[0.18, -0.28], [0.3, 0.2], [0.48, -0.14], [0.6, 0.32], [0.78, -0.33], [0.88, 0.14], [1.05, -0.2], [1.18, 0.29], [1.34, -0.31], [1.46, 0.16]].forEach(([v, u], i) => {
+      const geo = new THREE.IcosahedronGeometry(0.04, 0); geo.scale(1.25, 0.5, 1);
+      addGeo(i % 3 ? st : se, geo, gm.clone().setPosition(wa.clone().addScaledVector(dw2, v).addScaledVector(sw, u).addScaledVector(nw, 0.03)));
+    });
+    const ro = v => wa.clone().addScaledVector(nw, 0.032).addScaledVector(dw2, v);
+    rod(se, ro(0.02), ro(lw2 - 0.12), 0.014);
+    for (const v of [0.35, 0.7, 1.05, 1.4]) knot(ro(v), 0.032);
+
+    // Kletternetz nach Süden: helle Seile mit Knoten, oben am Podest, unten an einer Stahlstange auf zwei kurzen Pfosten
+    const N = S.netz, za = zP - 0.06, zb = 0.26, yb = y0 - N.tief, np = (u, t) => P(T.x + u, y0 + (yb - y0) * t, za + (zb - za) * t);
+    boxPlan(st, T.x - N.b / 2 - 0.06, T.x + N.b / 2 + 0.06, yb - 0.03, yb + 0.03, zb - 0.03, zb + 0.03);
+    for (const sg of [-1, 1]) boxPlan(st, T.x + sg * (N.b / 2 + 0.03) - 0.03, T.x + sg * (N.b / 2 + 0.03) + 0.03, yb - 0.03, yb + 0.03, 0, zb - 0.03);
+    for (let j = 0; j <= 5; j++) { const u = -N.b / 2 + N.b * j / 5; rod(se, np(u, 0), np(u, 1), j % 5 ? 0.011 : 0.015); }
+    for (let i = 0; i <= 6; i++) rod(se, np(-N.b / 2, i / 6), np(N.b / 2, i / 6), 0.011);
+    for (let i = 1; i < 6; i++) for (let j = 1; j < 5; j++) knot(np(-N.b / 2 + N.b * j / 5, i / 6), 0.022);
+
+    // Rutsche aus Edelstahl nach Osten: Wanne mit 17 cm hohen Seitenwänden entlang des Längsprofils (Start eben, in der Mitte höchstens 45°,
+    // Auslauf eben in 25 cm Höhe). Querschnitt im Uhrzeigersinn (q quer nach Norden, h nach oben), je Kante ein eigener Streifen.
+    const R = S.rutsche, zt = zP - 0.02, sl = R.len - 0.75, hq = R.b / 2;
+    const zs = u => u < 0.3 ? zt : u > R.len - 0.45 ? R.aus : R.aus + (zt - R.aus) * (1 + Math.cos(Math.PI * (u - 0.3) / sl)) / 2;
+    const ds = u => u < 0.3 || u > R.len - 0.45 ? 0 : -(zt - R.aus) * Math.PI / (2 * sl) * Math.sin(Math.PI * (u - 0.3) / sl);
+    const prof = [[-hq, 0.17], [-hq + 0.025, 0.17], [-hq + 0.025, 0.045], [-hq + 0.04, 0.012], [-hq + 0.07, 0], [hq - 0.07, 0], [hq - 0.04, 0.012],
+      [hq - 0.025, 0.045], [hq - 0.025, 0.17], [hq, 0.17], [hq, -0.025], [-hq, -0.025]];
+    const nr = 30, ring = [], pos = [], idx = [];
+    for (let i = 0; i <= nr; i++) {
+      const u = 0.03 + (R.len - 0.03) * i / nr, s = ds(u), l = Math.hypot(1, s);
+      ring.push(prof.map(([q, h]) => [x1 + u - h * s / l, zs(u) + h / l, -(T.y + q)]));
+    }
+    prof.forEach((_, k) => {
+      const k2 = (k + 1) % prof.length, b0 = pos.length / 3;
+      for (let i = 0; i <= nr; i++) pos.push(...ring[i][k], ...ring[i][k2]);
+      for (let i = 0; i < nr; i++) { const A = b0 + 2 * i; idx.push(A, A + 2, A + 3, A, A + 3, A + 1); }
+    });
+    // Stirnseiten: Dreiecke des Querschnitts, am Start umgedreht
+    const tri = THREE.ShapeUtils.triangulateShape(prof.map(([q, h]) => new THREE.Vector2(q, h)), []);
+    for (const [i, flip] of [[0, true], [nr, false]]) {
+      const b0 = pos.length / 3; for (const p of ring[i]) pos.push(...p);
+      for (const f of tri) idx.push(...(flip ? [f[0], f[2], f[1]] : f).map(j => b0 + j));
+    }
+    const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); rg.setIndex(idx); rg.computeVertexNormals();
+    rg.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(pos.length / 3 * 2), 2));
+    addGeo(M.spielRutsche, rg);
+    const xr = x1 + R.len - 0.29;
+    for (const sg of [-1, 1]) boxPlan(st, xr - 0.03, xr + 0.03, T.y + sg * 0.17 - 0.03, T.y + sg * 0.17 + 0.03, 0, R.aus - 0.07);
+    boxPlan(st, xr - 0.03, xr + 0.03, T.y - 0.2, T.y + 0.2, R.aus - 0.07, R.aus - 0.025);
+
+    // Doppelschaukel: Balken 10 × 10 cm auf zwei A-Gestellen aus schwarzem Stahl mit Querstrebe, zwei Gummisitze an hellen Seilen
+    const SW = S.schaukel, zB = SW.h;
+    beam(st, P(SW.x0 - 0.1, SW.y, zB), P(SW.x1 + 0.1, SW.y, zB), 0.1, 0.1);
+    for (const x of [SW.x0, SW.x1]) {
+      for (const sg of [-1, 1]) beam(st, P(x, SW.y, zB - 0.02), P(x, SW.y + sg * 0.95, 0), 0.08, 0.08);
+      const yq = 0.95 * (1 - 0.9 / (zB - 0.02));
+      boxPlan(st, x - 0.025, x + 0.025, SW.y - yq, SW.y + yq, 0.875, 0.925);
+    }
+    for (const xs of SW.sitze) {
+      boxPlan(M.spielGummi, xs - 0.225, xs + 0.225, SW.y - 0.085, SW.y + 0.085, SW.sitz - 0.03, SW.sitz);
+      for (const sg of [-1, 1]) {
+        addCyl(se, xs + sg * 0.2, SW.y, SW.sitz - 0.01, zB - 0.07, 0.011, 0.011, 6);
+        boxPlan(st, xs + sg * 0.2 - 0.025, xs + sg * 0.2 + 0.025, SW.y - 0.025, SW.y + 0.025, zB - 0.09, zB - 0.05);
+      }
+    }
   }
   // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Gelände mit Wegen, Pool, Bäumen und Beeten, Nachbarhäuser
   function buildSite() {
@@ -3724,8 +4000,11 @@ const View3D = (() => {
     boxPlan(M.stone, PW.x0, PW.x1, PW.y0 - 0.02, PW.y1 - 0.36, 0, 0.03);
     buildPoolhaus(g);
     gardenFurniture();
+    buildSpielplatz(g);
     buildFence(g);
     g.add(hedges());
+    // Zufallsfolge ab hier fest (Stand vor den neuen Hecken): Bäume, Beete und Nachbargrün bleiben gleich, wenn sich Zaun, Hecken oder Spielplatz ändern
+    seed = 334129586;
     // Grenze
     const pts = [...SITE.plot, SITE.plot[0]].map(q => P(q[0], q[1], 0.05));
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0x24292e, dashSize: 0.9, gapSize: 0.45 }));

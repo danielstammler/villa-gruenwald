@@ -2,6 +2,8 @@
   // Bäume in den Nachbargärten nach den Luftbildern: dichter Bestand aus Laub- und Nadelbäumen, einzelne Blutbuchen.
   // Nicht auf Häusern, Straßen und dem eigenen Grundstück und nicht in den Sichtachsen der Kamerablicke.
   function neighborGreen() {
+    // feste Zufallsfolge (Stand 4.11.2026), damit Änderungen an Beeten oder Bäumen davor die Nachbarbäume nicht umwürfeln
+    seed = 523963437;
     const grp = new THREE.Group(), leaf = [], needle = [], barkParts = [], Yax = new THREE.Vector3(0, 1, 0);
     const inPoly = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
     const segDist = (x, y, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(x - a[0] - t * dx, y - a[1] - t * dy); };
@@ -73,8 +75,7 @@
     const poly = P => { s.beginPath(); P.forEach(([x, y], i) => (i ? s.lineTo(X(x), Y(y)) : s.moveTo(X(x), Y(y)))); s.closePath(); s.fill(); };
     for (const b of [...SITE.neighbors, ...SITE.secondary]) poly(b.pts);
     for (const P0 of [C.haus, C.freisitz, C.poolhaus]) poly(P0);
-    const P0 = SITE.plot, chain = [[25.059, -44.0], P0[4], P0[5], P0[6], P0[0]];
-    s.lineWidth = 0.9 * k; s.beginPath(); chain.forEach(([x, y], i) => (i ? s.lineTo(X(x), Y(y)) : s.moveTo(X(x), Y(y)))); s.stroke();
+    for (const H of HOUSE.garten.hecken) { s.lineWidth = (H.b + 0.3) * k; s.beginPath(); H.linie.forEach(([x, y], i) => (i ? s.lineTo(X(x), Y(y)) : s.moveTo(X(x), Y(y)))); s.stroke(); }
     for (const t of SITE.trees) { s.beginPath(); s.arc(X(t.c[0]), Y(t.c[1]), (0.5 + 0.05 * t.r) * k, 0, 6.2832); s.fill(); }
     const c = document.createElement('canvas'); c.width = c.height = N;
     const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, N, N); g.imageSmoothingEnabled = true;
@@ -103,7 +104,7 @@
   }
   // Poolhaus im Stil des Hauses: weiße Wände mit Sockel und Gesims, zum Pool ganz offen (5,40 m breite Glas-Schiebewand, zwei Flügel
   // zur Seite geschoben), nach Norden ein großes Fenster; Veranda auf zwei quadratischen Pfeilern, flaches Walmdach mit Schiefer.
-  // Innen Bar, Liege und Handtücher.
+  // Innen Bar, Liege und Handtücher. Boden eine Stufe über der Poolterrasse (H.z) auf der Decke der Durchfahrt; Gesims und Dach bleiben auf ihrer Höhe.
   function buildPoolhaus(g) {
     const H = HOUSE.poolhaus, { x0, x1, y0, y1, z, wand: t, gesims, traufe } = H, xv = x0 - H.veranda, ov = 0.25, len = y1 - y0;
     boxPlan(M.stone, x0, x1, y0, y1, 0, z);
@@ -117,7 +118,9 @@
     // Poolseite: eine breite Öffnung zwischen den Eckpilastern, darin drei Schiebeflügel, zwei davon hinter den dritten geschoben
     const mx = frameMx({ o: [x0, y1], r: [0, -1], n: [-1, 0] }), [oa, ob] = H.front;
     g.add(wallWithHoles(len, 0, gesims, [{ u0: oa, u1: ob, z0: z, z1: 2.45 }], t, [M.site, M.site], mx));
-    addBox(M.coping, mx, -0.04, len + 0.04, 0, 0.18, 0, 0.03);
+    for (const [a, b] of [[-0.04, oa], [ob, len + 0.04]]) addBox(M.coping, mx, a, b, 0, 0.18, 0, 0.03);
+    // vor der Öffnung eine Stufe aus Naturstein auf Bodenhöhe: der Boden liegt eine Stufe über Veranda und Poolterrasse
+    addBox(M.stone, mx, oa - 0.05, ob + 0.05, 0, z, 0, H.stufe);
     for (const [a, b] of [[0, oa], [ob, len]]) addBox(M.siteHell, mx, a, b, 0.18, gesims, 0, 0.05);
     addBox(M.siteHell, mx, oa - 0.05, ob + 0.05, 2.45, 2.6, 0, 0.06);
     for (const [r0, r1] of [[z, z + 0.03], [2.41, 2.45]]) addBox(M.siteFrame, mx, oa, ob, r0, r1, -0.2, -0.05);
@@ -160,11 +163,12 @@
     loungerAt(xv + 0.62, xv + 1.37, -33.15, -31.15, z);
     addCyl(M.fOutTop, xv + 0.37, -31.75, z + 0.45, z + 0.48, 0.24, 0.24, 18); addCyl(M.fOutMetal, xv + 0.37, -31.75, z, z + 0.45, 0.02, 0.02, 8);
   }
-  // Zaun an der Straße: weißer Sockel mit Steinabdeckung, schwarze Stäbe mit Spitzen, Pfeiler mit Abdeckplatten (an Bäumen ausgespart);
-  // zweiflügeliges Einfahrtstor mit Bogen und Gartentür, beide öffnen sich nach innen, wenn man herankommt; Laternen auf den Torpfeilern.
+  // Zaun an der Straße, durchgehend über die ganze Straßenseite: weißer Sockel mit Steinabdeckung, schwarze Stäbe mit Spitzen, Pfeiler mit
+  // Abdeckplatten; an Stämmen auf der Grenze endet das Feld mit einem schmalen Pfosten und geht hinter dem Stamm weiter.
+  // Zweiflügeliges Einfahrtstor mit flachem Bogen und Gartentür, beide öffnen sich nach innen, wenn man herankommt; Leuchten vorn an den
+  // Torpfeilern. Alles höchstens hb = 1,60 m hoch (Pfeiler mit Abdeckung, Torbogen mit Spitzen), Stäbe mit Spitzen bis 1,55 m.
   function buildFence(g) {
-    const Zn = HOUSE.zaun, P0 = SITE.plot, pw2 = Zn.pfeiler / 2, hb = Zn.hoehe, trunks = SITE.trees.map(t => t.c);
-    const segDist = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy); };
+    const Zn = HOUSE.zaun, P0 = SITE.plot, pw2 = Zn.pfeiler / 2, hb = Zn.hoehe, zt = Zn.stab - 0.07;
     const spike = (mx, s, zz) => { const c = new THREE.ConeGeometry(0.022, 0.07, 4); c.rotateY(Math.PI / 4); c.translate(s, zz + 0.035, 0); addGeo(M.fOutMetal, c, mx); };
     const bars = (mx, s0, s1, zb0, top) => {
       const n = Math.max(1, Math.round((s1 - s0) / 0.12));
@@ -173,35 +177,58 @@
       // Handlauf knapp unter den Spitzen, folgt bei den Toren dem Bogen
       for (let j = 0; j < n; j++) { const sa = s0 + (s1 - s0) * j / n, sb = s0 + (s1 - s0) * (j + 1) / n, zm = (top(sa) + top(sb)) / 2 - 0.1; addBox(M.fOutMetal, mx, sa, sb, zm - 0.02, zm + 0.02, -0.018, 0.018); }
     };
-    const pillar = (mx, s, h, lamp) => {
+    // Pfeiler bis 1,50 m, Abdeckplatte und flache Haube bis hb
+    const pillar = (mx, s) => {
+      const h = hb - 0.1;
       addBox(M.siteHell, mx, s - pw2, s + pw2, 0, h, -pw2, pw2);
       addBox(M.brickCap, mx, s - pw2 - 0.04, s + pw2 + 0.04, h, h + 0.06, -pw2 - 0.04, pw2 + 0.04);
-      if (lamp) { addBox(M.siteFrame, mx, s - 0.12, s + 0.12, h + 0.06, h + 0.1, -0.12, 0.12); addBox(M.siteLamp, mx, s - 0.09, s + 0.09, h + 0.1, h + 0.36, -0.09, 0.09); addBox(M.siteFrame, mx, s - 0.11, s + 0.11, h + 0.36, h + 0.41, -0.11, 0.11); }
-      else addBox(M.brickCap, mx, s - pw2 + 0.06, s + pw2 - 0.06, h + 0.06, h + 0.1, -pw2 + 0.06, pw2 - 0.06);
+      addBox(M.brickCap, mx, s - pw2 + 0.06, s + pw2 - 0.06, h + 0.06, hb, -pw2 + 0.06, pw2 - 0.06);
+    };
+    // Wandleuchte vorn am Pfeiler (zur Straße): schwarzer Rahmen, Milchglas, Oberkante 1,52 m
+    const lantern = (mx, s) => {
+      addBox(M.siteFrame, mx, s - 0.075, s + 0.075, 1.28, 1.52, pw2, pw2 + 0.015);
+      addBox(M.siteLamp, mx, s - 0.055, s + 0.055, 1.31, 1.49, pw2 + 0.015, pw2 + 0.11);
+      for (const [z0, z1] of [[1.29, 1.31], [1.49, 1.515]]) addBox(M.siteFrame, mx, s - 0.07, s + 0.07, z0, z1, pw2 + 0.01, pw2 + 0.125);
     };
     // Lauf von a nach b, um 15 cm nach innen versetzt; links der Laufrichtung liegt das Grundstück
     const frameOf = (a, b) => {
       const l = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / l, uy = (b[1] - a[1]) / l, o = [a[0] - uy * 0.15, a[1] + ux * 0.15];
-      return { l, ux, uy, o, mx: frameMx({ o, r: [ux, uy], n: [uy, -ux] }), at: s => [o[0] + ux * s, o[1] + uy * s], on: s => [a[0] + ux * s, a[1] + uy * s] };
+      return { l, ux, uy, o, mx: frameMx({ o, r: [ux, uy], n: [uy, -ux] }), on: s => [a[0] + ux * s, a[1] + uy * s] };
     };
+    // Stämme an der Zaunlinie (Stammradius wie im Modell und 8 cm Luft, über die ganze Zauntiefe): Abschnitte [s0, s1] ohne Zaun
+    const cuts = F => SITE.trees.map(t => {
+      const r = 0.24 + 0.035 * t.r, dx = t.c[0] - F.o[0], dy = t.c[1] - F.o[1], s = dx * F.ux + dy * F.uy, d = Math.max(0, Math.abs(dx * F.uy - dy * F.ux) - 0.17);
+      return d < r ? [s - Math.sqrt(r * r - d * d), s + Math.sqrt(r * r - d * d)] : null;
+    }).filter(Boolean);
     const run = (a, b, noStart, noEnd) => {
-      const F = frameOf(a, b), k = Math.max(1, Math.round(F.l / 2.6)), step = F.l / k;
-      for (let i = 0; i <= k; i++) if (!(i === 0 && noStart) && !(i === k && noEnd)) pillar(F.mx, i * step, hb + 0.1);
+      const F = frameOf(a, b), k = Math.max(1, Math.round(F.l / 2.6)), step = F.l / k, cut = cuts(F);
+      for (let i = 0; i <= k; i++) {
+        if ((i === 0 && noStart) || (i === k && noEnd) || cut.some(([c0, c1]) => i * step + pw2 > c0 && i * step - pw2 < c1)) continue;
+        pillar(F.mx, i * step);
+      }
       for (let i = 0; i < k; i++) {
         const s0 = i * step + pw2, s1 = (i + 1) * step - pw2;
-        if (trunks.some(c => segDist(c, F.at(s0), F.at(s1)) < 0.55)) continue;
-        addBox(M.siteHell, F.mx, s0, s1, 0, Zn.sockel, -0.14, 0.14); addBox(M.brickCap, F.mx, s0 - 0.01, s1 + 0.01, Zn.sockel, Zn.sockel + 0.04, -0.17, 0.17);
-        bars(F.mx, s0, s1, Zn.sockel + 0.04, () => hb - 0.02);
+        let u = s0;
+        for (const [c0, c1] of [...cut.filter(([c0, c1]) => c1 > s0 && c0 < s1), [s1, s1]].sort((p, q) => p[0] - q[0])) {
+          const v = Math.min(c0, s1);
+          if (v - u > 0.06) {
+            addBox(M.siteHell, F.mx, u, v, 0, Zn.sockel, -0.14, 0.14); addBox(M.brickCap, F.mx, u - 0.01, v + 0.01, Zn.sockel, Zn.sockel + 0.04, -0.17, 0.17);
+            bars(F.mx, u, v, Zn.sockel + 0.04, () => zt);
+            for (const s of [u > s0 ? u : null, v < s1 ? v : null]) if (s !== null) addBox(M.fOutMetal, F.mx, s - 0.025, s + 0.025, Zn.sockel, zt + 0.02, -0.025, 0.025);
+          }
+          u = Math.max(u, c1);
+        }
       }
       return F;
     };
     run(P0[0], P0[1]); run(P0[1], P0[2], true);
-    // an der Zufahrt: Pfeiler A, zweiflügeliges Tor, Pfeiler B mit Briefkasten und Klingel, Gartentür, Eckpfeiler C
+    // an der Zufahrt: Pfeiler A mit Leuchte, zweiflügeliges Tor, Pfeiler B mit Briefkasten, Klingel und Leuchte, Gartentür, Eckpfeiler C
     const F = frameOf(P0[2], P0[3]), sx = x => (x - F.o[0]) / F.ux, sA = sx(Zn.tor[0]) - pw2, sB = sx(Zn.tor[1]) + pw2, sC = sx(Zn.tuer[1]) + pw2;
     run(P0[2], F.on(sA), true, true);
-    pillar(F.mx, sA, hb + 0.3, true); pillar(F.mx, sB, hb + 0.3, true); pillar(F.mx, sC, hb + 0.1);
-    addBox(M.trim, F.mx, sB - 0.14, sB + 0.14, 0.95, 1.3, pw2, pw2 + 0.05); addBox(M.siteFrame, F.mx, sB - 0.06, sB + 0.06, 1.4, 1.58, pw2, pw2 + 0.02); addBox(M.siteLamp, F.mx, sB - 0.02, sB + 0.02, 1.53, 1.56, pw2 + 0.02, pw2 + 0.025);
-    const wid = sB - pw2 - (sA + pw2), arch = s => hb - 0.12 + 0.3 * Math.sin(Math.PI * Math.min(1, Math.max(0, (s - sA - pw2) / wid)));
+    pillar(F.mx, sA); pillar(F.mx, sB); pillar(F.mx, sC); lantern(F.mx, sA); lantern(F.mx, sB);
+    addBox(M.trim, F.mx, sB - 0.14, sB + 0.14, 0.72, 1.02, pw2, pw2 + 0.05); addBox(M.siteFrame, F.mx, sB - 0.06, sB + 0.06, 1.08, 1.24, pw2, pw2 + 0.02); addBox(M.siteLamp, F.mx, sB - 0.02, sB + 0.02, 1.18, 1.21, pw2 + 0.02, pw2 + 0.025);
+    // Torbogen flach: Stäbe am Pfeiler bis 1,40 m, in der Mitte bis 1,53 m, mit Spitzen höchstens hb
+    const wid = sB - pw2 - (sA + pw2), arch = s => hb - 0.2 + 0.13 * Math.sin(Math.PI * Math.min(1, Math.max(0, (s - sA - pw2) / wid)));
     const gateLeaf = (s0, s1, hinge, sg, top, center) => leaf(g, new THREE.Vector3(hinge, 0, 0).applyMatrix4(F.mx), sg, center, () => {
       for (const s of [s0 + 0.03, s1 - 0.03]) addBox(M.fOutMetal, F.mx, s - 0.03, s + 0.03, 0.06, top(s) - 0.02, -0.02, 0.02);
       addBox(M.fOutMetal, F.mx, s0, s1, 0.06, 0.12, -0.02, 0.02);
@@ -211,6 +238,6 @@
     gateLeaf(sA + pw2 + 0.02, sm - 0.01, sA + pw2 + 0.02, 1, arch, gc);
     gateLeaf(sm + 0.01, sB - pw2 - 0.02, sB - pw2 - 0.02, -1, arch, gc);
     const tc = new THREE.Vector3((sB + sC) / 2, 1.0, 0).applyMatrix4(F.mx);
-    gateLeaf(sB + pw2 + 0.02, sC - pw2 - 0.02, sC - pw2 - 0.02, -1, () => hb - 0.08, tc);
+    gateLeaf(sB + pw2 + 0.02, sC - pw2 - 0.02, sC - pw2 - 0.02, -1, () => zt, tc);
     run(P0[3], [25.059, -44.0], true);
   }

@@ -104,7 +104,8 @@ const Site = (() => {
     s.push(poly(C.poolWasser, 's-water', 'Pool · Wasserfläche ca. 3,50 × 11,50 m'));
     const PH = HOUSE.poolhaus;
     s.push(poly(rect(PH.x0 - PH.veranda, PH.y0, PH.x0, PH.y1), 's-balkon', 'Veranda des Poolhauses · 1,80 × 6,00 m · überdacht, zwei Pfeiler'));
-    s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m · zum Pool offen mit Glas-Schiebewand, Fenster nach Norden, Walmdach · darunter führt die Rampe in die Tiefgarage'));
+    s.push(poly(C.poolhaus, 's-annex', `Poolhaus · 3,50 × 6,00 m · zum Pool offen mit Glas-Schiebewand, Fenster nach Norden, Walmdach · Boden +${num(PH.z)} m, eine Stufe über der Poolterrasse · darunter führt die Rampe in die Tiefgarage`));
+    s.push(poly(rect(PH.x0 - PH.stufe, PH.y1 - PH.front[1] - 0.05, PH.x0, PH.y1 - PH.front[0] + 0.05), 's-stone', `Stufe vor der Glas-Schiebewand · Naturstein · ${num(PH.stufe)} m tief, ${num((PH.z - HOUSE.poolDeck.z) * 100, 0)} cm hoch`));
     // Spielplatz im Vorgarten (HOUSE.garten.spiel): Fallschutzfläche, Turm mit Satteldach (First als Linie), Kletterwand, Netz, Rutsche, Doppelschaukel
     const SP = GA.spiel, TU = SP.turm, ta = TU.a, RU = SP.rutsche, SW = SP.schaukel, WA = SP.wand, NE = SP.netz;
     s.push(poly(SP.flaeche, 's-spiel', `Spielplatz · Fallschutz aus Holzhackschnitzeln, 30 cm (DIN EN 1177) · ${num(area(SP.flaeche), 1)} m² · Fallräume nach DIN EN 1176 rundum, mit Abstand zu den Stämmen`));
@@ -121,10 +122,10 @@ const Site = (() => {
     s.push(text([(SW.x0 + SW.x1) / 2, SW.y - 2.6], 'Spielplatz', 's-lbl s-tiny'));
     // Zaun durchgehend über die ganze Straßenseite mit Einfahrtstor und Gartentür, an der Ostgrenze bis zur Hecke
     const Z0 = HOUSE.zaun, P0 = SITE.plot, onB = x => [x, P0[2][1] + (x - P0[2][0]) * (P0[3][1] - P0[2][1]) / (P0[3][0] - P0[2][0])];
-    s.push(`<polyline points="${pts([P0[0], P0[1], P0[2], onB(Z0.tor[0])])}" class="s-fence" data-tip="Zaun · durchgehend über die ganze Straßenseite · weißer Sockel mit schwarzen Stäben zwischen Pfeilern · 1,65 m hoch · an den Stämmen auf der Grenze eng vorbei"/>`);
-    s.push(`<polyline points="${pts([onB(Z0.tuer[1]), P0[3], [25.059, -44.0]])}" class="s-fence" data-tip="Zaun · weißer Sockel mit schwarzen Stäben"/>`);
-    s.push(`<polyline points="${pts([onB(Z0.tor[0]), onB(Z0.tor[1])])}" class="s-gate" data-tip="Einfahrtstor · zweiflügelig, schwarzer Stahl · 3,60 m breit"/>`);
-    s.push(`<polyline points="${pts([onB(Z0.tuer[0]), onB(Z0.tuer[1])])}" class="s-gate" data-tip="Gartentür für Fußgänger mit Klingel und Briefkasten im Pfeiler"/>`);
+    s.push(`<polyline points="${pts([P0[0], P0[1], P0[2], onB(Z0.tor[0])])}" class="s-fence" data-tip="Zaun · durchgehend über die ganze Straßenseite · weißer Sockel mit schwarzen Stäben zwischen Pfeilern · höchstens ${num(Z0.hoehe)} m hoch (Ortsgestaltungssatzung § 9) · an den Stämmen auf der Grenze eng vorbei"/>`);
+    s.push(`<polyline points="${pts([onB(Z0.tuer[1]), P0[3], [25.059, -44.0]])}" class="s-fence" data-tip="Zaun · weißer Sockel mit schwarzen Stäben · höchstens ${num(Z0.hoehe)} m hoch"/>`);
+    s.push(`<polyline points="${pts([onB(Z0.tor[0]), onB(Z0.tor[1])])}" class="s-gate" data-tip="Einfahrtstor · zweiflügelig, schwarzer Stahl · 3,60 m breit · flacher Bogen bis ${num(Z0.hoehe)} m · Leuchten vorn an den Torpfeilern"/>`);
+    s.push(`<polyline points="${pts([onB(Z0.tuer[0]), onB(Z0.tuer[1])])}" class="s-gate" data-tip="Gartentür für Fußgänger mit Klingel und Briefkasten im Pfeiler · ${num(Z0.stab)} m hoch"/>`);
     s.push(poly(C.haus, 's-house', 'Wohnhaus · 16,00 × 11,65 m · 186,4 m² · Wandhöhe 7,25 m · First 11,12 m'));
     for (const o of HOUSE.fas.S.open.filter(q => q.z0 < 1)) s.push(poly(rect(o.u0, -HOUSE.D, o.u1, -HOUSE.D + 0.2), 's-win'));
     const bk = HOUSE.balkon;

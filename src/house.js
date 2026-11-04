@@ -137,11 +137,15 @@ const HOUSE = (() => {
   // Poolhaus auf der Fläche aus dem Konzept (3,50 × 6,00 m) im Stil des Hauses: weißer Putz, Gesims, flaches Walmdach mit Schiefer.
   // Zum Pool ganz offen: eine 5,40 m breite Glas-Schiebewand (zwei Flügel zur Seite geschoben), nach Norden ein großes Fenster,
   // davor eine überdachte Veranda auf zwei Pfeilern. Darunter führt die Rampe in die Tiefgarage.
-  const poolhaus = { x0: 19.384, x1: 22.885, y0: -33.651, y1: -27.652, z: 0.05, wand: 0.25, gesims: 2.75, traufe: 2.95, neigung: 27,
-    veranda: 1.8, pfeiler: 0.3, front: [0.3, 5.7], fenster: [20.75, 22.45] };
+  // Boden eine Stufe über der Poolterrasse (+0,15, vor der Schiebewand eine Stufe aus Naturstein): über der Durchfahrt (Unterkante −0,15)
+  // bleiben 30 cm für Decke und Belag. Gesims und Traufe bleiben auf ihrer Höhe, innen wird es 10 cm niedriger.
+  const poolhaus = { x0: 19.384, x1: 22.885, y0: -33.651, y1: -27.652, z: 0.15, wand: 0.25, gesims: 2.75, traufe: 2.95, neigung: 27,
+    veranda: 1.8, pfeiler: 0.3, front: [0.3, 5.7], fenster: [20.75, 22.45], stufe: 0.32 };
   // Zaun über die ganze Straßenseite (an Stämmen auf der Grenze eng vorbei): weißer Sockel mit schwarzen Stäben zwischen Pfeilern;
-  // Einfahrtstor zweiflügelig, daneben die Gartentür. Hecken und Spielplatz in HOUSE.garten (unten).
-  const zaun = { hoehe: 1.65, sockel: 0.45, pfeiler: 0.42, tor: [19.732, 23.33], tuer: [23.75, 24.73] };
+  // Einfahrtstor zweiflügelig, daneben die Gartentür. Alles höchstens 1,60 m über dem Pflaster (Ortsgestaltungssatzung Grünwald § 9 Abs. 4):
+  // Pfeiler mit Abdeckung 1,60 m, Stäbe mit Spitzen 1,55 m, Torbogen bis 1,60 m, Leuchten vorn an den Torpfeilern statt obenauf.
+  // Hecken und Spielplatz in HOUSE.garten (unten).
+  const zaun = { hoehe: 1.6, stab: 1.55, sockel: 0.3, pfeiler: 0.42, tor: [19.732, 23.33], tuer: [23.75, 24.73] };
 
   return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe,
     tg, pool, poolDeck, poolWeg, poolhaus, zaun };

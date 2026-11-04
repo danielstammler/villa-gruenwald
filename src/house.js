@@ -23,9 +23,10 @@ const HOUSE = (() => {
   const ax7 = [[0.9, 1.9], [2.8, 3.8], [5.2, 6.2], [7.0, 9.0], [9.8, 10.8], [12.2, 13.2], [14.1, 15.1]];
   const pilLang = [[0, 0.5], [4.4, 4.95], [11.05, 11.6], [15.5, 16]];
   const pilKurz = [[0, 0.5], [11.15, 11.65]];
-  const op = (u0, u1, z0, z1, kind, extra = {}) => ({ u0, u1, z0, z1, kind, leaves: u1 - u0 > 1.5 ? 2 : 1, ...extra });
+  // Alle Fenster und Fenstertüren mit senkrechter Mittelsprosse, also zwei Glasfelder (Daniel, 4.11.2026); die Haustür bleibt einflügelig
+  const op = (u0, u1, z0, z1, kind, extra = {}) => ({ u0, u1, z0, z1, kind, leaves: 2, ...extra });
   const gaube = (u0, u1, win, extra = {}) => ({ u0, u1, top: 9.4, clad: 'putz', front: 0.2, win, ...extra });
-  const gWin = (c, w = 0.9, z1 = 9.05) => ({ u0: c - w / 2, u1: c + w / 2, z0: 7.9, z1, leaves: w > 1.5 ? 2 : 1 });
+  const gWin = (c, w = 0.9, z1 = 9.05) => ({ u0: c - w / 2, u1: c + w / 2, z0: 7.9, z1, leaves: 2 });
   // Dachfenster in der steilen Dachfläche: Mitte c entlang der Traufe, v0..v1 die Fläche hinauf (Meter ab Traufe)
   const dachfenster = (c, w = 0.9) => ({ u0: c - w / 2, u1: c + w / 2, v0: 1.15, v1: 2.6 });
 
@@ -41,7 +42,7 @@ const HOUSE = (() => {
       dormers: [
         // Zwerchhaus in der Fassadenflucht über den Pilastern der Mittelachse; davor tritt der DG-Balkon nach vorne (siehe balkonDG)
         { u0: 4.45, u1: 11.55, top: 9.75, clad: 'putz', front: 0, zwerch: true,
-          win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.75, z1: 9.0, leaves: b - a > 1.5 ? 2 : 1, kind: 'tuer', move: a === 7.1 })) },
+          win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.75, z1: 9.0, leaves: 2, kind: 'tuer', move: a === 7.1 })) },
       ],
       // Links und rechts keine Gauben, sondern flache Dachfenster wie im Rendering
       roofWindows: [dachfenster(3.3), dachfenster(12.7)],
@@ -58,7 +59,7 @@ const HOUSE = (() => {
       ],
       // Auch hinten ein Zwerchhaus in der Mitte (französische Fenster mit Geländer), daneben Dachfenster wie im Süden
       dormers: [{ u0: 4.45, u1: 11.55, top: 9.75, clad: 'putz', front: 0, zwerch: true,
-        win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.9, z1: 9.0, leaves: b - a > 1.5 ? 2 : 1, kind: 'franz', rail: 7.85 })) }],
+        win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.9, z1: 9.0, leaves: 2, kind: 'franz', rail: 7.85 })) }],
       roofWindows: [dachfenster(3.3), dachfenster(12.7)],
       // Eingang: Portikus auf zwei quadratischen Pfeilern vor dem Podest, Laterne unter dem Vordach statt Wandleuchten
       portikus: { u0: 5.4, u1: 10.6, depth: 1.15, z0: 3.02, z1: 3.38, pillars: [5.75, 10.25], pw: 0.35, py: 0.8 },

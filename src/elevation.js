@@ -109,7 +109,8 @@ const Elev = (() => {
     let s = '';
     for (const w of F.roofWindows || []) {
       const z0 = HOUSE.traufe + w.v0 * sinA, z1 = HOUSE.traufe + w.v1 * sinA;
-      s += r(w.u0 - 0.07, z0 - 0.07, w.u1 + 0.07, z1 + 0.07, 'e-frame') + r(w.u0, z0, w.u1, z1, 'e-glass');
+      const c = (w.u0 + w.u1) / 2;
+      s += r(w.u0 - 0.07, z0 - 0.07, w.u1 + 0.07, z1 + 0.07, 'e-frame') + r(w.u0, z0, w.u1, z1, 'e-glass') + r(c - 0.03, z0, c + 0.03, z1, 'e-frame');
     }
     for (const k of HOUSE.kamine) {
       const u = { S: k.x, N: W - k.x, E: k.y + D, W: -k.y }[side], hw = (side === 'S' || side === 'N' ? k.w : k.d) / 2;

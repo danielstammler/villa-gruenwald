@@ -228,6 +228,8 @@
       const m = facadeMatrix(side).multiply(new THREE.Matrix4().makeTranslation(0, HOUSE.traufe, HOUSE.ueberstand)).multiply(slope);
       for (const [a, b, c, e] of [[w.u0 - 0.07, w.u1 + 0.07, w.v0 - 0.07, w.v0], [w.u0 - 0.07, w.u1 + 0.07, w.v1, w.v1 + 0.07], [w.u0 - 0.07, w.u0, w.v0, w.v1], [w.u1, w.u1 + 0.07, w.v0, w.v1]]) addBox(M.frame, m, a, b, c, e, -0.05, 0.05);
       addBox(M.glass, m, w.u0, w.u1, w.v0, w.v1, -0.01, 0.01);
+      // senkrechte Sprosse wie bei allen Fenstern
+      const c = (w.u0 + w.u1) / 2; addBox(M.frame, m, c - 0.03, c + 0.03, w.v0, w.v1, -0.03, 0.03);
     }
     // Flache Decke im DG unter dem oberen Dach (dort, wo die steile Dachfläche sie nicht schneidet)
     const sD = (Zh.ffbDG + 2.6 - HOUSE.roofIn(0)) / HOUSE.tan1;

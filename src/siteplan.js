@@ -81,7 +81,7 @@ const Site = (() => {
     s.push(poly(C.zufahrt, 's-pave', `Zufahrt · ${num(area(C.zufahrt), 1)} m² · darin die offene Rampe zur Tiefgarage`));
     // Offene Rampe zwischen Betonwänden: Querlinien im Meterabstand, Pfeil zeigt bergab
     const rp = HOUSE.rampe, rx0 = rp.x0 - rp.wand, rx1 = rp.x1 + rp.wand, rc = (rp.x0 + rp.x1) / 2;
-    s.push(poly(rect(rp.x0, rp.y0, rp.x1, rp.yPortal), 's-rampopen', `Offene Rampe zur Tiefgarage · 2,80 m breit · oben und unten ${num(rp.s0 * 100, 0)} %, dazwischen ${num(rp.s * 100, 0)} % · am Poolhaus ${num(-rp.z(rp.yPortal))} m tief`));
+    s.push(poly(rect(rp.x0, rp.y0, rp.x1, rp.yPortal), 's-rampopen', `Offene Rampe zur Tiefgarage · 2,80 m breit · davor ${num(rp.vor.l)} m Vorplatz mit ${num(rp.vor.s * 100, 0)} % bis zur Rinne, dann ${num(rp.s * 100, 0)} % · am Poolhaus ${num(-rp.z(rp.yPortal))} m tief`));
     for (let y = rp.y0 + 1; y < rp.yPortal - 0.4; y += 1) s.push(line([rp.x0, y], [rp.x1, y], 's-rampline'));
     s.push(poly(rect(rx0, rp.y0, rp.x0, rp.yPortal), 's-rampwall', 'Rampenwand mit Geländer') + poly(rect(rp.x1, rp.y0, rx1, rp.yPortal), 's-rampwall', 'Rampenwand mit Geländer'));
     s.push(poly([[rc - 0.5, -38.2], [rc + 0.5, -38.2], [rc, -36.9]], 's-ramparrow') + text([rc + 0.25, -43.4], `Rampe ${num(rp.s * 100, 0)} %`, 's-lbl s-tiny', -90));

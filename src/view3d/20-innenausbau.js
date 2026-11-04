@@ -3,8 +3,8 @@
   function buildInterior() {
     const lv = { UG: [Zh.ffbUG, -0.15], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
     // Fliesen in Bädern, Küche und Nebenräumen, Kalkstein in Halle und Garderobe, sonst Eichendielen
-    const nass = /bad|wc|dusche|küche|backkitchen|speis|abstell|schleuse|lager|technik|waschen|vorraum/i, halle = /halle|garderobe|foyer/i;
-    const W = HOUSE.W, D = HOUSE.D, roofIn = HOUSE.roofIn, { STAIR, LIFT, VOID } = Plans.CORE;
+    const nass = /bad|wc|dusche|küche|backkitchen|speis|abstell|schleuse|lager|technik|waschen|vorraum/i, halle = /halle|garderobe|foyer/i, gym = /gym/i;
+    const W = HOUSE.W, D = HOUSE.D, roofIn = HOUSE.roofIn, { LINE, HOLES, LIFT, VOID } = Plans.CORE;
     const uniq = a => [...new Set(a.map(v => +v.toFixed(3)))].sort((p, q) => p - q);
     // Rechteck ohne Öffnungen (Treppe, Aufzug, Luftraum) als Liste von Teilrechtecken
     const minus = (r, hs) => {
@@ -16,13 +16,28 @@
       }
       return out;
     };
-    const openings = { UG: [LIFT], EG: [STAIR, LIFT], OG: [STAIR, LIFT, ...VOID], DG: [STAIR, LIFT] };
+    const openings = { UG: [LIFT], EG: [HOLES.EG, LIFT], OG: [HOLES.OG, LIFT, ...VOID], DG: [HOLES.DG, LIFT] };
     const doorRect = d => d.o === 'v' ? [d.x - 0.2, d.x + 0.2, d.y, d.y + d.w] : [d.x, d.x + d.w, d.y - 0.2, d.y + 0.2];
     // Außenwände des Untergeschosses (unter Gelände), mit der Tür zur Tiefgarage in der Südwand
-    const t0 = HOUSE.wall, ug = [[0, W, -D, -D + t0, HOUSE.tg.schleuse.hausTuer], [0, W, -t0, 0], [0, t0, -D + t0, -t0], [W - t0, W, -D + t0, -t0]];
+    const t0 = HOUSE.wall, ug = [[0, W, -D, -D + t0, HOUSE.tg.schleuse.hausTuer], [0, W, -t0, 0], [W - t0, W, -D + t0, -t0]];
     for (const [a, b, c, e, gap] of ug) {
       const segs = gap ? [[a, gap[0]], [gap[1], b]] : [[a, b]];
       for (const [p, q] of segs) { boxPlan(M.inWall, p, q, c, e, Zh.ffbUG - 0.3, -0.15); wallRects.push({ fl: 'UG', r: [p, q, c, e], top: -0.15 }); }
+    }
+    // Westwand des UG mit den Fenstern zum Lichthof vor dem Gym: bis zum Boden, schwarze Rahmen mit Mittelsprosse, darüber ein Sturz
+    {
+      const LH = HOUSE.lichthof, wy = LH.win.map(([a, b]) => [-b, -a]).sort((p, q) => p[0] - q[0]), zt = -0.62;
+      let y = -D + t0;
+      for (const [a, b] of [...wy, [-t0, -t0]]) {
+        if (a > y) { boxPlan(M.inWall, 0, t0, y, a, Zh.ffbUG - 0.3, -0.15); wallRects.push({ fl: 'UG', r: [0, t0, y, a], top: -0.15 }); }
+        if (b > a) {
+          boxPlan(M.inWall, 0, t0, a, b, zt, -0.15);
+          for (const [p, q, z0, z1] of [[a, a + 0.07, Zh.ffbUG, zt], [b - 0.07, b, Zh.ffbUG, zt], [a, b, zt - 0.07, zt], [a, b, Zh.ffbUG, Zh.ffbUG + 0.07], [(a + b) / 2 - 0.035, (a + b) / 2 + 0.035, Zh.ffbUG, zt]])
+            boxPlan(M.frame, 0.1, 0.18, p, q, z0, z1);
+          boxPlan(M.glass, 0.13, 0.15, a + 0.05, b - 0.05, Zh.ffbUG + 0.05, zt - 0.05);
+        }
+        y = Math.max(y, b);
+      }
     }
     // Sturz über der Tür von der Tiefgarage ins Foyer (die Flügel enden bei 2,28 m)
     { const [ta, tb] = HOUSE.tg.schleuse.hausTuer; boxPlan(M.inWall, ta, tb, -D, -D + t0, Zh.ffbUG + 2.3, -0.15); }
@@ -31,8 +46,9 @@
     for (const [y0, y1] of [[-D + 0.12, -D + 0.36], [-0.36, -0.12]]) boxPlan(M.floorOak, 4.45, 11.55, y0, y1, Zh.ffbDG - 0.11, Zh.ffbDG + 0.005);
     for (const fl of ['UG', 'EG', 'OG', 'DG']) {
       const F = Plans.FL[fl], [z0, z1] = lv[fl];
-      for (const rm of F.rooms) for (const rr of [rm.r, ...(rm.ext || [])]) for (const q of minus(rr, openings[fl])) boxPlan(nass.test(rm.n) ? M.floorTile : halle.test(rm.n) ? M.floorHall : M.floorOak, q[0], q[1], q[2], q[3], z0 - 0.02, z0 + 0.005);
-      const free = [...F.rooms.flatMap(r => [r.r, ...(r.ext || [])]), ...(F.open || []), ...F.doors.map(doorRect)];
+      for (const rm of F.rooms) for (const rr of [rm.r, ...(rm.ext || [])]) for (const q of minus(rr, openings[fl])) boxPlan(nass.test(rm.n) ? M.floorTile : halle.test(rm.n) ? M.floorHall : gym.test(rm.n) ? M.floorGym : M.floorOak, q[0], q[1], q[2], q[3], z0 - 0.02, z0 + 0.005);
+      // frei bleiben Räume, Durchgänge, Türen und der Aufzugsschacht (seine Wände kommen eigens)
+      const free = [...F.rooms.flatMap(r => [r.r, ...(r.ext || [])]), ...(F.open || []), ...F.doors.map(doorRect), LIFT];
       const xs = uniq([0.36, 15.64, ...free.flatMap(r => [r[0], r[1]])]).filter(v => v >= 0.36 && v <= 15.64);
       const ys = uniq([-11.29, -0.36, ...free.flatMap(r => [r[2], r[3]])]).filter(v => v >= -11.29 && v <= -0.36);
       for (let j = 0; j < ys.length - 1; j++) {
@@ -56,22 +72,23 @@
       }
     }
     buildStair();
-    // Aufzug unauffällig im Wandblock neben der Halle: geschlossener Schacht, Türen wandbündig in Wandfarbe mit feiner Schattenfuge
-    // und kleinem Rufknopf, so dass sie kaum auffallen
-    const [lx0, lx1, ly0, ly1] = LIFT, lc = (lx0 + lx1) / 2;
+    // Aufzug unauffällig im Wandblock am Treppenpodest: geschlossener Schacht, Türen nach Osten wandbündig in Wandfarbe mit feiner
+    // Schattenfuge und kleinem Rufknopf, so dass sie kaum auffallen
+    const [lx0, lx1, ly0, ly1] = LIFT, ld = -4.2;
     for (const r of [[lx0, lx0 + 0.2, ly0, ly1], [lx1 - 0.2, lx1, ly0, ly1], [lx0, lx1, ly0, ly0 + 0.2], [lx0, lx1, ly1 - 0.2, ly1]]) {
       boxPlan(M.inWall, r[0], r[1], r[2], r[3], Zh.ffbUG, 9.6);
       for (const fl of ['UG', 'EG', 'OG', 'DG']) wallRects.push({ fl, r, top: 9.6 });
     }
     for (const zf of [Zh.ffbUG, Zh.ffbEG, Zh.ffbOG, Zh.ffbDG]) {
-      for (const [x0, x1, z0, z1] of [[lc - 0.47, lc - 0.462, zf, zf + 2.12], [lc + 0.462, lc + 0.47, zf, zf + 2.12], [lc - 0.47, lc + 0.47, zf + 2.112, zf + 2.12], [lc - 0.004, lc + 0.004, zf, zf + 2.12]])
-        boxPlan(M.frame, x0, x1, ly0 - 0.004, ly0, z0, z1);
-      boxPlan(M.metal, lc + 0.62, lc + 0.68, ly0 - 0.01, ly0, zf + 1.02, zf + 1.16);
+      for (const [y0, y1, z0, z1] of [[ld - 0.47, ld - 0.462, zf, zf + 2.12], [ld + 0.462, ld + 0.47, zf, zf + 2.12], [ld - 0.47, ld + 0.47, zf + 2.112, zf + 2.12], [ld - 0.004, ld + 0.004, zf, zf + 2.12]])
+        boxPlan(M.frame, lx1, lx1 + 0.004, y0, y1, z0, z1);
+      boxPlan(M.metal, lx1, lx1 + 0.01, ld + 0.62, ld + 0.68, zf + 1.02, zf + 1.16);
     }
-    // Galerie im OG: schwarzes Geländer an der Kante des Luftraums
-    railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -VOID[0][2] + 0.04), VOID[0][0] + 0.02, VOID[0][1] - 0.02, Zh.ffbOG, Zh.ffbOG + 1.0, 0);
-    // Kronleuchter im Luftraum: Stange vom DG-Boden, zwei Ringe mit Lichtschirmen (leuchten abends)
-    const cx = (VOID[0][0] + VOID[0][1]) / 2, cy = -1.9;
+    // OG: schwarzes Geländer am Luftraum neben dem Antritt der Dachtreppe; DG: Geländer an der Öffnung über der Dachtreppe
+    railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -LINE[3] + 0.04), Plans.CORE.FLIGHTS.OG.x0 + 0.02, VOID[0][1] - 0.02, Zh.ffbOG, Zh.ffbOG + 1.0, 0);
+    railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(HOLES.DG[1] + 0.04, 0, 0)), LINE[2] + 0.02, LINE[3] - 0.02, Zh.ffbDG, Zh.ffbDG + 1.0, 0);
+    // Kronleuchter im Luftraum über der Eingangsachse: Stange vom DG-Boden, zwei Ringe mit Lichtschirmen (leuchten abends)
+    const cx = 8.0, cy = (VOID[0][2] + VOID[0][3]) / 2;
     addCyl(M.metal, cx, cy, Zh.deckeDG - 0.06, Zh.deckeDG, 0.11, 0.11, 18); addCyl(M.metal, cx, cy, 5.0, Zh.deckeDG - 0.06, 0.012, 0.012, 8);
     addCyl(M.metal, cx, cy, 4.42, 5.0, 0.035, 0.035, 12); addCyl(M.metal, cx, cy, 4.34, 4.42, 0.07, 0.02, 12);
     for (const [zr, rr, nn] of [[4.62, 0.62, 10], [4.95, 0.4, 6]]) {
@@ -83,47 +100,38 @@
     }
     buildFurniture();
   }
-  // Treppe: zweiläufig mit Halbpodest. Massive weiße Läufe mit glatter Untersicht und Stufen aus hellem Naturstein, durchgehende
-  // Mittelwand, geschlossene Brüstung mit Steinabdeckung und Pfosten zur Halle hin; im EG eine breite, gerundete Antrittsstufe.
+  // Treppen: drei gerade Läufe in der Treppenbahn an der Rückwand der Halle, je ein Geschoss, alle nach Westen steigend und genau
+  // übereinander. Weiße Läufe mit Stufen aus hellem Naturstein; zur Halle hin eine geschlossene Brüstung mit Steinabdeckung, die im EG
+  // bis zum Boden reicht (dahinter liegt die Kellertreppe), mit Pfosten am Antritt und im EG einer breiten, gerundeten Antrittsstufe.
   function buildStair() {
-    const prism = (mat, pts, xa, xb) => {
-      const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([y, z]) => v2(y, z))), { depth: xb - xa, bevelEnabled: false });
-      addGeo(mat, g, new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 0, 0)).setPosition(xa, 0, 0));
+    const { LINE, FLIGHTS } = Plans.CORE, ly0 = LINE[2], ly1 = LINE[3], h = 0.92, t = 0.13;
+    // Prisma aus einem Längsschnitt (Punkte [x, z]) über die Breite y0 … y1 der Bahn
+    const prism = (mat, pts, y0, y1) => {
+      const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, z]) => v2(x, z))), { depth: y1 - y0, bevelEnabled: false });
+      addGeo(mat, g, new THREE.Matrix4().makeTranslation(0, 0, -y1));
     };
-    let top = null;
     for (const fl of ['UG', 'EG', 'OG']) {
-      const F = Plans.stairFlights(fl), { x0, x1, y0, y1, yl, fw, za, zb, zm, rise, n, a, b } = F, solid = fl === 'UG', zt = i => za + (i + 1) * rise;
-      // Lauf 1 nach Norden
-      const p1 = [[a[0], za]];
-      for (let i = 0; i < n - 1; i++) p1.push([a[i], zt(i)], [a[i + 1], zt(i)]);
-      p1.push(...(solid ? [[yl, za]] : [[yl, zm - 0.28], [a[0] + 0.45, za]]));
-      prism(M.putzHell, p1, x0, x0 + fw);
-      for (let i = 0; i < n - 1; i++) boxPlan(M.stairMat, x0 + 0.13, x0 + fw, a[i] - 0.03, a[i + 1], zt(i) - 0.035, zt(i) + 0.005);
-      if (F.flare) {
-        boxPlan(M.stairMat, x0 - 0.3, x0 + 0.14, a[0] - 0.03, a[1], za, zt(0) + 0.005);
-        addCyl(M.stairMat, x0 - 0.3, (a[0] - 0.03 + a[1]) / 2, za, zt(0) + 0.005, (a[1] - a[0] + 0.03) / 2, (a[1] - a[0] + 0.03) / 2, 28);
+      const { x0, x1, n, za, zb } = FLIGHTS[fl], rise = (zb - za) / n, g = (x0 - x1) / (n - 1), zt = i => za + (i + 1) * rise, xs = i => x0 - i * g;
+      // Stufenprofil von unten (Osten) nach oben (Westen); die Kellertreppe ist massiv, die anderen tragen als Laufplatte frei darüber
+      const steps = [[x0, za]];
+      for (let i = 0; i < n - 1; i++) steps.push([xs(i), zt(i)], [xs(i + 1), zt(i)]);
+      steps.push([x1, zb]);
+      prism(M.putzHell, [...steps, ...(fl === 'UG' ? [[x1, za]] : [[x1, zb - 0.32], [x0 - 0.5, za]])], ly0, ly1);
+      const yt = fl === 'UG' ? ly1 : ly1 - t;
+      for (let i = 0; i < n - 1; i++) boxPlan(M.stairMat, xs(i + 1), xs(i) + 0.03, ly0, yt, zt(i) - 0.035, zt(i) + 0.005);
+      if (fl === 'UG') continue;
+      // Brüstung an der Nordseite mit Steinabdeckung: im EG bis zum Boden geschlossen, im OG unter dem Lauf offen zum Luftraum
+      const top = [[x0, za + rise + h], [x1, zb + h]];
+      prism(M.putzHell, [...top, ...(fl === 'EG' ? [[x1, za], [x0, za]] : [[x1, zb - 0.32], [x0 - 0.5, za], [x0, za]])], yt, ly1);
+      prism(M.stairMat, [...top, [x1, zb + h + 0.06], [x0, za + rise + h + 0.06]], yt - 0.025, ly1 + 0.025);
+      boxPlan(M.putzHell, x0 - 0.26, x0, yt - 0.065, ly1 + 0.065, za, za + rise + 1.02);
+      boxPlan(M.stairMat, x0 - 0.285, x0 + 0.025, yt - 0.09, ly1 + 0.09, za + rise + 1.02, za + rise + 1.09);
+      if (fl === 'EG') {
+        // breite Antrittsstufe, zur Halle hin 40 cm vorgezogen und gerundet
+        boxPlan(M.stairMat, x0 - g, x0 - 0.2, ly1, ly1 + 0.4, za, zt(0) + 0.005); boxPlan(M.stairMat, x0 - 0.2, x0, ly1, ly1 + 0.2, za, zt(0) + 0.005);
+        addCyl(M.stairMat, x0 - 0.2, ly1 + 0.2, za, zt(0) + 0.005, 0.2, 0.2, 20);
       }
-      // Podest und Lauf 2 nach Süden
-      boxPlan(M.putzHell, x0, x1, yl, y1, zm - 0.28, zm - 0.035); boxPlan(M.stairMat, x0 + 0.13, x1, yl - 0.03, y1, zm - 0.035, zm + 0.005);
-      const zu = j => zm + (j + 1) * rise, p2 = [[yl, zm - 0.28], [yl, zm]];
-      for (let j = 0; j < n - 1; j++) p2.push([b[j], zu(j)], [b[j + 1], zu(j)]);
-      p2.push([y0, zb - 0.32]);
-      prism(M.putzHell, p2, x1 - fw, x1);
-      for (let j = 0; j < n - 1; j++) boxPlan(M.stairMat, x1 - fw, x1, b[j + 1], b[j] + 0.03, zu(j) - 0.035, zu(j) + 0.005);
-      // Brüstung zur Halle mit Pfosten am Antritt
-      const ys = a[0] + 0.07, zs = zt(0), h = 0.92;
-      prism(M.putzHell, [[ys, za], [ys, zs + h], [yl, zm + h], [y1 - 0.02, zm + h], [y1 - 0.02, zm - 0.3], [yl, zm - 0.3], solid ? [yl, za] : [a[0] + 0.5, za]], x0, x0 + 0.13);
-      prism(M.stairMat, [[ys, zs + h], [yl, zm + h], [y1 - 0.02, zm + h], [y1 - 0.02, zm + h + 0.06], [yl, zm + h + 0.06], [ys, zs + h + 0.06]], x0 - 0.025, x0 + 0.155);
-      boxPlan(M.putzHell, x0 - 0.065, x0 + 0.195, ys, ys + 0.26, za, zs + 1.02); boxPlan(M.stairMat, x0 - 0.09, x0 + 0.22, ys - 0.025, ys + 0.285, zs + 1.02, zs + 1.09);
-      top = F;
     }
-    // Mittelwand durch alle Geschosse, oben mit der Brüstungslinie des obersten Laufs; im DG eine Brüstung um die Öffnung
-    const { x0, y0, y1, yl, fw, spine, zm, zb } = top, h = 0.92;
-    prism(M.putzHell, [[y0, Zh.ffbUG], [yl, Zh.ffbUG], [yl, zm + h], [y0, zb + h - 0.1]], x0 + fw, x0 + fw + spine);
-    prism(M.stairMat, [[yl, zm + h], [y0, zb + h - 0.1], [y0, zb + h - 0.04], [yl, zm + h + 0.06]], x0 + fw - 0.02, x0 + fw + spine + 0.02);
-    const zd = Zh.ffbDG;
-    boxPlan(M.putzHell, x0, x0 + fw, y0 - 0.13, y0, zd - 0.35, zd + h); boxPlan(M.putzHell, x0 - 0.13, x0, y0 - 0.13, y1, zd - 0.35, zd + h);
-    boxPlan(M.stairMat, x0 - 0.155, x0 + fw, y0 - 0.155, y0 + 0.025, zd + h, zd + h + 0.06); boxPlan(M.stairMat, x0 - 0.155, x0 + 0.025, y0 - 0.155, y1, zd + h, zd + h + 0.06);
   }
   // Möbel nach dem Grundriss-Vorschlag: dieselben Positionen wie im 2D-Plan, Höhen nach üblichen Maßen, im DG unter der Schräge gekappt
   function buildFurniture() {

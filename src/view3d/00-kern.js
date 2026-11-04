@@ -247,6 +247,16 @@ const View3D = (() => {
       g.fillStyle = 'rgba(120,112,100,0.75)';
       for (let i = 0; i <= n; i++) { g.fillRect(i * c - 1, 0, 2, w); g.fillRect(0, i * c - 1, w, 2); }
     });
+    // Gym: Sportboden aus Gummifliesen 1 × 1 m, anthrazit mit feiner heller und blauer Einstreuung (Kachel 2,00 m)
+    const tGym = canvasTex(512, 512, (g, w) => {
+      const n = 2, c = w / n;
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        g.fillStyle = `hsl(210, 4%, ${21 + rq() * 2}%)`; g.fillRect(i * c, j * c, c, c);
+        for (let k = 0; k < 2200; k++) { g.fillStyle = rq() < 0.82 ? 'rgba(150,150,150,0.35)' : 'rgba(70,120,160,0.45)'; g.fillRect(i * c + rq() * c, j * c + rq() * c, 1.6, 1.6); }
+      }
+      g.fillStyle = 'rgba(10,10,10,0.8)';
+      for (let i = 0; i <= n; i++) { g.fillRect(i * c - 1, 0, 2, w); g.fillRect(0, i * c - 1, w, 2); }
+    });
     // Halle: heller Kalkstein 80 × 80 cm mit kleinen dunklen Cabochons an den Ecken (Kachel 3,20 m)
     const tHall = canvasTex(512, 512, (g, w) => {
       const n = 4, c = w / n;
@@ -286,7 +296,7 @@ const View3D = (() => {
       glass: glass(), lamp: std(0x1c1c1c, 0.4, 0.2, { emissive: 0xffd49c, emissiveIntensity: 0 }),
       slab: std(0xb9b2a4, 0.9), beton: std(0xb7b3ab, 0.92),
       inWall: std(0xebe7df, 0.95, 0, { emissive: 0xffd6a6, emissiveIntensity: 0 }), floorOak: std(0xffffff, 0.55, 0, { map: tOak, emissive: 0xffc98a, emissiveIntensity: 0 }),
-      floorTile: std(0xffffff, 0.32, 0, { map: tTile }), floorHall: std(0xffffff, 0.26, 0, { map: tHall }), stairMat: std(0xe9e3d7, 0.4),
+      floorTile: std(0xffffff, 0.32, 0, { map: tTile }), floorHall: std(0xffffff, 0.26, 0, { map: tHall }), floorGym: std(0xffffff, 0.85, 0, { map: tGym }), stairMat: std(0xe9e3d7, 0.4),
       tor: std(0x3b3e42, 0.5, 0.4), door: std(0x1e2226, 0.35, 0.25),
       rampe: std(0xa5a198, 0.92, 0, { side: THREE.DoubleSide }), phInnen: std(0x655d52, 0.9),
       stone: std(0xffffff, 0.75, 0, { map: tSlab }), deck: std(0xffffff, 0.75, 0, { map: tDeck }), kuebel: std(0x3a3d41, 0.6, 0.05), pave: std(0xffffff, 0.9, 0, { map: pave }), lawn: std(0xffffff, 1, 0, { map: grass }),
@@ -347,10 +357,10 @@ const View3D = (() => {
       if (k === 'fShade') m.userData.glow = 6; else if (k === 'fFire') m.userData.glow = 9; else m.emissive.copy(m.color).multiply(warm);
       glowMats.push(m);
     }
-    for (const k of ['putz', 'putzRust', 'putzHell', 'putzDS', 'sockel', 'roof', 'zink', 'zinkDS', 'door', 'frame', 'metal', 'glass', 'lamp', 'slab', 'inWall', 'floorOak', 'floorTile', 'floorHall', 'stairMat', 'curtain', ...Object.keys(furn)]) {
+    for (const k of ['putz', 'putzRust', 'putzHell', 'putzDS', 'sockel', 'roof', 'zink', 'zinkDS', 'door', 'frame', 'metal', 'glass', 'lamp', 'slab', 'inWall', 'floorOak', 'floorTile', 'floorHall', 'floorGym', 'stairMat', 'curtain', ...Object.keys(furn)]) {
       houseMats.add(M[k]); M[k].clipShadows = true;
     }
-    M.floorOak.userData.worldUV = 2.4; M.floorTile.userData.worldUV = 2.4; M.floorHall.userData.worldUV = 3.2; M.stone.userData.worldUV = 3.6; M.tgStone.userData.worldUV = 3.2;
+    M.floorOak.userData.worldUV = 2.4; M.floorTile.userData.worldUV = 2.4; M.floorHall.userData.worldUV = 3.2; M.floorGym.userData.worldUV = 2.0; M.stone.userData.worldUV = 3.6; M.tgStone.userData.worldUV = 3.2;
     if (typeof CarKit !== 'undefined') carMats = CarKit.materials(THREE);
     for (const m of [M.inWall, M.floorOak, M.floorTile, M.floorHall, M.stairMat, M.curtain, ...Object.values(furn)]) if (m !== M.fMirror) m.envMapIntensity = 0.55;
     // Stein und Außenmöbel: nur der Geschossschnitt erfasst sie (Balkone und Dachterrasse über der Schnitthöhe)

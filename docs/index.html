@@ -801,7 +801,8 @@ const HOUSE = (() => {
   // Drei Stellplätze 2,85 m breit an der Fahrgasse, die Autos mit der Front zur Holzwand. Vor dem Haus ein offener Eingangsbereich
   // (schleuse, 5,40 × 3,35 m, seit 4.11.2026 ohne Glaswände) mit Steinboden, von dort eine zweiflügelige Tür ins Foyer des Untergeschosses.
   const tg = { decke: -0.7, platte: 0.3, bucht: 2.85, y0: -23.85, x0: 12.0, x1: 17.2,
-    schleuse: { x0: 11.8, x1: 17.2, y0: -15.0, y1: -11.65, hausTuer: [12.9, 14.3] },
+    // Eingangsbereich (seit 4.11.2026 mittig, wo vorher die Fahrräder standen; die Fahrräder stehen jetzt östlich davon)
+    schleuse: { x0: 4.8, x1: 11.8, y0: -14.352, y1: -11.65, hausTuer: [7.3, 8.7] },
     autos: [
       { k: 'ferrari', name: 'Ferrari F8 Tributo', L: 4.61, W: 1.98 }, { k: 'cayenne', name: 'Porsche Cayenne Coupé', L: 4.93, W: 1.98 },
       { k: 'vklasse', name: 'Mercedes V-Klasse', L: 5.14, W: 1.93 },
@@ -822,8 +823,11 @@ const HOUSE = (() => {
   // Zaun an der Straße: weißer Sockel mit schwarzen Stäben zwischen Pfeilern; Einfahrtstor zweiflügelig, daneben die Gartentür
   const zaun = { hoehe: 1.65, sockel: 0.45, pfeiler: 0.42, tor: [19.732, 23.33], tuer: [23.75, 24.73] };
 
+  // Lichthof vor dem Gym im UG (Westseite, u wie in der Westansicht von Norden gemessen): bis zum UG-Boden, Fenster bis zum Boden.
+  // Ortsgestaltungssatzung Grünwald § 8: Lichtschächte höchstens 1,50 m tief und höchstens ein Drittel der Ansichtsbreite (11,65 / 3 = 3,88 m)
+  const lichthof = { side: 'W', u0: 6.6, u1: 10.45, tief: 1.5, win: [[6.9, 8.4], [8.65, 10.15]] };
   return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe,
-    tg, pool, poolDeck, poolWeg, poolhaus, zaun };
+    tg, pool, poolDeck, poolWeg, poolhaus, zaun, lichthof };
 })();
 
 // Maßstäbliche Ansichten und Schnitt als SVG. Einheit: Meter; Höhe z wird zu SVG-y = -z.
@@ -1371,14 +1375,27 @@ const Plans = (() => {
   const pts = P => P.map(p => `${f(p[0])},${f(-p[1])}`).join(' ');
   const area = r => (r[1] - r[0]) * (r[3] - r[2]);
   const area2 = P => Math.abs(P.reduce((t, p, i) => { const q = P[(i + 1) % P.length]; return t + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
-  // Treppenhalle: zweiläufige Treppe mit 1,29 m breiten Läufen und massiver Mittelwand. Der Aufzug liegt unauffällig in einem
-  // Wandblock neben der Halle (wandbündige Türen). Über dem Eingang ein zweigeschossiger Luftraum, im OG mit Galerie und Geländer.
-  const STAIR = [8.9, 11.68, -3.9, -0.36], LIFT = [4.72, 6.72, -3.98, -1.98];
-  const VOID = [[6.72, 8.9, -3.98, -0.36]];
+  // Treppenhalle (Daniel, 4.11.2026: „so, dass man beim Reinkommen auf sie zuschaut, nicht so zick zack“): eine gerade, 1,30 m
+  // breite Treppenbahn an der Rückwand der Halle (LINE). Kellertreppe UG→EG, Haupttreppe EG→OG und Dachtreppe OG→DG sind je ein
+  // gerader Lauf, steigen nach Westen und liegen genau übereinander, je ein Geschoss versetzt (Kopfhöhe überall über 2,9 m).
+  // Antritt im Osten, Austritt im Westen auf das Podest vor dem Aufzug. Der Aufzug sitzt im Wandblock westlich davon, Türen nach Osten.
+  const LINE = [4.72, 11.68, -4.88, -3.58];
+  const FLIGHTS = {
+    UG: { x0: 10.69, x1: 6.01, n: 19, za: HOUSE.Z.ffbUG, zb: HOUSE.Z.ffbEG },   // 19 Steigungen à 18,9 cm, Auftritt 26 cm
+    EG: { x0: 10.6, x1: 6.01, n: 18, za: HOUSE.Z.ffbEG, zb: HOUSE.Z.ffbOG },    // 18 à 18,6 cm, Auftritt 27 cm
+    OG: { x0: 10.6, x1: 6.28, n: 17, za: HOUSE.Z.ffbOG, zb: HOUSE.Z.ffbDG },    // 17 à 18,2 cm, Auftritt 27 cm
+  };
+  // Deckenöffnung über einem Lauf: so weit, wie man unter der Decke sonst keine 2,00 m Kopfhöhe hätte
+  const holeOver = (fl, under) => { const F = FLIGHTS[fl]; return [F.x1, F.x0 - (under - 2 - F.za) / (F.zb - F.za) * (F.x0 - F.x1), LINE[2], LINE[3]]; };
+  const HOLES = { EG: holeOver('UG', HOUSE.Z.ffbEG - 0.35), OG: holeOver('EG', HOUSE.Z.gurtU), DG: holeOver('OG', HOUSE.Z.deckeDG) };
+  const LIFT = [2.92, 4.72, -4.88, -3.08];
+  // Luftraum über dem vorderen Teil der Halle, im OG mit Geländer an der Treppe
+  const VOID = [[6.25, 11.68, -3.58, -0.36]];
   // Fläche eines Raums ohne Treppe, Aufzug und (im OG) Luftraum, soweit sie darin liegen
   const cutA = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[2], b[2]));
-  const coreIn = (fl, r) => cutA(r, STAIR) + cutA(r, LIFT) + (fl === 'OG' ? VOID.reduce((t, v) => t + cutA(r, v), 0) : 0);
-  const STAIR_SP = { spine: 0.2, land: 1.2, n: 10, flare: 0.4 };
+  const STAIRUSE = { UG: [FLIGHTS.UG.x1, FLIGHTS.UG.x0, LINE[2], LINE[3]], EG: [FLIGHTS.EG.x1, FLIGHTS.EG.x0, LINE[2], LINE[3]],
+    OG: [FLIGHTS.EG.x1, FLIGHTS.OG.x0, LINE[2], LINE[3]], DG: HOLES.DG };
+  const coreIn = (fl, r) => cutA(r, STAIRUSE[fl]) + cutA(r, LIFT) + (fl === 'OG' ? VOID.reduce((t, v) => t + cutA(r, v), 0) : 0);
 
   // ---------- Möbel und Ausstattung ----------
   const fu = {
@@ -1454,29 +1471,36 @@ const Plans = (() => {
     UG: {
       titel: 'Untergeschoss mit Tiefgarage', ffb: HOUSE.Z.ffbUG,
       rooms: [
-        { n: 'Fitness', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Sauna', r: [6.72, 9.4, -11.29, -8.0] },
-        { n: 'Dusche / WC', r: [9.52, 11.28, -11.29, -8.0] }, { n: 'Flur', r: [6.72, 11.28, -7.88, -5.12] },
-        // Foyer hinter dem Eingangsbereich der Tiefgarage: großzügig, mit Garderobe, Bank und Spiegel
-        { n: 'Foyer', r: [11.52, 15.64, -11.29, -5.12], at: [13.7, -8.4] },
-        { n: 'Technik', r: [11.92, 15.64, -4.88, -0.36] }, { n: 'Waschen', r: [0.36, 4.48, -4.88, -0.36] },
-        { n: 'Vorraum', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.8, -1.2] },
+        // Gym im Westen mit Sportboden und Lichthof davor (Daniel, 4.11.2026)
+        { n: 'Gym', r: [0.36, 6.48, -11.29, -6.56], ext: [[0.36, 4.48, -6.56, -5.12]], at: [3.0, -8.9] },
+        // Zugang von der Tiefgarage mittig, wo früher die Fahrräder standen: Foyer, Flur und Treppenbahn
+        { n: 'Foyer', r: [6.72, 9.28, -11.29, -6.32], ext: [[4.72, 11.68, -6.32, -5.12], LINE], core: true, at: [8.0, -8.9] },
+        { n: 'Ruheraum', r: [9.52, 15.64, -8.26, -6.56], ext: [[11.92, 15.64, -6.56, -5.12]], at: [12.6, -7.0] },
+        { n: 'Sauna', r: [9.52, 12.2, -11.29, -8.5], at: [10.86, -9.9] }, { n: 'Dusche / WC', r: [12.44, 15.64, -11.29, -8.5], at: [13.9, -9.9] },
+        { n: 'Technik', r: [11.92, 15.64, -4.88, -0.36], at: [13.8, -2.6] },
+        // Waschen und ein richtiger Abstellraum nebeneinander (Hauswirtschaft); der Aufzug sitzt im Wandblock daneben
+        { n: 'Waschen', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, -4.88, -2.84]], at: [2.3, -1.6] },
+        { n: 'Abstellraum', r: [4.72, 11.68, -3.34, -0.36], at: [8.2, -1.85] },
       ],
-      open: [[7.0, 9.0, -5.12, -4.88]],
+      // Durchgänge vom Flur zur Treppenbahn: im Westen zum Aufzug und Abstellraum, im Osten zum Antritt der Kellertreppe
+      open: [[4.72, FLIGHTS.UG.x1, -5.12, -4.88], [FLIGHTS.UG.x0, 11.68, -5.12, -4.88]],
       doors: [
-        { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 11.8, y: -4.78, w: 0.85, o: 'v', s: 1, h: 0 },
-        { x: 6.6, y: -7.6, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 7.3, y: -7.94, w: 0.7, o: 'h', s: -1, h: 0 },
-        { x: 9.9, y: -7.94, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -6.02, w: 0.9, o: 'v', s: 1, h: 0 },
-        { x: 12.9, y: -11.47, w: 0.7, o: 'h', s: 1, h: 0, t: 0.5 }, { x: 13.6, y: -11.47, w: 0.7, o: 'h', s: 1, h: 1, t: 0.5 },
+        { x: 7.3, y: -11.47, w: 0.7, o: 'h', s: 1, h: 0, t: 0.5 }, { x: 8.0, y: -11.47, w: 0.7, o: 'h', s: 1, h: 1, t: 0.5 },
+        { x: 6.6, y: -8.0, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 11.8, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 },
+        { x: 10.4, y: -8.38, w: 0.7, o: 'h', s: -1, h: 0 }, { x: 13.4, y: -8.38, w: 0.8, o: 'h', s: -1, h: 0 },
+        { x: 11.8, y: -4.8, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 4.85, y: -3.46, w: 0.8, o: 'h', s: 1, h: 0 },
+        { x: 4.6, y: -2.6, w: 0.85, o: 'v', s: -1, h: 0 },
       ],
       furn: () => [
         fu.box(0.9, 1.7, -10.9, -9.0, 'Laufband'), fu.box(2.3, 3.1, -10.9, -9.3, 'Rad'), fu.box(3.9, 6.1, -10.9, -9.8, 'Matte'),
-        fu.box(4.3, 6.0, -7.2, -5.6, 'Kraftstation'),
-        fu.box(6.72, 9.4, -11.29, -10.69, '', 'saunabank'), fu.box(6.72, 7.32, -10.69, -8.7, '', 'saunabank'), fu.box(8.5, 9.0, -9.0, -8.5, 'Ofen'),
-        fu.shower(9.52, 10.72, -11.29, -10.09), fu.wc(11.28, -9.1, 'E'), fu.basin(10.5, -8.0, 0.6, 'N'),
-        fu.box(9.5, 11.0, -7.55, -7.0, 'Liege'), fu.box(9.5, 11.0, -6.6, -6.05, 'Liege'),
-        fu.shelf(15.04, 15.64, -10.7, -6.3), fu.box(11.52, 11.97, -10.5, -8.5, 'Bank'), fu.box(12.8, 14.6, -5.52, -5.12, '', 'konsole'),
+        fu.box(1.0, 2.8, -6.9, -5.6, 'Kraftstation'),
+        fu.box(6.72, 7.17, -10.5, -8.6, 'Bank'), fu.shelf(8.68, 9.28, -10.7, -7.2),
+        fu.box(9.52, 12.2, -11.29, -10.69, '', 'saunabank'), fu.box(9.52, 10.12, -10.69, -8.9, '', 'saunabank'), fu.box(11.4, 11.9, -9.2, -8.7, 'Ofen'),
+        fu.shower(14.44, 15.64, -11.29, -10.09), fu.wc(15.64, -9.3, 'E'), fu.basin(13.2, -11.29, 0.6, 'S'),
+        fu.box(9.9, 11.5, -7.9, -7.2, 'Liege'), fu.box(12.0, 13.6, -7.9, -7.2, 'Liege'), fu.shelf(15.04, 15.64, -8.0, -5.5),
         fu.box(12.2, 13.8, -1.5, -0.6, 'Wärmepumpe'), Ci(14.8, -1.25, 0.5, 'g-furn'), T(14.8, -1.33, 'Speicher', 'g-ftxt'), fu.box(12.2, 13.4, -3.6, -2.8, 'Anschluss'),
         fu.box(0.6, 1.2, -1.0, -0.4, 'WM'), fu.box(1.3, 1.9, -1.0, -0.4, 'TR'), fu.box(2.1, 3.3, -0.96, -0.4, 'Spüle', 'spuelzeile'), fu.shelf(0.36, 0.86, -4.6, -2.2),
+        fu.shelf(5.0, 11.4, -0.96, -0.36), fu.shelf(9.2, 11.68, -3.34, -2.74),
       ],
     },
     EG: {
@@ -1485,16 +1509,18 @@ const Plans = (() => {
         { n: 'Wohnen', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Essen', r: [6.72, 11.28, -11.29, -5.12], at: [9.0, -10.6] },
         // Küche L-förmig: 1 m weiter nach Norden, dafür ist die Backkitchen kleiner (Daniel, 4.11.2026)
         { n: 'Küche', r: [11.52, 15.64, -11.29, -5.12], ext: [[11.92, 15.64, -5.12, -4.12]], at: [13.6, -10.4] },
-        { n: 'Halle', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.8, -4.15] },
-        { n: 'Garderobe', r: [0.36, 4.48, -2.95, -0.36], at: [2.4, -1.75] }, { n: 'Gäste-WC', r: [2.74, 4.48, -4.88, -3.07], at: [3.6, -3.75] },
-        { n: 'Abstellraum', r: [0.36, 2.62, -4.88, -3.07], at: [1.5, -3.75] },
+        // Halle mit der Treppenbahn an der Rückwand: beim Hereinkommen steigt die Haupttreppe quer vor einem auf
+        { n: 'Halle', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.6, -2.2] },
+        // Gäste-WC dort, wo früher der kleine Abstellraum war; an der alten WC-Stelle sitzt jetzt der Aufzug
+        { n: 'Garderobe', r: [0.36, 4.48, -2.84, -0.36], at: [2.4, -1.65] }, { n: 'Gäste-WC', r: [0.36, 2.68, -4.88, -3.08], at: [1.52, -3.98] },
         { n: 'Backkitchen', r: [11.92, 15.64, -3.88, -0.36], at: [13.75, -1.65] },
       ],
-      open: [[7.0, 9.0, -5.12, -4.88], [6.48, 6.72, -10.4, -5.9], [11.28, 11.52, -10.4, -6.2]],
+      open: [[6.48, 6.72, -10.4, -5.9], [11.28, 11.52, -10.4, -6.2]],
       doors: [
-        { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 3.2, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 },
-        { x: 0.95, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.8, y: -4.84, w: 0.7, o: 'v', s: 1, h: 0 },
-        { x: 12.3, y: -4.0, w: 0.9, o: 'h', s: 1, h: 1 },
+        { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 1.1, y: -2.96, w: 0.8, o: 'h', s: -1, h: 0 },
+        { x: 11.8, y: -4.84, w: 0.7, o: 'v', s: 1, h: 0 }, { x: 12.3, y: -4.0, w: 0.9, o: 'h', s: 1, h: 1 },
+        // vom Podest unter dem Treppenaustritt ins Wohnzimmer
+        { x: 4.95, y: -5.0, w: 0.9, o: 'h', s: -1, h: 0 },
         { x: 7.35, y: -0.18, w: 1.3, o: 'h', s: -1, h: 0, t: 0.5 },
       ],
       furn: () => [
@@ -1505,12 +1531,12 @@ const Plans = (() => {
         fu.box(12.6, 14.6, -7.2, -6.2, 'Insel'),
         // kleiner Esstisch für vier vor den Gartentüren der Küche
         fu.table(12.75, 13.95, -10.45, -9.65, 2, false),
-        fu.shelf(1.8, 3.1, -2.95, -2.35), fu.box(3.95, 4.48, -2.9, -2.15, 'Bank'),
-        fu.wc(3.65, -4.88, 'S'), fu.basin(2.74, -3.95, 0.45, 'W'), fu.shelf(0.36, 0.81, -4.7, -3.2),
+        fu.shelf(1.8, 3.1, -2.84, -2.24), fu.box(3.95, 4.48, -2.8, -2.05, 'Bank'),
+        fu.wc(1.6, -4.88, 'S'), fu.basin(0.36, -3.7, 0.45, 'W'),
         fu.box(12.2, 15.64, -1.0, -0.36, '', 'zeile'), fu.box(12.8, 13.6, -0.95, -0.42, 'Spüle'), fu.box(15.0, 15.64, -3.6, -1.0, '', 'hochschrank'),
         fu.shelf(11.92, 12.5, -3.85, -1.4), fu.box(13.2, 14.6, -2.9, -2.1, 'Arbeitsfläche'),
-        // Halle: Konsole mit Spiegel an der Nordwand neben dem Eingang
-        fu.box(5.0, 6.4, -0.76, -0.36, '', 'konsole'),
+        // Halle: Konsole mit Spiegel an der Nordwand neben dem Eingang, Garderobenschrank für Gäste in der Nordostecke
+        fu.box(5.0, 6.4, -0.76, -0.36, '', 'konsole'), fu.box(11.08, 11.68, -2.9, -0.36, '', 'hochschrank'),
         // draußen: Lounge mittig unter dem Balkon (Blick in den Garten, vor der Fassade bleibt ein Gang), Esstisch auf dem Freisitz;
         // Liegen stehen am Pool, nicht am Haus
         fu.sofa(6.8, 9.2, -13.95, -13.1, 'N'), fu.box(7.4, 8.6, -14.85, -14.35, '', 'couchtisch'),
@@ -1521,31 +1547,30 @@ const Plans = (() => {
     OG: {
       titel: 'Obergeschoss', ffb: HOUSE.Z.ffbOG,
       rooms: [
-        { n: 'Kind 1', r: [0.36, 4.48, -11.29, -7.5], at: [2.4, -10.2] }, { n: 'Kinderbad West', r: [0.36, 4.48, -7.26, -5.2], at: [2.2, -6.5] },
-        { n: 'Kind 2', r: [0.36, 4.48, -4.96, -0.36], at: [2.4, -2.2] },
-        { n: 'Familienraum', r: [4.72, 11.28, -11.29, -6.24], at: [8.0, -10.5] }, { n: 'Flur', r: [4.72, 11.28, -6.0, -4.96], at: [6.0, -5.55] },
-        // Galerie = Umgang am Geländer; Luftraum, Treppe und Aufzug sind frei (open), damit dort keine Wände entstehen
-        { n: 'Galerie', r: [4.72, 11.68, -4.96, -3.9], core: true, at: [7.8, -4.4] },
-        // nördlich neben dem Aufzug ein Schrankraum für Kind 2, mit Wand zum Luftraum (x 6,52–6,72)
-        { n: 'Schrank Kind 2', r: [4.72, 6.52, -1.98, -0.36], at: [5.62, -1.17] },
-        { n: 'Kind 3', r: [11.52, 15.64, -11.29, -7.5], at: [13.6, -9.9] }, { n: 'Kinderbad Ost', r: [11.52, 15.64, -7.26, -5.2], at: [13.8, -6.5] },
-        { n: 'Kind 4', r: [11.92, 15.64, -4.96, -0.36], at: [13.8, -2.4] },
+        // vier größere Kinderzimmer (Daniel, 4.11.2026: kein Wohnzimmer im OG) und zwei Bäder mit Wanne, die sich je zwei Kinder teilen
+        { n: 'Kind 1', r: [0.36, 4.48, -11.29, -7.24], ext: [[4.72, 6.48, -11.29, -6.56]], at: [2.5, -9.7] },
+        { n: 'Bad West', r: [0.36, 4.48, -7.0, -5.12], at: [2.4, -6.06] },
+        { n: 'Kind 2', r: [0.36, 6.01, -2.84, -0.36], ext: [[0.36, 2.68, -4.88, -2.84], [4.72, 6.01, -3.34, -2.84]], at: [3.4, -1.75] },
+        { n: 'Kind 3', r: [11.52, 15.64, -11.29, -7.24], ext: [[9.52, 11.28, -11.29, -6.56]], at: [13.5, -9.7] },
+        { n: 'Bad Ost', r: [11.52, 15.64, -7.0, -5.12], at: [13.6, -6.06] },
+        { n: 'Kind 4', r: [11.92, 15.64, -4.88, -0.36], at: [13.8, -2.4] },
+        // Flur mit Treppenbahn: die Haupttreppe kommt im Westen an, die Dachtreppe beginnt im Osten; Mittelgang bis zur Balkontür
+        { n: 'Flur', r: [4.72, 11.28, -6.32, -5.12], ext: [[6.72, 9.28, -11.29, -6.32], LINE], core: true, at: [8.0, -9.2] },
       ],
-      open: [[7.0, 9.0, -6.24, -6.0], [6.72, 11.68, -3.9, -0.36], [4.72, 6.72, -3.98, -1.98]],
+      open: [...VOID, [4.72, FLIGHTS.EG.x1, -5.12, -4.88], [FLIGHTS.OG.x0, 11.28, -5.12, -4.88]],
       doors: [
-        { x: 4.6, y: -9.6, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 4.6, y: -5.95, w: 0.75, o: 'v', s: -1, h: 0 },
-        { x: 4.6, y: -4.92, w: 0.85, o: 'v', s: -1, h: 0 }, { x: 11.4, y: -9.6, w: 0.9, o: 'v', s: 1, h: 0 },
-        { x: 11.4, y: -5.95, w: 0.75, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.92, w: 0.85, o: 'v', s: 1, h: 0 },
-        { x: 4.6, y: -1.6, w: 0.75, o: 'v', s: 1, h: 0 },
+        { x: 5.2, y: -6.44, w: 0.85, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -6.2, w: 0.75, o: 'v', s: -1, h: 0 },
+        { x: 4.9, y: -3.46, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 10.0, y: -6.44, w: 0.85, o: 'h', s: -1, h: 1 },
+        { x: 11.4, y: -6.2, w: 0.75, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
-        fu.bed(1.0, 2.0, -9.5, -7.5, 'N'), fu.desk(2.7, 4.1, -11.29, -10.6, 'N'), fu.shelf(2.3, 4.4, -8.1, -7.5),
-        fu.shower(3.28, 4.48, -7.26, -6.06), fu.wc(0.36, -6.75, 'W'), fu.basin(2.0, -5.2, 1.4, 'N'),
-        fu.bed(1.0, 2.0, -4.96, -2.96, 'S'), fu.desk(2.7, 4.1, -1.06, -0.36, 'S'), fu.shelf(3.88, 4.48, -3.9, -2.3),
-        fu.sofa(6.8, 9.2, -8.1, -7.2, 'N'), fu.box(7.4, 8.6, -9.2, -8.5, '', 'couchtisch'), fu.shelf(10.68, 11.28, -8.4, -6.5),
-        fu.bed(11.52, 13.52, -8.7, -7.7, 'W'), fu.desk(13.9, 15.3, -11.29, -10.6, 'N'), fu.shelf(11.52, 12.12, -11.2, -9.7),
-        fu.shower(11.52, 12.72, -7.26, -6.06), fu.wc(15.64, -6.75, 'E'), fu.basin(14.0, -5.2, 1.4, 'N'),
-        fu.bed(14.0, 15.0, -4.96, -2.96, 'S'), fu.desk(12.2, 13.6, -1.06, -0.36, 'S'), fu.shelf(11.92, 12.52, -3.8, -1.6),
+        fu.bed(1.0, 2.4, -9.24, -7.24, 'N'), fu.desk(2.7, 4.1, -11.29, -10.6, 'N'), fu.shelf(3.0, 4.48, -7.84, -7.24), fu.shelf(4.72, 5.32, -11.0, -8.6),
+        fu.tub(0.5, 2.2, -7.0, -6.25), fu.basin(3.0, -5.12, 1.2, 'N'), fu.wc(4.48, -6.65, 'E'),
+        fu.bed(0.5, 2.5, -4.78, -3.38, 'W'), fu.desk(2.8, 4.2, -1.06, -0.36, 'S'), fu.shelf(5.41, 6.01, -2.8, -0.6),
+        fu.bed(13.64, 15.04, -9.24, -7.24, 'N'), fu.desk(11.92, 13.32, -11.29, -10.6, 'N'), fu.shelf(11.52, 13.0, -7.84, -7.24), fu.shelf(10.68, 11.28, -11.0, -8.6),
+        fu.tub(13.8, 15.5, -7.0, -6.25), fu.basin(12.8, -5.12, 1.2, 'N'), fu.wc(11.52, -6.65, 'W'),
+        fu.bed(13.9, 15.3, -4.88, -2.88, 'S'), fu.desk(12.2, 13.6, -1.06, -0.36, 'S'), fu.shelf(11.92, 12.52, -4.2, -1.6),
+        fu.box(6.72, 7.17, -10.6, -8.6, 'Bank'),
         // draußen auf dem Balkon über der Terrasse
         fu.table(7.4, 8.6, -13.6, -12.9, 1, false),
       ],
@@ -1553,27 +1578,30 @@ const Plans = (() => {
     DG: {
       titel: 'Dachgeschoss', ffb: HOUSE.Z.ffbDG,
       rooms: [
-        { n: 'Büro', r: [4.72, 11.28, -11.29, -7.8], at: [8.0, -10.4] }, { n: 'Flur', r: [4.72, 11.68, -4.0, -0.36], core: true, at: [7.8, -1.2] },
-        { n: 'Lesezone', r: [4.72, 11.28, -7.56, -4.0], at: [8.0, -5.4] },
-        { n: 'Lounge', r: [0.36, 4.48, -11.29, -4.88], at: [2.0, -10.4] }, { n: 'Abstellraum', r: [0.36, 4.48, -4.64, -0.36], wf: 0, at: [2.5, -3.2] },
-        // Elternsuite: vom Flur ins Schlafzimmer, dahinter Ankleide und Bad (en suite, nur über das Schlafzimmer erreichbar)
-        { n: 'Eltern', r: [11.52, 15.64, -11.29, -6.6], at: [13.6, -10.4] }, { n: 'Ankleide', r: [11.52, 15.64, -6.36, -4.2], at: [13.9, -5.3] },
-        { n: 'Elternbad', r: [11.92, 15.64, -3.96, -0.36], at: [13.2, -2.0] },
+        // Büro vorne mittig im Zwerchhaus mit Balkon (Daniel, 4.11.2026); Elternbereich im Westen, en suite: Flur → Schlafzimmer → Ankleide → Bad
+        { n: 'Büro', r: [4.72, 11.28, -11.29, -6.56], at: [8.0, -10.4] },
+        { n: 'Flur', r: [4.72, 11.28, -6.32, -5.12], ext: [LINE], core: true, at: [8.0, -5.72] },
+        { n: 'Schlafzimmer', r: [0.36, 4.48, -11.29, -5.12], at: [2.4, -9.9] },
+        { n: 'Ankleide', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, -4.88, -2.84]], at: [2.6, -1.75] },
+        { n: 'Bad', r: [4.72, 9.28, -3.34, -0.36], at: [6.9, -2.1] },
+        // die Ostseite ist frei geworden: Gästezimmer und Abstellraum
+        { n: 'Gäste', r: [11.52, 15.64, -11.29, -5.12], at: [13.6, -9.9] },
+        { n: 'Abstellraum', r: [11.92, 15.64, -4.88, -0.36], ext: [[9.52, 11.92, -3.34, -0.36]], wf: 0, at: [13.8, -2.6] },
       ],
+      open: [[4.72, FLIGHTS.OG.x1, -5.12, -4.88], [HOLES.DG[1], 11.28, -5.12, -4.88]],
       doors: [
-        { x: 6.15, y: -7.68, w: 0.9, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -5.95, w: 0.9, o: 'v', s: -1, h: 0 },
-        { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 11.4, y: -7.45, w: 0.8, o: 'v', s: 1, h: 0 },
-        { x: 11.6, y: -6.48, w: 0.85, o: 'h', s: -1, h: 0 }, { x: 12.0, y: -4.08, w: 0.85, o: 'h', s: 1, h: 0 },
+        { x: 7.6, y: -6.44, w: 0.9, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -6.2, w: 0.85, o: 'v', s: -1, h: 0 },
+        { x: 1.0, y: -5.0, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 4.6, y: -1.2, w: 0.8, o: 'v', s: 1, h: 0 },
+        { x: 11.4, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
-        fu.desk(7.2, 8.8, -9.3, -8.5, 'N'), fu.shelf(4.72, 5.22, -10.9, -8.0), fu.box(10.1, 10.9, -10.6, -9.8, '', 'sessel-E'),
-        fu.shelf(8.6, 10.6, -7.56, -7.1), fu.box(8.7, 9.5, -7.0, -6.2, '', 'sessel-S'), fu.box(9.7, 10.5, -7.0, -6.2, '', 'sessel-S'),
-        fu.bed(12.6, 14.4, -8.7, -6.6, 'N'), fu.box(12.08, 12.56, -7.08, -6.6, '', 'nacht'), fu.box(14.44, 14.92, -7.08, -6.6, '', 'nacht'),
-        fu.box(11.52, 12.02, -10.6, -9.0, '', 'kommode'),
-        fu.shelf(13.0, 15.64, -4.8, -4.2), fu.shelf(12.6, 15.64, -6.36, -5.76),
-        fu.tub(12.6, 14.4, -1.36, -0.56), fu.shower(13.2, 14.4, -3.96, -2.76), fu.basin(11.92, -2.4, 1.2, 'W'), fu.wc(15.0, -3.96, 'S'),
-        fu.sofa(3.58, 4.48, -9.8, -7.4, 'E'), fu.box(2.4, 3.2, -9.1, -8.1, '', 'couchtisch'), fu.box(1.0, 1.8, -9.0, -8.2, '', 'sessel-W'),
-        fu.shelf(1.0, 3.8, -5.48, -4.88), fu.shelf(1.2, 3.9, -1.65, -1.15),
+        fu.desk(7.2, 8.8, -9.3, -8.5, 'N'), fu.shelf(4.72, 5.22, -10.9, -8.0), fu.box(10.1, 10.9, -10.6, -9.8, '', 'sessel-E'), fu.shelf(9.8, 11.28, -7.06, -6.56),
+        fu.bed(2.38, 4.48, -9.1, -7.3, 'E'), fu.box(4.0, 4.48, -7.3, -6.82, '', 'nacht'), fu.box(4.0, 4.48, -9.58, -9.1, '', 'nacht'),
+        fu.box(1.6, 3.2, -11.0, -10.5, '', 'kommode'), fu.box(1.2, 2.0, -6.6, -5.8, '', 'sessel-W'),
+        fu.shelf(1.0, 4.4, -1.6, -1.1), fu.shelf(2.0, 4.48, -2.84, -2.34), fu.shelf(0.9, 1.5, -4.8, -2.9),
+        fu.tub(6.6, 8.4, -1.2, -0.45), fu.shower(4.72, 5.92, -3.34, -2.14), fu.basin(9.28, -2.0, 1.4, 'E'), fu.wc(7.0, -3.34, 'S'),
+        fu.bed(12.6, 14.4, -8.7, -6.7, 'N'), fu.desk(13.9, 15.3, -11.29, -10.6, 'N'), fu.shelf(11.52, 12.02, -10.6, -8.8),
+        fu.shelf(12.2, 15.4, -1.6, -1.1), fu.shelf(9.52, 11.6, -3.34, -2.84),
         // draußen auf dem Balkon vor dem Büro, neben der Tür
         fu.table(10.1, 10.5, -12.45, -11.85, 1, false),
       ],
@@ -1592,14 +1620,13 @@ const Plans = (() => {
   }));
   const tall = (r, inner) => clip(r, inner) + ZWERCH.reduce((t, z) => t + clip(r, z) - clip(r, inter(inner, z)), 0);
   function roomArea(fl, rm) {
-    // ext: weitere Rechtecke desselben Raums (L-förmige Räume, z. B. die Küche)
-    let a = area(rm.r) + (rm.ext || []).reduce((t, q) => t + area(q), 0);
-    if (rm.core) a -= coreIn(fl, rm.r);
+    // ext: weitere Rechtecke desselben Raums (L-förmige Räume, z. B. die Küche); Treppe, Aufzug und Luftraum zählen bei core nicht
+    const rs = [rm.r, ...(rm.ext || [])], core = q => (rm.core ? coreIn(fl, q) : 0);
+    const a = rs.reduce((t, q) => t + area(q) - core(q), 0);
     if (fl !== 'DG') return { a, wf: fl === 'UG' ? 0 : (rm.wf ?? 1) * a };
     // Wohnfläche nach WoFlV: unter 1 m lichter Höhe 0 %, 1–2 m 50 %, ab 2 m 100 %; Zwerchhäuser zählen voll, Gauben nicht (eher zu niedrig)
-    const full = tall(rm.r, inset(sAt(2))), half = tall(rm.r, inset(sAt(1))) - full;
-    const coreFull = rm.core ? coreIn(fl, rm.r) : 0;
-    return { a, wf: (rm.wf ?? 1) * (full - coreFull + 0.5 * half) };
+    const wf = rs.reduce((t, q) => { const full = tall(q, inset(sAt(2))), half = tall(q, inset(sAt(1))) - full; return t + full - core(q) + 0.5 * half; }, 0);
+    return { a, wf: (rm.wf ?? 1) * wf };
   }
 
   // ---------- Zeichnen ----------
@@ -1624,6 +1651,12 @@ const Plans = (() => {
   }
   function outerOpenings(fl) {
     let s = '';
+    if (fl === 'UG') {
+      // Lichthof vor dem Gym: große Fenster bis zum Boden in der Westwand
+      const LH = HOUSE.lichthof;
+      s += R(...planSeg(LH.side, LH.u0, LH.u1, -LH.tief, 0), 'g-outside', `Lichthof vor dem Gym · ${num(LH.u1 - LH.u0, 2)} × ${num(LH.tief, 2)} m, bis zum UG-Boden, Steinbelag, oben Geländer`);
+      for (const [a, b] of LH.win) s += R(...planSeg(LH.side, a, b, -0.01, 0.37), 'g-gap') + R(...planSeg(LH.side, a, b, 0.13, 0.19), 'g-glass');
+    }
     if (fl === 'EG' || fl === 'OG') {
       const [za, zb] = fl === 'EG' ? [0, 3] : [3, 6.5];
       for (const side of ['S', 'N', 'E', 'W']) for (const o of HOUSE.fas[side].open) {
@@ -1650,50 +1683,51 @@ const Plans = (() => {
     }
     return s;
   }
-  // Treppenläufe eines Geschosses (für Grundriss und 3D): Lauf 1 im Westen nach Norden, Podest, Lauf 2 im Osten zurück nach Süden.
-  // Je Lauf zehn Steigungen; im EG beginnt Lauf 1 mit einer 40 cm tiefen, nach Westen ausschwingenden Antrittsstufe.
-  function stairFlights(fl) {
-    const [x0, x1, y0, y1] = STAIR, { spine, land, n, flare } = STAIR_SP, fw = (x1 - x0 - spine) / 2, yl = y1 - land;
-    const span = { UG: [HOUSE.Z.ffbUG, HOUSE.Z.ffbEG], EG: [HOUSE.Z.ffbEG, HOUSE.Z.ffbOG], OG: [HOUSE.Z.ffbOG, HOUSE.Z.ffbDG] }[fl];
-    if (!span) return null;
-    const [za, zb] = span, rise = (zb - za) / (2 * n), zm = za + n * rise, big = fl === 'EG';
-    const a = big ? [y0 - flare, ...Array.from({ length: n - 1 }, (_, i) => y0 + (yl - y0) * i / (n - 2))] : Array.from({ length: n }, (_, i) => y0 + (yl - y0) * i / (n - 1));
-    const b = Array.from({ length: n }, (_, i) => yl - (yl - y0) * i / (n - 1));
-    return { x0, x1, y0, y1, yl, fw, spine, za, zb, zm, rise, n, flare: big ? flare : 0, a, b };
-  }
+  // Treppenbahn eines Geschosses: der Lauf nach oben mit Stufen und Laufpfeil (Antritt im Osten, Austritt im Westen); im EG eine
+  // breitere, zur Halle ausschwingende Antrittsstufe; im DG die Öffnung über dem heraufkommenden Lauf mit Geländer
+  const TREPPE = { UG: 'Kellertreppe', EG: 'Haupttreppe', OG: 'Treppe ins DG' };
   function stair(fl) {
-    const [x0, x1, y0, y1] = STAIR, F = stairFlights(fl) || stairFlights('OG'), { fw, spine, yl } = F;
-    let s = R(x0, x1, y0, y1, 'g-stair');
-    if (F.flare && fl === 'EG') s += `<path d="M${f(x0 + fw)} ${f(-F.a[0])} H${f(x0 - 0.3)} A0.2 0.2 0 0 1 ${f(x0 - 0.3)} ${f(-y0)} H${f(x0 + fw)} Z" class="g-stair" data-tip="Antrittsstufe · 40 cm tief, nach Westen ausschwingend"/>`;
-    const tr = fl === 'EG' ? F.a : stairFlights('OG').a;
-    for (let i = 1; i < tr.length; i++) if (tr[i] > y0 + 0.01) s += L(x0, tr[i], x0 + fw, tr[i], 'g-tread');
-    for (const y of F.b.slice(1, -1)) s += L(x1 - fw, y, x1, y, 'g-tread');
-    s += L(x0, yl, x1, yl, 'g-tread') + R(x0 + fw, x0 + fw + spine, y0, yl, 'g-wall', 'Massive Mittelwand der Treppe');
-    // geschlossene Brüstung an der offenen Westseite (zur Halle)
-    s += L(x0 + 0.06, y0 + 0.05, x0 + 0.06, y1 - 0.02, 'g-railing');
-    const xa = x0 + fw / 2, xb = x1 - fw / 2, ym = yl + STAIR_SP.land / 2;
-    if (fl !== 'DG') s += `<polyline points="${pts([[xa, (fl === 'EG' ? F.a[0] : y0) + 0.2], [xa, ym], [xb, ym], [xb, y0 + 0.45]])}" class="g-walk"/>` +
-      `<polygon points="${pts([[xb - 0.14, y0 + 0.5], [xb + 0.14, y0 + 0.5], [xb, y0 + 0.22]])}" class="g-walkhead"/>`;
-    const lbl = { UG: '↑ EG', EG: '↑ OG  ↓ UG', OG: '↑ DG  ↓ EG', DG: '↓ OG' }[fl];
-    return s + T((x0 + x1) / 2 + 0.3, y1 - 0.75, lbl, 'g-stairtxt') + (fl === 'DG' ? L(x0 + 0.05, y0 + 0.08, x0 + fw, y0 + 0.08, 'g-railing') : '');
+    const ly0 = LINE[2], ly1 = LINE[3], ym = (ly0 + ly1) / 2, up = FLIGHTS[fl];
+    let s = '';
+    if (up) {
+      const g = (up.x0 - up.x1) / (up.n - 1), h = (up.zb - up.za) / up.n;
+      s += R(up.x1, up.x0, ly0, ly1, 'g-stair', `${TREPPE[fl]} · gerade, 1,30 m breit · ${up.n} Steigungen à ${num(h * 100)} cm, Auftritt ${num(g * 100, 0)} cm`);
+      for (let i = 1; i < up.n - 1; i++) s += L(up.x1 + i * g, ly0, up.x1 + i * g, ly1, 'g-tread');
+      if (fl === 'EG') s += `<path d="M${f(up.x0)} ${f(-ly0)} V${f(-(ly1 + 0.2))} A0.2 0.2 0 0 0 ${f(up.x0 - 0.2)} ${f(-(ly1 + 0.4))} H${f(up.x0 - g)} V${f(-ly1)} H${f(up.x0)} Z" class="g-stair" data-tip="Antrittsstufe · zur Halle hin 40 cm breiter, gerundet"/>`;
+      // geschlossene Brüstung an der Nordseite (zur Halle bzw. zum Luftraum)
+      s += L(up.x1, ly1 + 0.04, up.x0, ly1 + 0.04, 'g-railing');
+      s += `<polyline points="${pts([[up.x0 - 0.15, ym], [up.x1 + 0.5, ym]])}" class="g-walk"/>` +
+        `<polygon points="${pts([[up.x1 + 0.55, ym + 0.14], [up.x1 + 0.55, ym - 0.14], [up.x1 + 0.27, ym]])}" class="g-walkhead"/>`;
+    } else {
+      const [h0, h1] = HOLES[fl], F = FLIGHTS.OG, g = (F.x0 - F.x1) / (F.n - 1);
+      s += R(h0, h1, ly0, ly1, 'g-void', 'Öffnung über der Treppe aus dem OG');
+      for (let i = 1; F.x1 + i * g < h1; i++) s += L(F.x1 + i * g, ly0, F.x1 + i * g, ly1, 'g-tread');
+      s += L(h1 + 0.03, ly0, h1 + 0.03, ly1, 'g-railing');
+    }
+    // Beschriftung: aufwärts auf dem Lauf, abwärts am Podest im Westen, wo der Lauf von unten ankommt
+    const [hoch, runter] = { UG: ['↑ EG', ''], EG: ['↑ OG', '↓ UG'], OG: ['↑ DG', '↓ EG'], DG: ['', '↓ OG'] }[fl];
+    if (hoch) s += T((up.x1 + up.x0) / 2, ym + 0.3, hoch, 'g-stairtxt');
+    if (runter) s += T((LINE[0] + FLIGHTS.EG.x1) / 2 + 0.05, ym - 0.08, runter, 'g-stairtxt');
+    return s;
   }
-  // Luftraum über der Halle (im OG): schraffiert, Geländer an der Galerie
+  // Luftraum über der Halle (im OG): schraffiert; Geländer am Antritt der Dachtreppe
   function voidArea() {
     const [a] = VOID;
-    let s = R(a[0], a[1], a[2], a[3], 'g-void', 'Luftraum über dem Eingang · Halle zweigeschossig, 6,10 m hoch');
+    let s = R(a[0], a[1], a[2], a[3], 'g-void', 'Luftraum über der Halle · zweigeschossig, 6,10 m hoch, mit dem Fenster über der Haustür');
     s += L(a[0], a[3], a[1], a[2], 'g-thin') + L(a[0], a[2], a[1], a[3], 'g-thin');
-    return s + L(a[0], a[2] - 0.06, a[1], a[2] - 0.06, 'g-railing') + T((a[0] + a[1]) / 2, -1.25, 'Luftraum', 'g-ftxt');
+    return s + L(FLIGHTS.OG.x0, a[2] - 0.04, a[1], a[2] - 0.04, 'g-railing') + T((a[0] + a[1]) / 2, -1.25, 'Luftraum', 'g-ftxt');
   }
+  // Aufzug im Wandblock westlich der Treppenbahn, Tür nach Osten auf das Podest
   function lift() {
-    const [x0, x1, y0, y1] = LIFT, t = 0.2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-    return R(x0, x1, y0, y1, 'g-wall') + R(x0 + t, x1 - t, y0 + t, y1 - t, 'g-shaft', 'Personenaufzug · Kabine 1,10 × 1,40 m · UG bis DG · unauffällig im Wandblock, wandbündige Türen') +
+    const [x0, x1, y0, y1] = LIFT, t = 0.2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, dy = -4.2;
+    return R(x0, x1, y0, y1, 'g-wall') + R(x0 + t, x1 - t, y0 + t, y1 - t, 'g-shaft', 'Personenaufzug · Kabine 1,10 × 1,40 m · UG bis DG · im Wandblock am Treppenpodest, wandbündige Türen nach Osten') +
       L(x0 + t, y0 + t, x1 - t, y1 - t, 'g-thin') + L(x0 + t, y1 - t, x1 - t, y0 + t, 'g-thin') +
-      R(cx - 0.55, cx + 0.55, cy - 0.7, cy + 0.7, 'g-cabin') + R(cx - 0.45, cx + 0.45, y0 - 0.02, y0 + t + 0.02, 'g-gap') + T(cx, cy - 0.08, 'Aufzug', 'g-ftxt g-lifttxt');
+      R(cx - 0.55, cx + 0.55, cy - 0.7, cy + 0.7, 'g-cabin') + R(x1 - t - 0.02, x1 + 0.02, dy - 0.45, dy + 0.45, 'g-gap') + T(cx, cy - 0.08, 'Aufzug', 'g-ftxt g-lifttxt');
   }
   function tiefgarage() {
     const tg = C.tg, ph = C.poolhaus, rp = HOUSE.rampe, PL = SITE.plot, wx0 = rp.x0 - rp.wand, wx1 = rp.x1 + rp.wand, rc = (rp.x0 + rp.x1) / 2;
     const kote = v => (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + num(Math.abs(v), 2);
-    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · drei Stellplätze, Eingangsbereich vor dem Foyer, unter der Terrasse Fahrräder und Lager"/>`;
+    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · drei Stellplätze, mittig unter der Terrasse der Eingangsbereich zum Haus, östlich daneben die Fahrräder"/>`;
     // Rampe: offen in der Zufahrt, dann unter dem Poolhaus bis in den Anschluss der Tiefgarage
     s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · offen in der Zufahrt, dann unter dem Poolhaus · 2,80 m breit · ${num(rp.y1 - rp.y0)} m lang · oben und unten ${num(rp.s0 * 100, 0)} %, dazwischen ${num(rp.s * 100, 0)} %`);
     for (let y = rp.y0 + 1; y < rp.y1 - 0.2; y += 1) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
@@ -1720,8 +1754,9 @@ const Plans = (() => {
         L(x0 + c.L * 0.3, cy - c.W / 2 + 0.12, x0 + c.L * 0.3, cy + c.W / 2 - 0.12, 'g-furn-l') + L(x0 + c.L * 0.72, cy - c.W / 2 + 0.12, x0 + c.L * 0.72, cy + c.W / 2 - 0.12, 'g-furn-l') +
         T(x0 + c.L / 2, cy - 0.1, c.name.replace(/^(Ferrari|Porsche|Mercedes) /, ''), 'g-ftxt') + T(G.x1 + 0.55, cy - 0.1, `P${i + 1}`, 'g-ftxt');
     });
-    for (let x = 5.2; x < 11.0; x += 0.65) s += L(x, -12.0, x, -13.7, 'g-furn-l');
-    s += T(8.0, -14.2, 'Fahrräder · Lager', 'g-ftxt') + T(20.2, -18.2, 'Fahrgasse 6,00 m', 'g-ftxt');
+    // Fahrräder östlich des Eingangsbereichs an der Hauswand, davor der Weg von den Stellplätzen zum Eingang
+    for (let x = 12.4; x < 17.0; x += 0.65) s += L(x, -12.0, x, -13.7, 'g-furn-l');
+    s += T(14.5, -14.65, 'Fahrräder', 'g-ftxt') + T(20.2, -18.2, 'Fahrgasse 6,00 m', 'g-ftxt');
     s += T(20.2, -15.0, 'Tiefgarage', 'g-roomtxt') + T(20.2, -15.7, `${num(area2(tg))} m² · lichte Höhe ${num(G.lichte, 2)} m`, 'g-areatxt');
     return s;
   }
@@ -1800,7 +1835,7 @@ const Plans = (() => {
     const aussen = 0.25 * (area([B.x0, B.x1, B.y0, B.y1]) + 15.0 + area([BD.x0, BD.x1, BD.y0, BD.y1]));
     return { eg: part[0], og: part[1], dg: part[2], aussen, sum: part[0] + part[1] + part[2] + aussen };
   }
-  return { render, table, wohnflaeche, items, FL, num, CORE: { STAIR, LIFT, VOID }, stairFlights };
+  return { render, table, wohnflaeche, items, FL, num, CORE: { LINE, FLIGHTS, HOLES, LIFT, VOID } };
 })();
 </script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
@@ -2040,947 +2075,6 @@ const CarKit = (() => {
   return { materials, build };
 })();
 globalThis.CarKit = CarKit;
-
-// Ferrari F8 Tributo (2019–2023): Mittelmotor-Coupé in Rosso Corsa, prozedural mit dem Baukasten aus src/cars.js.
-// Eigenes Profil mit 22 Punkten je Station (Rollen wie k.section): 0 Bodenmitte, 1–2 Boden, 3 Schweller, 4–8 untere Flanke,
-// 9–11 Schulter, 12 Gürtellinie bzw. Kotflügelkamm, 13–15 Seitenscheibe, 16 Scheibenoberkante (ohne Scheibe = 12),
-// 17 Innenkante (Haubenrand, Rand der Frontscheibe, Dachkante, Rand der Motorabdeckung), 18–20 Bogen zur Mitte, 21 Mitte oben.
-// Auto-Koordinaten: x von der Frontspitze nach hinten, y Höhe, z quer; +z ist geometrisch die linke Fahrzeugseite (Fahrer).
-CAR_MODELS.ferrari = k => {
-  // LH: Heckfläche der Karosserie; Leuchten, Abrisskante und Endrohre stehen bis L vor
-  const L = 4.611, W = 1.979, H = 1.206, xf = 1.04, xr = 3.69, rf = 0.34, rr = 0.345, X0 = 0.025, LH = L - 0.045;
-  CAR_MODELS.ferrari.spec = { L, W, H, wheelbase: +(xr - xf).toFixed(3) };
-  const C = k.curve, sm = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
-  // Seitenansicht: Mittellinie oben (Haube, Frontscheibe, Dach, Motorabdeckung, Abrisskante), Gürtellinie, Boden, Schweller
-  const yTop = C([[X0, 0.375], [0.045, 0.455], [0.07, 0.505], [0.11, 0.545], [0.2, 0.585], [0.4, 0.628], [0.7, 0.676], [1.0, 0.722], [1.3, 0.772],
-    [1.47, 0.812], [1.62, 0.9], [1.85, 1.04], [2.06, 1.152], [2.2, 1.192], [2.36, 1.206], [2.52, 1.199], [2.68, 1.178], [2.9, 1.142], [3.25, 1.092],
-    [3.6, 1.045], [3.95, 1.005], [4.25, 0.985], [4.42, 0.992], [4.5, 1.02], [4.55, 1.042], [LH, 1.05]]);
-  const yBelt = C([[X0, 0.365], [0.05, 0.45], [0.09, 0.525], [0.16, 0.61], [0.3, 0.675], [0.5, 0.735], [0.8, 0.792], [1.04, 0.818], [1.3, 0.835],
-    [1.55, 0.845], [2.0, 0.866], [2.4, 0.89], [2.8, 0.93], [3.2, 0.955], [3.7, 0.968], [4.1, 0.966], [4.4, 0.975], [4.52, 0.995], [L, 0.985]]);
-  const yBot = C([[X0, 0.17], [0.06, 0.135], [0.15, 0.122], [0.5, 0.115], [1.6, 0.11], [3.85, 0.11], [4.05, 0.125], [4.3, 0.19], [4.5, 0.24], [L, 0.27]]);
-  const ySill = C([[X0, 0.2], [0.08, 0.17], [0.3, 0.16], [1.5, 0.175], [3.3, 0.175], [3.9, 0.19], [4.25, 0.24], [4.5, 0.29], [L, 0.31]]);
-  // breiteste Stelle; an der Tür zugleich die schräg ansteigende Kante unter der Mulde
-  const yWid = C([[X0, 0.3], [0.1, 0.36], [0.4, 0.43], [1.0, 0.47], [1.42, 0.45], [1.6, 0.41], [2.0, 0.44], [2.6, 0.51], [3.05, 0.575], [3.2, 0.585], [3.7, 0.6], [4.3, 0.63], [L, 0.66]]);
-  // Draufsicht: halbe Breiten an Schweller, breitester Stelle, Gürtellinie und Innenkante
-  const wSill = C([[X0, 0.42], [0.06, 0.58], [0.12, 0.7], [0.25, 0.8], [0.45, 0.875], [0.8, 0.91], [1.4, 0.905], [2.0, 0.895], [2.8, 0.9],
-    [3.2, 0.925], [3.7, 0.945], [4.2, 0.93], [4.45, 0.885], [L, 0.8]]);
-  const wWid = C([[X0, 0.5], [0.05, 0.62], [0.09, 0.72], [0.15, 0.81], [0.25, 0.885], [0.4, 0.935], [0.6, 0.962], [0.85, 0.974], [1.1, 0.976],
-    [1.4, 0.965], [1.8, 0.948], [2.2, 0.94], [2.6, 0.935], [2.9, 0.94], [3.12, 0.962], [3.4, 0.984], [3.7, 0.9895], [4.0, 0.985], [4.3, 0.968],
-    [4.48, 0.935], [4.58, 0.89], [L, 0.86]]);
-  const wBelt = C([[X0, 0.46], [0.05, 0.56], [0.09, 0.64], [0.16, 0.72], [0.3, 0.785], [0.6, 0.83], [1.04, 0.845], [1.55, 0.822], [2.0, 0.8],
-    [2.5, 0.79], [2.8, 0.8], [3.1, 0.845], [3.5, 0.882], [3.9, 0.89], [4.3, 0.88], [4.5, 0.85], [L, 0.8]]);
-  const wEdge = C([[X0, 0.36], [0.06, 0.4], [0.15, 0.45], [0.4, 0.515], [0.8, 0.555], [1.2, 0.6], [1.42, 0.66], [1.56, 0.772], [1.75, 0.7],
-    [1.95, 0.622], [2.14, 0.575], [2.42, 0.56], [2.7, 0.545], [3.0, 0.53], [3.5, 0.505], [3.9, 0.515], [4.2, 0.57], [4.45, 0.66], [L, 0.71]]);
-  const dEdge = C([[X0, -0.005], [0.2, 0.004], [1.0, 0.012], [1.4, 0.008], [1.56, -0.01], [1.8, -0.022], [2.14, -0.03], [2.42, -0.032],
-    [2.7, -0.03], [3.0, -0.02], [3.6, -0.012], [4.2, -0.005], [4.3, 0], [L, 0.012]]);
-  // Seitenscheibe (Tropfenform): Oberkante von der A-Säule über das Dach bis zur Spitze hinten
-  const xA = 1.56, xT = 2.8;
-  const yWinTop = C([[xA, 0.842], [1.75, 0.95], [1.95, 1.055], [2.14, 1.135], [2.3, 1.155], [2.42, 1.152], [2.55, 1.125], [2.66, 1.07], [2.74, 1.0], [xT, 0.932]]);
-  const wWinTop = C([[xA, 0.82], [1.75, 0.74], [1.95, 0.66], [2.14, 0.6], [2.3, 0.585], [2.42, 0.585], [2.55, 0.6], [2.66, 0.65], [2.74, 0.73], [xT, 0.798]]);
-  const win = x => {
-    const yl = yBelt(x), wl = wBelt(x);
-    if (x <= xA || x >= xT) return [wl - 0.001, yl + 0.001];
-    return [Math.min(wWinTop(x), wl - 0.001), Math.max(yWinTop(x), yl + 0.001)];
-  };
-  // Radläufe und Lufteinlass hinter der Tür (Flanke weicht nach innen, scharfe Kante am hinteren Kotflügel)
-  const arch = x => { let y = -1; for (const [c, r, ra] of [[xf, rf, 0.378], [xr, rr, 0.388]]) { const d = Math.abs(x - c); if (d < ra) y = Math.max(y, r + Math.sqrt(ra * ra - d * d)); } return y; };
-  // Mulde in der Tür: beginnt flach vorn unten und steigt nach hinten zum Einlass an
-  // Vorderkante des hinteren Kotflügels als scharfe, senkrechte Stufe bei xW
-  // Mulde nur über der Kante (Profilpunkte 9–12), nach hinten tiefer; Punkt 11 bleibt weiter außen: scharfe Lippe über dem Einlass
-  const xW = 3.08, dJ = { 9: 1, 10: 1.1, 11: 0.3, 12: 0.15 };
-  const dipD = x => 0.088 * Math.pow(Math.max(0, x - 1.7) / (xW - 1.7), 1.4);
-  const dip = (x, j) => (dJ[j] || 0) * (x <= xW ? dipD(x) : x < xW + 0.03 ? dipD(xW) * (xW + 0.03 - x) / 0.03 : 0);
-  // Schulter: vorn und hinten schärfer (Kotflügelkamm), an der Tür weicher
-  const pS = C([[X0, 2.2], [0.5, 3.4], [1.3, 3.4], [1.8, 2.4], [2.8, 2.4], [3.3, 3.2], [4.3, 3.2], [L, 2.6]]);
-  function prof(x) {
-    const yb = yBot(x), ys = ySill(x), yw = yWid(x), yl = yBelt(x), yc = yTop(x);
-    const ws = wSill(x), wb = ws - 0.1, ww = wWid(x), wl = wBelt(x), [wu, yu] = win(x), we = wEdge(x), ye = yc + dEdge(x);
-    const P = [[0, yb], [wb * 0.55, yb], [wb, yb + 0.004], [ws, ys]];
-    for (let q = 1; q <= 5; q++) { const t = q / 5; P.push([ws + (ww - ws) * Math.sin(t * Math.PI / 2), ys + (yw - ys) * t]); }
-    const ps = pS(x);
-    for (let q = 1; q <= 3; q++) { const t = q / 4; P.push([ww + (wl - ww) * t ** ps, yw + (yl - yw) * t]); }
-    P.push([wl, yl]);
-    // Seitenscheibe: schmaler Rahmen unten und oben, dazwischen leicht nach außen gewölbt
-    const len = Math.hypot(wu - wl, yu - yl), fr = Math.min(0.3, 0.012 / Math.max(len, 1e-4)), bo = 0.012 * Math.min(1, len / 0.1);
-    for (const t of [fr, 0.5, 1 - fr]) P.push([wl + (wu - wl) * t + bo * Math.sin(Math.PI * t), yl + (yu - yl) * t]);
-    P.push([wu, yu], [we, ye]);
-    for (let q = 1; q <= 3; q++) { const z = we * Math.cos(q / 4 * Math.PI / 2); P.push([z, yc - (yc - ye) * (z / we) ** 2]); }
-    P.push([0, yc]);
-    const ac = arch(x);
-    for (let j = 9; j <= 12; j++) P[j][0] -= dip(x, j);
-    if (ac > 0) for (const p of P) if (p[1] < ac) p[1] = ac;
-    return P;
-  }
-  // Stationen: vorn und hinten dicht, am Lufteinlass sehr dicht (scharfe Kante)
-  const xs = [];
-  for (let x = X0; x < 0.16; x += 0.009) xs.push(x);
-  for (let x = 0.16; x < 4.46; x += 0.022) xs.push(x);
-  for (let x = 4.46; x < LH - 0.004; x += 0.01) xs.push(x);
-  xs.push(LH);
-  for (const x of [3.07, 3.08, 3.09, 3.1, 3.11, 3.12]) xs.push(x);
-  // an den steilen Flanken der Radläufe dicht, damit die Bogenkante glatt wird
-  for (const [c, ra] of [[xf, 0.378], [xr, 0.388]]) for (let d = 0.25; d <= ra + 0.012; d += 0.006) xs.push(c - d, c + d);
-  xs.sort((a, b) => a - b);
-  const st = xs.filter((x, i) => i === 0 || x - xs[i - 1] > 0.004).map(x => ({ x, p: prof(x) }));
-  // Frontscheibe in der Draufsicht gekrümmt (Mitte weiter vorn): Unter- und Oberkante je Profilstelle j (17 Rand … 21 Mitte)
-  const cj = j => Math.cos((j - 17) * Math.PI / 8) ** 2, wsC = j => 1.47 + 0.085 * cj(j), wsH = j => 2.065 + 0.055 * cj(j);
-  const H1 = k.hull(st, { caps: ['grille', 'paint'], mat: (i, j, side, c) => {
-    const x = c.x, az = Math.abs(c.z), ac = arch(x);
-    if (j <= 1) return 'underbody';
-    if (ac > 0 && c.y < ac + 0.003 && j <= 11) return 'liner';
-    if (j <= 3 && ((x > 1.4 && x < 3.32) || x < 0.5)) return 'carbon';
-    if (j <= 4 && x > 4.08) return 'carbon';
-    if (j >= 8 && j <= 10 && x > xW && x < xW + 0.03) return 'liner';   // Stufe am Kotflügel: Innenseite des Einlasses
-    if (j >= 12 && j <= 15 && win(x)[1] - yBelt(x) > 0.004) return j === 12 || j === 15 ? 'trim' : 'glass';
-    if (j >= 17 && x > wsC(j + 0.5) && x < wsH(j + 0.5)) return null;
-    if (j >= 17 && x > 2.8 && x < 4.12) return 'glassDark';
-    return 'paint';
-  } });
-  const T = k.THREE;
-  // Flächenstück mit veränderlichen Grenzen j0(x)…j1(x) auf der Karosserie (Leuchten, Einlässe in Keil- oder Tropfenform)
-  // allgemeines Gitter: f(u, v) → [x, j] mit u, v von 0 bis 1
-  function patchG(m, f, nx, nj, { side = 0, off = 0.004, Hh = H1 } = {}) {
-    for (const sg of side ? [side] : [1, -1]) {
-      const pts = [], nor = [], id = (a, b) => a * (nj + 1) + b;
-      for (let a = 0; a <= nx; a++) for (let b = 0; b <= nj; b++) {
-        const [x, j] = f(a / nx, b / nj), q = Hh.at(x, j, sg); pts.push(q.p.addScaledVector(q.n, off)); nor.push(q.n);
-      }
-      const p = [], nn = [];
-      for (let a = 0; a < nx; a++) for (let b = 0; b < nj; b++) {
-        let tri = [[id(a, b), id(a + 1, b), id(a + 1, b + 1)], [id(a, b), id(a + 1, b + 1), id(a, b + 1)]];
-        const [p0, p1, p2] = tri[0].map(q => pts[q]), fn = p1.clone().sub(p0).cross(p2.clone().sub(p0));
-        if (fn.dot(nor[id(a, b)]) < 0) tri = tri.map(([u, v, w]) => [u, w, v]);
-        for (const t of tri) for (const q of t) { p.push(pts[q].x, pts[q].y, pts[q].z); nn.push(nor[q].x, nor[q].y, nor[q].z); }
-      }
-      const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(p, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(nn, 3));
-      k.add(m, g);
-    }
-  }
-  const patchV = (m, x0, x1, j0, j1, { nx = 16, nj = 4, ...o } = {}) =>
-    patchG(m, (u, v) => { const x = x0 + (x1 - x0) * u; return [x, j0(x) + (j1(x) - j0(x)) * v]; }, nx, nj, o);
-  // Frontscheibe als eigenes Flächenstück mit glatten Rändern, schwarzer Siebdruckrand unten, oben und seitlich
-  const wsF = (a, b) => (u, v) => { const j = 17 + 4 * v; return [wsC(j) + a + (wsH(j) - wsC(j) + b - a) * u, j]; };
-  patchG('glass', wsF(-0.004, 0.004), 24, 8, { off: 0.0015 });
-  patchG('trim', (u, v) => { const j = 17 + 4 * v; return [wsC(j) - 0.014 + 0.05 * u, j]; }, 2, 8, { off: 0.003 });
-  patchG('trim', (u, v) => { const j = 17 + 4 * v; return [wsH(j) - 0.035 + 0.05 * u, j]; }, 2, 8, { off: 0.003 });
-  patchG('trim', (u, v) => { const j = 17 + 0.28 * v; return [wsC(j) + (wsH(j) - wsC(j)) * u, j]; }, 20, 1, { off: 0.003 });
-  const lin = (a, b) => x => a[1] + (b[1] - a[1]) * Math.min(1, Math.max(0, (x - a[0]) / (b[0] - a[0])));
-  // Lufteinlass hinter der Tür: schwarze Öffnung in der Mulde bis an die scharfe Kante des Kotflügels
-  // Vorderkante schräg hinter der Türfuge, oben unter der Lippe; dazu drei waagrechte Stege
-  const xLo = j => 2.74 + Math.max(0, 10.9 - j) / 2.9 * 0.3;
-  patchG('liner', (u, v) => { const j = 8.0 + 2.8 * v, a = xLo(j), b = xW; return [a + (b - a) * u, j]; }, 24, 10, { off: 0.002 });
-  for (const j of [8.7, 9.35, 10.0]) patchV('rimDark', xLo(j) + 0.01, xW - 0.006, () => j - 0.035, () => j + 0.035, { off: 0.005, nx: 12, nj: 1 });
-  // Scheinwerfer: schmal, nach hinten gezogen, oben am Kotflügelkamm; Tagfahrlicht als Streifen unten und vorn hochgezogen
-  const hlLo = lin([0.09, 10.2], [0.54, 11.35]), hlHi = x => 12 - 0.25 * sm(0.4, 0.54, x);
-  patchV('lampHousing', 0.09, 0.54, hlLo, hlHi, { off: 0.002, nx: 20 });
-  patchV('lens', 0.092, 0.535, x => hlLo(x) + 0.05, x => hlHi(x) - 0.03, { off: 0.006, nx: 20 });
-  patchV('drl', 0.1, 0.5, x => hlLo(x) + 0.08, x => hlLo(x) + 0.26, { off: 0.0045, nx: 20, nj: 1 });
-  patchV('drl', 0.095, 0.115, x => hlLo(x) + 0.08, x => hlHi(x) - 0.15, { off: 0.0045, nx: 1, nj: 3 });
-  for (const [a, b] of [[0.23, 0.275], [0.33, 0.375]]) patchV('headlight', a, b, x => hlLo(x) + 0.5, x => hlHi(x) - 0.25, { off: 0.004, nx: 4, nj: 3 });
-  patchV('chrome', 0.15, 0.45, x => hlLo(x) + 0.38, x => hlLo(x) + 0.42, { off: 0.0042, nx: 12, nj: 1 });
-  // seitliche Einlässe vorn unter den Scheinwerfern, mit waagrechter Lamelle
-  patchV('grille', 0.04, 0.3, lin([0.04, 4.3], [0.3, 4.6]), lin([0.04, 8.6], [0.3, 7.4]), { off: 0.002, nx: 14, nj: 5 });
-  patchV('paint', 0.05, 0.27, lin([0.05, 6.2], [0.27, 5.9]), lin([0.05, 6.55], [0.27, 6.2]), { off: 0.006, nx: 10, nj: 1 });
-  // S-Duct: Luftauslass quer über die Fronthaube kurz hinter der Spitze, dahinter eine flache Mulde
-  patchV('liner', 0.12, 0.35, x => 18.55 + 0.35 * sm(0.12, 0.35, x), () => 21, { off: 0.002, nx: 10, nj: 4 });
-  patchV('trimMatte', 0.2, 0.34, x => 19.2 + 0.2 * sm(0.2, 0.34, x), () => 21, { off: 0.0035, nx: 6, nj: 3 });
-  patchV('trim', 0.35, 0.362, () => 18.85, () => 21, { off: 0.003, nx: 1, nj: 4 });
-  // Splitter (Carbon) und Lippe unter dem großen mittleren Einlass
-  const spl = [];
-  for (let q = 0; q <= 16; q++) { const z = -0.78 + 1.56 * q / 16; spl.push([0.004 + 0.26 * Math.pow(Math.abs(z) / 0.78, 2.2), z]); }
-  spl.push([0.4, 0.76], [0.4, -0.76]);
-  k.shape('carbon', 'xz', spl, 0.108, 0.02);
-  k.box('trimMatte', X0 - 0.008, X0 + 0.01, 0.245, 0.262, -0.44, 0.44);   // Querstrebe im Mitteleinlass
-  // Gitterstruktur: feine waagrechte Stege im Mitteleinlass und in den seitlichen Einlässen
-  for (const y of [0.195, 0.222, 0.292, 0.318, 0.344]) k.box('rimDark', X0 - 0.004, X0 + 0.002, y, y + 0.005, -0.42, 0.42);
-  for (let q = 0; q < 4; q++) patchV('rimDark', 0.045, 0.29, lin([0.045, 4.6 + q * 0.95], [0.29, 4.85 + q * 0.6]), lin([0.045, 4.66 + q * 0.95], [0.29, 4.91 + q * 0.6]), { off: 0.004, nx: 12, nj: 1 });
-  k.box('plate', X0 - 0.012, X0 - 0.004, 0.262, 0.372, -0.26, 0.26);      // Kennzeichen vorn (ohne Schrift)
-  k.box('trimMatte', X0 - 0.004, X0 + 0.004, 0.258, 0.376, -0.265, 0.265);
-  // Heck: Abrisskante als kräftige Lippe in Wagenfarbe entlang der Heckkontur (Flanke über das Deck), steht bis L über,
-  // läuft an den Enden dünn in die Kotflügel aus; Hinterkante leicht hochgezogen
-  const xe = LH - 0.002, ring = (m, R, tube, x, y, z) => { const g = new T.TorusGeometry(R, tube, 8, 36); g.rotateY(Math.PI / 2); g.translate(x, y, z); k.add(m, g); };
-  const lipT = y => 0.008 + 0.047 * sm(0.9, 0.99, y), lipTop = [], lipBot = [];
-  for (const s of [1, -1]) for (let q = 0; q <= 40; q++) {
-    const p = H1.at(LH, s > 0 ? 11 + q * 0.25 : 21 - q * 0.25, s).p, l = lipTop[lipTop.length - 1];
-    if (l && Math.hypot(l[0] - p.z, l[1] - p.y) < 0.004) continue;
-    lipTop.push([p.z, p.y]); lipBot.push([p.z, p.y - lipT(p.y)]);
-  }
-  const half = lipBot.filter(p => p[0] >= 0).sort((p, q) => p[0] - q[0]);
-  const yLipB = z => { for (let i = 1; i < half.length; i++) if (half[i][0] >= z) { const [z0, y0] = half[i - 1], [z1, y1] = half[i]; return y0 + (y1 - y0) * (z - z0) / ((z1 - z0) || 1); } return half[half.length - 1][1]; };
-  const lip = k.shape('paint', 'zy', [...lipTop, ...[...lipBot].reverse()], LH - 0.003, L - LH + 0.003, { curve: 2 }), lp = lip.attributes.position;
-  // hinter LH: Oberseite steigt weiter an, die Enden folgen der Rundung der Heckecken nach innen
-  for (let i = 0; i < lp.count; i++) {
-    const d = Math.max(0, lp.getX(i) - LH), z = lp.getZ(i);
-    lp.setY(i, lp.getY(i) + 0.22 * d); lp.setZ(i, z - Math.sign(z) * 0.55 * d * sm(0.6, 0.84, Math.abs(z)));
-  }
-  lip.computeVertexNormals();
-  const yu = yLipB(0);
-  // darunter zwischen den Leuchtenpaaren ein schwarzer Auslass mit Schattenfuge, mittig die dritte Bremsleuchte
-  k.box('grille', LH - 0.01, LH + 0.006, 0.9, yu - 0.01, -0.44, 0.44);
-  k.box('trim', LH, LH + 0.04, yu - 0.012, yu + 0.002, -0.45, 0.45);
-  k.box('taillight', LH + 0.006, LH + 0.009, 0.924, 0.932, -0.14, 0.14);
-  // je Leuchtenpaar ein vorstehendes Gehäuse in Wagenfarbe (oben in die Lippe übergehend), Leuchten als kurze Röhren
-  const xp = LH + 0.033;
-  k.both(s => {
-    const pod = [[s * 0.46, yLipB(0.46) + 0.006]];
-    for (let q = 0; q <= 6; q++) { const a = Math.PI + q / 6 * Math.PI / 2; pod.push([s * (0.548 + 0.088 * Math.cos(a)), 0.885 + 0.088 * Math.sin(a)]); }
-    for (let q = 0; q <= 6; q++) { const a = -Math.PI / 2 + q / 6 * Math.PI / 2; pod.push([s * (0.712 + 0.088 * Math.cos(a)), 0.885 + 0.088 * Math.sin(a)]); }
-    for (let q = 0; q < 6; q++) { const z = 0.8 - 0.34 * q / 6; pod.push([s * z, yLipB(z) + 0.006]); }
-    k.shape('paint', 'zy', pod, LH - 0.005, 0.03, { bevel: 0.008, curve: 2 });
-    for (const zc of [0.548, 0.712]) {
-      const z = s * zc, y = 0.885;
-      k.lathe('lampHousing', 'x', [[0.074, xp - 0.012], [0.074, xp + 0.008], [0.064, xp + 0.008], [0.064, xp - 0.006]], y, z, 32);
-      k.cyl('taillightDark', 'x', xp - 0.006, xp - 0.003, y, z, 0.064, 0.064, 32);
-      ring('taillight', 0.047, 0.0075, xp - 0.002, y, z);
-      k.cyl('taillight', 'x', xp - 0.004, xp + 0.001, y, z, 0.016, 0.016, 16);
-    }
-    // schwarze Einsätze unter den Leuchten (Luftauslässe), schräg nach außen
-    k.shape('carbon', 'zy', [[s * 0.42, 0.79], [s * 0.82, 0.79], [s * 0.85, 0.64], [s * 0.56, 0.6]], xe - 0.008, 0.012);
-  });
-  // Rückfahr-/Nebelleuchte mittig auf der Heckschürze, Rückstrahler seitlich (xa: Rückseite der Schürze)
-  const xa = LH + 0.018;
-  k.box('taillight', xa - 0.004, xa + 0.004, 0.3, 0.34, -0.035, 0.035);
-  k.both(s => k.box('taillightDark', xa - 0.003, xa + 0.003, 0.405, 0.418, s * 0.6, s * 0.76));
-  // Ansaugöffnungen für den Motor neben der Abrisskante, innen an den hinteren Kotflügeln
-  patchV('liner', 4.27, 4.47, () => 17.0, x => 17.55 + 0.15 * sm(4.27, 4.47, x), { off: 0.002, nx: 8, nj: 3 });
-  // Kennzeichen hinten (weiß, ohne Schrift) in schwarzer Mulde
-  k.box('trimMatte', xe - 0.006, xe + 0.004, 0.462, 0.592, -0.275, 0.275);
-  k.box('plate', xe, xe + 0.008, 0.47, 0.584, -0.26, 0.26);
-  // Diffusor: schwarze Heckschürze als Volumen (steht 2 cm vor), Finnen bis an ihre Rückseite
-  k.shape('carbon', 'zy', [[-0.78, 0.26], [0.78, 0.26], [0.81, 0.43], [0.3, 0.45], [-0.3, 0.45], [-0.81, 0.43]], LH - 0.008, 0.02, { bevel: 0.006, curve: 2 });
-  for (const z of [-0.52, -0.26, 0, 0.26, 0.52]) {
-    const fin = [[4.05, 0.12], [xa - 0.004, 0.175]];
-    for (let q = 0; q <= 8; q++) { const x = xa - 0.004 - (xa - 4.054) * q / 8; fin.push([x, Math.min(yBot(x), 0.258) + 0.004]); }
-    k.shape('carbon', 'xy', fin, z - 0.006, 0.012);
-  }
-  // zwei große runde Endrohre: Chromrohr mit gerundetem Rand, innen dunkel und tief geschlossen
-  const xt = L - 0.006;
-  k.both(s => {
-    const z = s * 0.4, y = 0.365;
-    k.lathe('chrome', 'x', [[0.058, LH - 0.06], [0.058, xt], [0.049, xt], [0.049, xt - 0.012]], y, z, 32);
-    k.lathe('trimMatte', 'x', [[0.049, xt - 0.012], [0.049, xt - 0.07]], y, z, 32);
-    k.cyl('trimMatte', 'x', xt - 0.075, xt - 0.07, y, z, 0.05, 0.05, 24);
-    ring('chrome', 0.0535, 0.0045, xt, y, z);
-  });
-  // Stab zwischen zwei Punkten (Spiegelfuß, Wischer, Lenkradspeichen)
-  const V = (x, y, z) => new T.Vector3(x, y, z);
-  const rod = (m, a, b, r, seg = 10, sc = [1, 1]) => {
-    const A = V(...a), B = V(...b), d = B.clone().sub(A), g = new T.CylinderGeometry(r, r, d.length(), seg);
-    g.scale(sc[0], 1, sc[1]); g.applyQuaternion(new T.Quaternion().setFromUnitVectors(V(0, 1, 0), d.normalize()));
-    g.translate((A.x + B.x) / 2, (A.y + B.y) / 2, (A.z + B.z) / 2); return k.add(m, g);
-  };
-  // Außenspiegel: tropfenförmiges Gehäuse in Wagenfarbe auf schlankem schwarzem Stiel an der Tür
-  k.both(s => {
-    const cx = 1.835, cy = 0.985, cz = s * 0.955;
-    const h = new T.SphereGeometry(1, 22, 12, -Math.PI / 2, Math.PI); h.scale(0.085, 0.047, 0.092); h.translate(cx, cy, cz); k.add('paint', h);
-    const gl = new T.CircleGeometry(1, 24); gl.rotateY(Math.PI / 2); gl.scale(1, 0.04, 0.083); gl.translate(cx - 0.002, cy, cz); k.add('chrome', gl);
-    const rim = new T.CircleGeometry(1, 24); rim.rotateY(Math.PI / 2); rim.scale(1, 0.047, 0.092); rim.translate(cx - 0.004, cy, cz); k.add('trim', rim);
-    rod('trim', [1.73, 0.855, s * 0.83], [1.8, 0.95, s * 0.915], 0.011, 8, [1.6, 0.7]);
-    rod('trim', [1.75, 0.86, s * 0.83], [1.86, 0.955, s * 0.915], 0.008, 8);
-  });
-  // Fugen: Tür, Fronthaube, Motorhaube; Türgriff oben in der Mulde
-  const fuge = { w: 0.005, off: 0.0022 };
-  for (const x of [1.49, 2.71]) k.lineX('trim', H1, x, 3.7, 11.95, { ...fuge, n: 33 });
-  k.lineJ('trim', H1, 1.49, 2.71, 3.7, { dj: 0.05, off: 0.0022 });
-  for (const x of [0.34, 1.425]) k.lineX('trim', H1, x, 17.02, 21, { ...fuge, n: 6 });
-  k.lineJ('trim', H1, 0.34, 1.425, 17.05, { dj: 0.07, off: 0.0022 });
-  k.lineJ('trim', H1, 2.79, 4.46, 16.9, { dj: 0.035, off: 0.0022 });
-  k.lineX('trim', H1, 4.46, 16.9, 21, { ...fuge, n: 6 });
-  patchV('trim', 2.42, 2.53, () => 11.1, () => 11.32, { off: 0.0025, nx: 3, nj: 1 });
-  // Wischer (einer, in Ruhestellung an der Scheibenwurzel)
-  rod('trimMatte', [1.508, 0.84, -0.5], [1.49, 0.832, 0.32], 0.007, 6);
-  rod('trimMatte', [1.49, 0.828, 0.06], [1.505, 0.838, -0.28], 0.009, 6);
-  // Motorabdeckung aus Lexan mit drei breiten Lamellen quer über die Abdeckung
-  for (const x0 of [3.0, 3.35, 3.7]) {
-    patchV('carbon', x0, x0 + 0.21, () => 17.25, () => 21, { off: 0.016, nx: 6, nj: 6 });
-    patchV('trim', x0 + 0.205, x0 + 0.215, () => 17.25, () => 21, { off: 0.008, nx: 1, nj: 6 });
-  }
-  // Innenraum (Fahrer links, +z): Boden, Rückwand, Türverkleidung, Himmel, Armaturenbrett, Lenkrad, Mittelkonsole, Schalensitze
-  k.box('carpet', 1.55, 2.84, 0.12, 0.14, -0.76, 0.76);
-  k.shape('interior', 'zy', [[-0.78, 0.14], [0.78, 0.14], [0.78, 0.84], [0.52, 1.04], [-0.52, 1.04], [-0.78, 0.84]], 2.82, 0.04);
-  k.box('interior', 2.06, 2.72, 1.128, 1.142, -0.54, 0.54);
-  k.both(s => { k.box('interior', 1.6, 2.74, 0.2, 0.82, s * 0.76, s * 0.78); k.box('interiorLight', 1.9, 2.5, 0.52, 0.64, s * 0.75, s * 0.762); });
-  k.shape('interior', 'xy', [[1.56, 0.81], [1.94, 0.805], [2.03, 0.73], [2.0, 0.6], [1.62, 0.56]], -0.77, 1.54);
-  k.box('interior', 1.86, 2.0, 0.79, 0.85, 0.17, 0.5);
-  k.box('trimMatte', 1.995, 2.0, 0.795, 0.84, 0.19, 0.48);
-  const sw = new T.TorusGeometry(0.17, 0.02, 8, 32); sw.rotateY(Math.PI / 2); sw.rotateZ(-0.38); sw.translate(2.09, 0.72, 0.335); k.add('interior', sw);
-  k.cyl('interior', 'x', 2.02, 2.1, 0.72, 0.335, 0.045, 0.055, 14);
-  for (const a of [Math.PI / 2 + 0.3, -Math.PI / 2 - 0.3, Math.PI * 1.5]) rod('interior', [2.09, 0.72, 0.335], [2.09 - Math.sin(-0.38) * 0.16 * Math.cos(a), 0.72 + 0.16 * Math.cos(-0.38) * Math.cos(a), 0.335 + 0.16 * Math.sin(a)], 0.014, 6);
-  rod('interior', [1.95, 0.64, 0.335], [2.06, 0.7, 0.335], 0.03, 10);
-  k.box('interior', 1.92, 2.46, 0.14, 0.4, -0.1, 0.1);
-  k.box('carbon', 2.0, 2.3, 0.4, 0.43, -0.09, 0.09);
-  k.both(s => {
-    const zc = s * 0.335;
-    k.box('interiorLight', 2.3, 2.72, 0.15, 0.3, zc - 0.22, zc + 0.22);
-    for (const d of [-1, 1]) k.box('interiorLight', 2.32, 2.7, 0.24, 0.38, zc + d * 0.2 - 0.04, zc + d * 0.2 + 0.04);
-    const bk = new T.BoxGeometry(0.11, 0.66, 0.46); bk.rotateZ(-0.3); bk.translate(2.78, 0.62, zc); k.add('interiorLight', bk);
-    const wing = new T.BoxGeometry(0.12, 0.42, 0.06); wing.rotateZ(-0.3);
-    for (const d of [-1, 1]) { const g = wing.clone(); g.translate(2.74, 0.6, zc + d * 0.21); k.add('interior', g); }
-  });
-  // Motor unter der Lexan-Abdeckung (dunkel, mit Ansaugbrücken), damit die Abdeckung Tiefe hat
-  k.box('trimMatte', 2.92, 3.95, 0.3, 0.82, -0.42, 0.42);
-  k.both(s => { k.box('alu', 3.0, 3.85, 0.82, 0.88, s * 0.12, s * 0.34); k.box('carbon', 3.05, 3.8, 0.88, 0.895, s * 0.16, s * 0.3); });
-  // Räder: vorn 245/35 R20, hinten 305/30 R20, geschmiedete Felgen mit fünf Doppelspeichen, gelbe Bremssättel
-  // Eigenes Rad: flache Reifenflanke, tiefes Felgenbett, fünf schlanke Doppelspeichen mit Schüssel (außen weiter vorn als an der Nabe)
-  function f8Wheel(x, r, w, zc, calA) {
-    const s = Math.sign(zc), hw = w / 2, R = 0.254, zf = zc + s * hw * 0.8;
-    const tp = [[R - 0.004, -hw * 0.84], [r - 0.045, -hw], [r - 0.012, -hw * 0.92], [r, -hw * 0.62], [r, hw * 0.62], [r - 0.012, hw * 0.92], [r - 0.045, hw], [R - 0.004, hw * 0.84]];
-    k.lathe('tire', 'z', tp.map(([a, b]) => [a, zc + b]), x, r, 56);
-    k.lathe('rimDark', 'z', [[R - 0.006, zc - hw * 0.8], [R - 0.006, zc + hw * 0.8]], x, r, 48);
-    const lip = new T.TorusGeometry(R - 0.002, 0.011, 8, 56); lip.translate(x, r, zf); k.add('rim', lip);
-    // Doppelspeichen: V-Form je Paar, Schüssel durch Verschieben in z abhängig vom Abstand zur Nabe
-    const zh = zf - s * 0.07, uh = 0.07, uo = R - 0.008;
-    for (let q = 0; q < 5; q++) {
-      const a = q * 2 * Math.PI / 5 + Math.PI / 2, ca = Math.cos(a), sa = Math.sin(a);
-      const uv = [[uh, -0.03], [uh, 0.03], [uo, 0.07], [uo, 0.041], [0.135, 0.006], [0.135, -0.006], [uo, -0.041], [uo, -0.07]];
-      const g = k.shape('rim', 'xy', uv.map(([u, v]) => [x + u * ca - v * sa, r + u * sa + v * ca]), s > 0 ? zh - 0.024 : zh, 0.024, { curve: 2 });
-      const p = g.attributes.position;
-      for (let i = 0; i < p.count; i++) { const rho = Math.hypot(p.getX(i) - x, p.getY(i) - r); p.setZ(i, p.getZ(i) + s * 0.064 * Math.min(1, Math.max(0, (rho - uh) / (uo - uh)))); }
-      g.computeVertexNormals();
-    }
-    // Nabe, Zentralkappe, Radschrauben
-    k.cyl('rim', 'z', zh - s * 0.03, zh + s * 0.004, x, r, 0.068, 0.062, 28);
-    k.lathe('rimDark', 'z', s > 0 ? [[0.036, zh], [0.03, zh + 0.012], [0.001, zh + 0.016]] : [[0.001, zh - 0.016], [0.03, zh - 0.012], [0.036, zh]], x, r, 20);
-    for (let q = 0; q < 5; q++) { const a = q * 2 * Math.PI / 5 + Math.PI / 2 + Math.PI / 5; k.cyl('chrome', 'z', zh, zh + s * 0.012, x + Math.cos(a) * 0.052, r + Math.sin(a) * 0.052, 0.009, 0.008, 8); }
-    // Bremsscheibe mit Topf und gelber Sattel hinter den Speichen (mind. 2 cm Luft), davor Nabe mit Schrauben und Kappe frei
-    const zd = zc - s * hw * 0.2;
-    k.cyl('disc', 'z', zd - 0.016, zd + 0.016, x, r, 0.195, 0.195, 40);
-    k.cyl('alu', 'z', zd - s * 0.03, zd + s * 0.012, x, r, 0.09, 0.09, 24);
-    k.cyl('alu', 'z', zd + s * 0.012, zh - s * 0.03, x, r, 0.062, 0.062, 20);
-    const arc = (a0, a1, rr, rev) => { const pp = []; for (let q = 0; q <= 8; q++) { const t = a0 + (a1 - a0) * q / 8; pp.push([x + Math.cos(t) * rr, r + Math.sin(t) * rr]); } return rev ? pp.reverse() : pp; };
-    k.shape('calYellow', 'xy', [...arc(calA[0], calA[1], 0.16, false), ...arc(calA[0], calA[1], 0.235, true)], zd - 0.032, 0.064, { curve: 2, bevel: 0.006 });
-  }
-  for (const [x, r, w, tz, ca] of [[xf, rf, 0.245, 0.8385, [0.1 * Math.PI, 0.36 * Math.PI]], [xr, rr, 0.305, 0.823, [0.64 * Math.PI, 0.9 * Math.PI]]]) {
-    k.arch(x, r, 0.95, { ra: r + 0.03 });
-    k.both(s => f8Wheel(x, r, w, s * tz, ca));
-  }
-};
-
-// Porsche Cayenne Coupé (E3, Baujahr 2021) in Anthrazit – prozedural aus Stützkurven und eigenen Querschnitten.
-// Eigenes Profil je Station mit 26 Punkten (j) von der Bodenmitte über die rechte Seite zur Dachmitte:
-// 0–2 Boden, 3–5 Schweller, 6–9 Flanke bis zur breitesten Stelle, 10–12 Schulter bis zur Kante, 13 Schulterfläche, 14 Gürtellinie,
-// 15–18 Seitenscheibe (vorn: Kotflügelrücken), 19 Dachkante/A-Säule (vorn: Kamm über dem Kotflügel), 20–25 Dach bzw. Haube bis zur Mitte.
-CAR_MODELS.cayenne = k => {
-  const L = 4.931, W = 1.983, H = 1.676, xf = 0.98, xr = 3.875, rf = 0.381, rr = 0.377;
-  CAR_MODELS.cayenne.spec = { L, W, H, wheelbase: xr - xf };
-  const C = k.curve, T = k.THREE, V = (x, y, z) => new T.Vector3(x, y, z);
-  // Seitenansicht: Boden, Schweller, breiteste Stelle, Schulterkante, Gürtellinie, Dachkante (vorn Kotflügelkamm), Dachmitte
-  const yb = C([[0, 0.375], [0.01, 0.36], [0.04, 0.35], [0.12, 0.345], [0.3, 0.335], [0.6, 0.32], [1.45, 0.25], [1.7, 0.215], [3.35, 0.215], [3.6, 0.25], [4.3, 0.33], [4.6, 0.37], [4.75, 0.36], [4.85, 0.365], [4.91, 0.39], [L, 0.44]]);
-  const ys = C([[0, 0.39], [0.03, 0.385], [0.1, 0.38], [0.3, 0.37], [0.6, 0.36], [1.45, 0.31], [1.7, 0.3], [3.35, 0.3], [3.6, 0.31], [4.3, 0.37], [4.6, 0.41], [4.8, 0.42], [4.9, 0.44], [L, 0.47]]);
-  const yw = C([[0, 0.6], [0.1, 0.62], [0.5, 0.66], [1.0, 0.7], [1.5, 0.68], [2.5, 0.66], [3.3, 0.74], [3.9, 0.84], [4.5, 0.84], [4.75, 0.78], [4.9, 0.7], [L, 0.62]]);
-  const ysh = C([[0, 0.74], [0.04, 0.8], [0.08, 0.84], [0.25, 0.885], [0.6, 0.91], [1.0, 0.94], [1.5, 0.965], [2.5, 0.99], [3.3, 1.0], [3.9, 1.025], [4.4, 1.035], [4.62, 1.03], [L, 1.0]]);
-  const ybelt = C([[0, 0.72], [0.012, 0.78], [0.03, 0.835], [0.06, 0.88], [0.1, 0.91], [0.18, 0.94], [0.3, 0.96], [0.7, 0.99], [1.1, 1.03], [1.5, 1.075], [1.75, 1.1], [2.8, 1.137], [3.6, 1.177], [3.88, 1.208], [4.2, 1.205], [4.5, 1.19], [4.62, 1.18], [4.66, 1.17], [4.7, 1.1], [4.74, 1.0], [4.79, 0.88], [4.82, 0.82], [4.9, 0.79], [L, 0.76]]);
-  const yre = C([[0, 0.74], [0.012, 0.8], [0.03, 0.86], [0.06, 0.915], [0.1, 0.945], [0.18, 0.975], [0.3, 0.995], [0.6, 1.025], [1.0, 1.06], [1.3, 1.088], [1.52, 1.1], [1.9, 1.355], [2.28, 1.615], [2.6, 1.64], [3.0, 1.615], [3.4, 1.55], [3.7, 1.5], [3.95, 1.455], [4.2, 1.37], [4.45, 1.28], [4.56, 1.235], [4.62, 1.19], [L, 0]]);
-  // Oberkante der hinteren Seitenscheibe: läuft vor der C-Säule spitz auf die Gürtellinie zu
-  const dloTop = C([[3.0, 1.8], [3.05, 1.6], [3.3, 1.545], [3.55, 1.47], [3.75, 1.37], [3.85, 1.275], [3.9, 1.222], [3.94, 1.0]]);
-  const yr = C([[0, 0.74], [0.012, 0.8], [0.03, 0.85], [0.06, 0.902], [0.1, 0.925], [0.18, 0.945], [0.3, 0.96], [0.6, 0.995], [1.0, 1.04], [1.3, 1.075], [1.52, 1.115], [1.9, 1.4], [2.28, 1.655], [2.5, 1.676], [2.9, 1.668], [3.3, 1.63], [3.6, 1.585], [3.85, 1.54], [3.95, 1.52], [4.2, 1.42], [4.45, 1.3], [4.56, 1.248], [4.66, 1.218], [4.675, 1.17], [4.7, 1.1], [4.74, 1.0], [4.79, 0.88], [4.82, 0.82], [4.9, 0.79], [L, 0.76]]);
-  // Draufsicht: halbe Breiten (breiteste Stelle, Schultereinzug, Gürtellinie, Dachkante bzw. Kotflügelkamm)
-  const ww = C([[0, 0.36], [0.012, 0.5], [0.03, 0.62], [0.06, 0.73], [0.1, 0.81], [0.16, 0.88], [0.25, 0.925], [0.4, 0.955], [0.6, 0.972], [0.9, 0.982], [1.2, 0.976], [1.5, 0.96], [2.0, 0.948], [2.6, 0.948], [3.1, 0.958], [3.45, 0.978], [3.85, 0.9915], [4.2, 0.988], [4.45, 0.975], [4.62, 0.955], [4.72, 0.93], [4.8, 0.895], [4.87, 0.86], [L, 0.8]]);
-  const dsh = C([[0, 0.01], [1.0, 0.012], [2.0, 0.03], [3.8, 0.035], [4.6, 0.03], [L, 0.02]]);
-  const wbelt = C([[0, 0.52], [0.03, 0.7], [0.08, 0.79], [0.15, 0.835], [0.3, 0.862], [0.8, 0.874], [1.5, 0.878], [2.2, 0.875], [2.9, 0.865], [3.5, 0.85], [3.9, 0.84], [4.3, 0.84], [4.55, 0.83], [4.65, 0.81], [4.75, 0.78], [4.85, 0.74], [L, 0.66]]);
-  const wre = C([[0, 0.4], [0.04, 0.55], [0.1, 0.6], [0.3, 0.635], [0.8, 0.655], [1.2, 0.68], [1.52, 0.72], [1.9, 0.68], [2.28, 0.625], [2.6, 0.625], [3.2, 0.632], [3.6, 0.645], [3.95, 0.655], [4.3, 0.675], [4.56, 0.7], [4.62, 0.76], [4.66, 0.84], [L, 0.84]]);
-  const pexp = C([[1.5, 2], [2.4, 2.2], [3.3, 2.6], [3.9, 2.8], [4.4, 2.5], [4.7, 2.2]]);
-  // Radläufe: alles darunter wird auf den Bogen angehoben
-  const RA = 0.44, cut = x => { let y = -1; for (const [c, r] of [[xf, rf], [xr, rr]]) { const d = Math.abs(x - c); if (d < RA) y = Math.max(y, r + Math.sqrt(RA * RA - d * d)); } return y; };
-  const ua = [1, 0.93, 0.8, 0.62, 0.42, 0.21, 0]; // Teilung des Dachs (j19…25) als Anteil der Halbbreite
-  function prof(x) {
-    const b = yb(x), wwx = ww(x), ybl = ybelt(x), yre_ = Math.max(yre(x), ybl);
-    const ysh_ = Math.min(ysh(x), ybl - 0.015), ywx = Math.max(b + 0.02, Math.min(yw(x), ysh_ - 0.02));
-    const s = Math.max(b + 0.004, Math.min(ys(x), ywx - 0.015)), sd = Math.min(s + 0.12, (s + ywx) / 2), ws = wwx - 0.05, wb = ws - 0.05;
-    const wsh_ = wwx - dsh(x), wbl = Math.min(wbelt(x), wsh_ - 0.01), wre_ = Math.min(wre(x), wbl);
-    const cr = yr(x) - yre_, pw = pexp(x), gl = Math.min(1, Math.max(0, (yre_ - ybl) / 0.12));
-    const P = [[0, b], [wb * 0.6, b], [wb, b + 0.008], [ws, s], [ws + 0.012, s + 0.045], [ws + 0.022, sd]];
-    for (let q = 1; q <= 4; q++) { const t = q / 4; P.push([ws + 0.022 + (wwx - ws - 0.022) * Math.sin(t * Math.PI / 2), sd + (ywx - sd) * t]); }
-    for (let q = 1; q <= 3; q++) { const t = q / 3; P.push([wwx + (wsh_ - wwx) * t * t, ywx + (ysh_ - ywx) * t]); }
-    P.push([wsh_ - (wsh_ - wbl) * 0.45, ysh_ + (ybl - ysh_) * 0.7], [wbl, ybl]);
-    // Band Gürtel → Dachkante: Gürtelleiste, Scheibe, Rahmen bis zur Fensteroberkante yD, darüber C-Säule
-    const yD = Math.min(yre_, Math.max(ybl, dloTop(x))), bY = [ybl, Math.min(ybl + 0.025, yD), 0, Math.max(ybl, yD - 0.03), yD, yre_];
-    bY[1] = Math.min(bY[1], bY[3]); bY[2] = (bY[1] + bY[3]) / 2;
-    for (let q = 1; q <= 5; q++) { const t = (bY[q] - ybl) / Math.max(1e-6, yre_ - ybl); P.push([wbl + (wre_ - wbl) * t + 0.01 * gl * Math.sin(t * Math.PI), bY[q]]); }
-    for (let q = 1; q <= 6; q++) { const u = ua[q], f = cr >= 0 ? Math.pow(1 - Math.pow(u, pw), 1 / pw) : 1 - u * u; P.push([wre_ * u, yre_ + cr * f]); }
-    const yc = cut(x); if (yc > 0) for (const p of P) if (p[1] < yc) p[1] = yc;
-    return P;
-  }
-  // Stationen: dicht an Bug, Heck und Radläufen, dazu feste Stellen (Spoilerkante, Radlaufenden)
-  const xs = [4.652, 4.658, 4.664, 4.67, 4.676, 4.682, xf - RA - 0.002, xf + RA + 0.002, xr - RA - 0.002, xr + RA + 0.002];
-  for (let x = 0; x < L - 0.005;) { xs.push(x); const d = Math.min(Math.abs(x - xf), Math.abs(x - xr)); x += x < 0.22 || x > 4.6 ? 0.012 : d < RA + 0.02 ? 0.01 : d < 0.5 ? 0.02 : 0.03; }
-  xs.sort((a, b) => a - b);
-  const st = [];
-  for (const x of [...xs, L]) if (!st.length || x - st[st.length - 1].x > 0.004) st.push({ x, p: prof(x) });
-  // Materialien je Feld: Seitenscheiben mit schwarzen Rahmen, Frontscheibe, Panorama-Glasdach, Heckscheibe, Schweller
-  const mat = (i, j, side, c) => {
-    const x = c.x, yc = cut(x);
-    if (yc > 0 && c.y < yc + 0.004 && j <= 13) return 'liner';   // auf den Radlauf angehobene Felder: Radhausdecke
-    if (j <= 1) return 'underbody';
-    if (j >= 14 && j <= 18) {
-      if (x < 1.52 || x > 3.9 || j === 18) return 'paint';
-      if (j === 14 || j === 17) return 'trim';
-      if (x < 1.66 || Math.abs(x - 2.84) < 0.035 || Math.abs(x - 3.6) < 0.01) return 'trim';
-      return 'glass';
-    }
-    if (j >= 19) {
-      if (x > 1.53 && x < 2.27) return j === 19 ? 'trim' : 'glass';
-      if (x > 2.36 && x < 3.72 && j >= 21) return 'glassDark';
-      if (x > 3.97 && x < 4.555) return j === 19 ? 'trim' : 'glass';
-      return 'paint';
-    }
-    if (j >= 2 && j <= 4 && ((x > 1.42 && x < 3.43) || x > 4.62)) return 'trimMatte';
-    return 'paint';
-  };
-  const H1 = k.hull(st, { mat });
-  // Flächenstück über eine Abbildung f(u, v) → [x, j] (u, v von 0 bis 1); off Abstand nach außen (Zahl oder Funktion)
-  function patchF(m, f, { side = 0, off = 0.004, nu = 12, nv = 6 } = {}) {
-    for (const s of side ? [side] : [1, -1]) {
-      const pts = [], nor = [], id = (a, b) => a * (nv + 1) + b;
-      for (let a = 0; a <= nu; a++) for (let b = 0; b <= nv; b++) {
-        const [x, j] = f(a / nu, b / nv), q = H1.at(x, j, s), o = typeof off === 'function' ? off(a / nu, b / nv) : off;
-        pts.push(q.p.addScaledVector(q.n, o)); nor.push(q.n);
-      }
-      grid(m, pts, nor, nu, nv);
-    }
-  }
-  // Gitter aus (nu+1)·(nv+1) Punkten mit Normalen je Ecke (weich schattiert statt facettiert), Drehsinn nach der Normalen
-  function grid(m, pts, nor, nu, nv) {
-    const id = (a, b) => a * (nv + 1) + b, p = [], nn = [];
-    for (let a = 0; a < nu; a++) for (let b = 0; b < nv; b++) {
-      let tri = [[id(a, b), id(a + 1, b), id(a + 1, b + 1)], [id(a, b), id(a + 1, b + 1), id(a, b + 1)]];
-      const [p0, p1, p2] = tri[0].map(q => pts[q]), fn = p1.clone().sub(p0).cross(p2.clone().sub(p0));
-      if (fn.dot(nor[id(a, b)]) < 0) tri = tri.map(([u, v, w]) => [u, w, v]);
-      for (const t of tri) for (const q of t) { p.push(pts[q].x, pts[q].y, pts[q].z); nn.push(nor[q].x, nor[q].y, nor[q].z); }
-    }
-    const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(p, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(nn, 3)); k.add(m, g);
-  }
-  // Querschnitt sec = [[dx, h], …] (geschlossen, Länge ab x0 und Höhe über der Fläche) quer über das Profil von ja bis jb gezogen
-  function sweep(m, x0, sec, ja, jb, { nj = 12, side = 0, caps = [false, false] } = {}) {
-    for (const s of side ? [side] : [1, -1]) {
-      const rows = [];
-      for (let b = 0; b <= nj; b++) { const jj = ja + (jb - ja) * b / nj; rows.push(sec.map(([dx, h]) => { const q = H1.at(x0 + dx, jj, s); return q.p.addScaledVector(q.n, h); })); }
-      const p = [], n = sec.length;
-      for (let b = 0; b < nj; b++) {
-        const cen = V(0, 0, 0); for (const v of rows[b]) cen.add(v); cen.multiplyScalar(1 / n);
-        for (let a = 0; a < n; a++) {
-          const A = rows[b][a], B = rows[b][(a + 1) % n], Cc = rows[b + 1][(a + 1) % n], D = rows[b + 1][a];
-          const fn = B.clone().sub(A).cross(Cc.clone().sub(A)), mid = A.clone().add(Cc).multiplyScalar(0.5).sub(cen);
-          const q = fn.dot(mid) >= 0 ? [A, B, Cc, A, Cc, D] : [A, Cc, B, A, D, Cc];
-          for (const v of q) p.push(v.x, v.y, v.z);
-        }
-      }
-      // Stirnflächen an den Enden (caps: [Anfang, Ende])
-      [[0, 1], [nj, nj - 1]].forEach(([b, nb], e) => {
-        if (!caps[e]) return;
-        const cen = V(0, 0, 0), cn = V(0, 0, 0); for (const v of rows[b]) cen.add(v); for (const v of rows[nb]) cn.add(v); cen.multiplyScalar(1 / n); cn.multiplyScalar(1 / n);
-        const out = cen.clone().sub(cn);
-        for (let a = 0; a < n; a++) { let A = rows[b][a], B = rows[b][(a + 1) % n]; if (B.clone().sub(cen).cross(A.clone().sub(cen)).dot(out) < 0) [A, B] = [B, A]; p.push(cen.x, cen.y, cen.z, B.x, B.y, B.z, A.x, A.y, A.z); }
-      });
-      const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(p, 3)); k.add(m, smooth(g));
-    }
-  }
-  // Normalen glätten, Kanten über 0,6 rad bleiben scharf (toCreasedNormals aus BufferGeometryUtils)
-  function smooth(g) { if (k.utils && k.utils.toCreasedNormals) return k.utils.toCreasedNormals(g, 0.6); g.computeVertexNormals(); return g; }
-  // Profilstelle j zu einer Höhe y an der Flanke; Länge x zu einer Höhe auf der Mittellinie am Heck
-  const jAt = (x, y) => { let a = 2, b = 19; for (let q = 0; q < 28; q++) { const m = (a + b) / 2; if (H1.at(x, m, 1).p.y < y) a = m; else b = m; } return (a + b) / 2; };
-  const xTail = y => { let a = 4.6, b = L; for (let q = 0; q < 28; q++) { const m = (a + b) / 2; if (yr(m) > y) a = m; else b = m; } return (a + b) / 2; };
-  // Heck: Leuchtenband unter der Spoilerlippe, Rückleuchten um die Ecken, Kennzeichen, Diffusor, vier Endrohre
-  patchF('trim', (u, v) => [4.562 + 0.005 * v, 19.3 + 5.7 * u], { nu: 16, nv: 1, off: 0.0015 });   // Fuge des ausfahrbaren Heckspoilers
-  const sub = (f, u0, u1, v0, v1) => (u, v) => f(u0 + (u1 - u0) * u, v0 + (v1 - v0) * v);
-  // Höhenlinie bei Höhe y um die Heckecke: Flanke (x ab 4.3), Rundung bis zur Gürtellinie (j 14), Heckfläche (j 19 → 25; 14…19 fallen
-  // hinten zusammen). Je Punkt [x, j, s], s = Bogenlänge in der Draufsicht ab der Ecke (Flanke negativ, Heckfläche positiv)
-  const xAtJ = (j, y) => { let a = 4.3, b = L; for (let q = 0; q < 26; q++) { const m = (a + b) / 2; if (H1.at(m, j, 1).p.y > y) a = m; else b = m; } return (a + b) / 2; };
-  const hlC = new Map();
-  function hline(y) {
-    const key = Math.round(y * 4000); if (hlC.has(key)) return hlC.get(key);
-    const xe = xAtJ(14, y), P = [];
-    for (let q = 0; q < 24; q++) { const x = 4.3 + (xe - 0.006 - 4.3) * q / 23; P.push([x, jAt(x, y)]); }
-    const j0 = P[P.length - 1][1];
-    for (let q = 1; q <= 8; q++) { const j = j0 + (14 - j0) * q / 8; P.push([xAtJ(j, y), j]); }
-    const i0 = P.length - 1;
-    for (let q = 0; q <= 24; q++) { const j = 19 + 6 * q / 24; P.push([xAtJ(j, y), j]); }
-    let s = 0; P[0].push(0);
-    for (let q = 1; q < P.length; q++) { const a = H1.at(P[q - 1][0], P[q - 1][1], 1).p, b = H1.at(P[q][0], P[q][1], 1).p; s += Math.hypot(b.x - a.x, b.z - a.z); P[q].push(s); }
-    const s0 = P[i0][2]; for (const p of P) p[2] -= s0;
-    hlC.set(key, P); return P;
-  }
-  // Punkt bei Bogenlänge s auf der Höhenlinie y → [x, j]
-  const onH = (s, y) => {
-    const P = hline(y); let q = 0; while (q < P.length - 2 && P[q + 1][2] < s) q++;
-    const a = P[q], b = P[q + 1], t = Math.min(1, Math.max(0, (s - a[2]) / ((b[2] - a[2]) || 1)));
-    return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-  };
-  // Rückleuchte als ein Stück: Spitze auf der Flanke (s −0.30), um die Ecke bis s 0.32 auf der Heckklappe; Unterkante 1.078, Oberkante 1.163
-  const sT = -0.3, sE = 0.32;
-  const yHi = s => (s >= -0.06 ? 1.163 : 1.163 - 0.012 * Math.pow((-0.06 - s) / 0.24, 1.3));
-  const yLo = s => (s >= -0.04 ? 1.078 : 1.078 + 0.073 * Math.pow(Math.min(1, (-0.04 - s) / 0.26), 0.75));
-  const tlF = (s0, s1, v0, v1) => (u, v) => { const s = s0 + (s1 - s0) * u, a = yLo(s), b = yHi(s); return onH(s, a + (b - a) * (v0 + (v1 - v0) * v)); };
-  const tlY = (s0, s1, y0, y1) => (u, v) => { const s = s0 + (s1 - s0) * u; return onH(s, y0 + (y1 - y0) * v); };
-  const sFrom = y => { let s = sT; while (yLo(s) > y && s < 0) s += 0.002; return s; };
-  patchF('taillightDark', tlF(sT, sE, 0, 1), { nu: 44, nv: 4, off: 0.004 });
-  patchF('taillight', tlF(sT + 0.01, sE, 0.86, 1), { nu: 44, nv: 1, off: 0.006 });   // Kontur am oberen Rand
-  patchF('taillight', tlY(sFrom(1.128), sE - 0.012, 1.134, 1.142), { nu: 36, nv: 1, off: 0.006 });
-  patchF('taillight', tlY(sFrom(1.09), sE - 0.012, 1.096, 1.104), { nu: 30, nv: 1, off: 0.006 });
-  patchF('lens', tlF(sT, sE, 0, 1), { nu: 44, nv: 4, off: 0.0085 });
-  // Leuchtenband quer über die Heckklappe, beginnt unter den Rückleuchten
-  const jE = onH(sE - 0.03, 1.14)[1];
-  const band = (v0, v1) => (u, v) => { const j = jE + (25 - jE) * u, y = 1.118 + 0.045 * (v0 + (v1 - v0) * v); return [xAtJ(j, y), j]; };
-  patchF('taillightDark', band(0, 1), { nu: 24, nv: 2, off: 0.003 });
-  patchF('taillight', band(0.3, 0.7), { nu: 24, nv: 1, off: 0.0045 });
-  // Heckklappenfuge unten und seitlich
-  patchF('trim', (u, v) => [xTail(0.835) + 0.004 * v, 13.6 + 11.4 * u], { nu: 20, nv: 1, off: 0.002 });
-  // Kennzeichen im Stoßfänger, Diffusor schwarz, Rückstrahler
-  k.box('trimMatte', L - 0.002, L + 0.0008, 0.617, 0.753, -0.272, 0.272);
-  k.box('plate', L - 0.0005, L + 0.003, 0.63, 0.74, -0.26, 0.26);
-  // Diffusor als Block mit Tiefe (unten sichtbar), senkrechte Rippen, je Seite ein dunkler Ausschnitt mit zwei ovalen Endrohren
-  k.box('trimMatte', L - 0.14, L + 0.002, 0.40, 0.57, -0.78, 0.78);
-  for (const z of [-0.3, -0.12, 0.12, 0.3]) k.box('trimMatte', L - 0.12, L + 0.012, 0.395, 0.52, z - 0.004, z + 0.004);
-  patchF('taillightDark', (u, v) => [4.84 + 0.06 * u, jAt(4.87, 0.6) + 0.5 * v], { nu: 4, nv: 1, off: 0.003 });
-  const ell = (g, x, y, z, sy, sz) => { g.rotateY(Math.PI / 2); g.scale(1, sy, sz); g.translate(x, y, z); return g; };
-  k.both(s => {
-    k.box('trim', L + 0.002, L + 0.005, 0.435, 0.535, s > 0 ? 0.43 : -0.70, s > 0 ? 0.70 : -0.43);
-    for (const zc of [0.5, 0.63]) {
-      const g = new T.CylinderGeometry(1, 1, 0.062, 28, 1, true); g.rotateZ(Math.PI / 2); g.scale(1, 0.036, 0.052); g.translate(L - 0.019, 0.485, s * zc); k.add('chrome', g);
-      k.add('chrome', ell(new T.RingGeometry(0.84, 1, 28), L + 0.012, 0.485, s * zc, 0.036, 0.052));
-      k.add('liner', ell(new T.CircleGeometry(1, 28), L + 0.010, 0.485, s * zc, 0.03, 0.046));
-    }
-  });
-  // Dachkantenspoiler über der Heckscheibe
-  sweep('paint', 3.9, [[0, 0], [0.05, 0.011], [0.1, 0.018], [0.15, 0.021], [0.155, 0.01], [0.1, 0.004], [0.05, 0.0005]], 19.2, 25, { nj: 14, caps: [true, false] });
-  // Leiste entlang eines Pfades: fr = [{ p, a, b }] (Punkt, zwei Richtungen), sec = [[s, t], …] geschlossener Querschnitt
-  function tube(m, fr, sec) {
-    const rows = fr.map(({ p, a, b }) => sec.map(([s, t]) => p.clone().addScaledVector(a, s).addScaledVector(b, t))), n = sec.length, out = [];
-    const cenOf = r => { const c = V(0, 0, 0); for (const v of r) c.add(v); return c.multiplyScalar(1 / n); };
-    // Mantel mit gemeinsamen Punkten (weiche Normalen), Drehsinn nach Mehrheit nach außen
-    const pos = [], idx = []; let vote = 0;
-    for (const r of rows) for (const v of r) pos.push(v.x, v.y, v.z);
-    for (let i = 0; i < rows.length - 1; i++) {
-      const cen = cenOf(rows[i]);
-      for (let q = 0; q < n; q++) {
-        const A = rows[i][q], B = rows[i][(q + 1) % n], Cc = rows[i + 1][(q + 1) % n];
-        vote += B.clone().sub(A).cross(Cc.clone().sub(A)).dot(A.clone().add(Cc).multiplyScalar(0.5).sub(cen)) >= 0 ? 1 : -1;
-        const a = i * n + q, b = i * n + (q + 1) % n, c = (i + 1) * n + (q + 1) % n, d = (i + 1) * n + q;
-        idx.push(a, b, c, a, c, d);
-      }
-    }
-    if (vote < 0) for (let q = 0; q < idx.length; q += 3) { const t = idx[q + 1]; idx[q + 1] = idx[q + 2]; idx[q + 2] = t; }
-    const gm = new T.BufferGeometry(); gm.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); gm.setIndex(idx); gm.computeVertexNormals(); k.add(m, gm);
-    [[0, 1], [rows.length - 1, rows.length - 2]].forEach(([i, ni]) => {
-      const cen = cenOf(rows[i]), dir = cen.clone().sub(cenOf(rows[ni]));
-      for (let q = 0; q < n; q++) { let A = rows[i][q], B = rows[i][(q + 1) % n]; if (B.clone().sub(cen).cross(A.clone().sub(cen)).dot(dir) < 0) [A, B] = [B, A]; out.push(cen.x, cen.y, cen.z, B.x, B.y, B.z, A.x, A.y, A.z); }
-    });
-    const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(out, 3)); g.computeVertexNormals(); k.add(m, g);
-  }
-  // Radlaufkanten: ausgestellte Lippe entlang des Bogens
-  for (const [c, r] of [[xf, rf], [xr, rr]]) k.both(s => {
-    // Lage quer aus der Fläche, über die Nachbarpunkte gemittelt; Rahmen fest (radial, quer), damit die Lippe nicht verdreht
-    const n = 48, th = q => Math.PI * q / n, zs = [];
-    for (let q = 0; q <= n; q++) { const x = c + (RA + 0.004) * Math.cos(th(q)), y = r + (RA + 0.004) * Math.sin(th(q)); zs.push(H1.at(x, jAt(x, y), s).p.z); }
-    for (let it = 0; it < 2; it++) { const z0 = zs.slice(); for (let q = 0; q <= n; q++) zs[q] = (z0[Math.max(0, q - 1)] + z0[q] + z0[Math.min(n, q + 1)]) / 3; }
-    const fr = [];
-    for (let q = 0; q <= n; q++) fr.push({ p: V(c + (RA + 0.004) * Math.cos(th(q)), r + (RA + 0.004) * Math.sin(th(q)), zs[q]), a: V(Math.cos(th(q)), Math.sin(th(q)), 0), b: V(0, 0, s) });
-    tube('paint', fr, [[-0.018, 0.002], [-0.014, 0.013], [0.012, 0.019], [0.04, 0.013], [0.075, 0.001], [0.03, -0.006], [-0.012, -0.004]]);
-  });
-  // Fugen: Türen, Haube
-  const fuge = f => patchF('trim', f, { nu: 24, nv: 1, off: 0.0015 });
-  const xLine = (x, y0, y1) => fuge((u, v) => [x - 0.003 + 0.006 * v, jAt(x, y0 + (y1 - y0) * u)]);
-  xLine(1.555, 0.43, 1.098); xLine(2.8, 0.43, 1.134); xLine(3.585, 0.79, 1.17);
-  fuge((u, v) => { const th = Math.PI * (0.73 + 0.25 * u), x = xr + 0.495 * Math.cos(th) - 0.003 + 0.006 * v; return [x, jAt(x, rr + 0.495 * Math.sin(th))]; });
-  fuge((u, v) => [0.13 + 1.39 * u, 15.15 + 0.12 * v]);
-  fuge((u, v) => [0.112 + 0.006 * v, 15.15 + 9.85 * u]);
-  // Türgriffe mit Griffmulde
-  k.both(s => { for (const x of [2.43, 3.3]) {
-    const y = 0.985, j0 = jAt(x, y - 0.024), j1 = jAt(x, y + 0.024), z = Math.abs(H1.at(x, jAt(x, y), 1).p.z);
-    patchF('trim', (u, v) => [x - 0.1 + 0.2 * u, j0 + (j1 - j0) * v], { side: s, nu: 4, nv: 2, off: 0.001 });
-    const g = new T.BoxGeometry(0.18, 0.028, 0.02); g.translate(x, y, s * (z + 0.006)); k.add('paint', g);
-  } });
-  // Außenspiegel: Fuß an der Tür, Gehäuse in Wagenfarbe, Spiegelglas nach hinten
-  k.both(s => {
-    const x = 1.74, z0 = Math.abs(H1.at(x, jAt(x, 1.105), 1).p.z);
-    const f = new T.BoxGeometry(0.12, 0.05, 0.12); f.translate(x + 0.04, 1.13, s * (z0 + 0.03)); k.add('trim', f);
-    const hd = new T.SphereGeometry(1, 22, 14); hd.scale(0.055, 0.064, 0.112); hd.translate(x + 0.07, 1.195, s * (z0 + 0.112)); k.add('paint', hd);
-    const gl = new T.CircleGeometry(1, 22); gl.rotateY(Math.PI / 2); gl.scale(1, 0.053, 0.096); gl.translate(x + 0.111, 1.195, s * (z0 + 0.112)); k.add('glassDark', gl);
-  });
-  // Scheibenwischer auf der Frontscheibe
-  patchF('trimMatte', (u, v) => [1.575 + 0.012 * v, 19.6 + 5.4 * u], { nu: 10, nv: 1, off: 0.012 });
-  // Front: Kennzeichen, Mitteleinlass mit Querstreben auf der Bugfläche, seitliche Einlässe an den Ecken mit Streben
-  k.shape('grille', 'zy', [[-0.47, 0.385], [0.47, 0.385], [0.5, 0.62], [-0.5, 0.62]], -0.003, 0.003);
-  for (const y of [0.45, 0.515, 0.58]) k.box('trim', -0.006, 0, y - 0.008, y + 0.008, -0.49, 0.49);
-  k.box('trimMatte', -0.004, 0, 0.375, 0.392, -0.55, 0.55);
-  k.box('trimMatte', -0.006, -0.001, 0.452, 0.568, -0.272, 0.272);
-  k.box('plate', -0.009, -0.006, 0.46, 0.56, -0.26, 0.26);
-  const si = (u, v) => { const x = 0.004 + 0.13 * u; return [x, jAt(x, 0.41 + 0.3 * v - 0.04 * u * v)]; };
-  patchF('grille', si, { nu: 12, nv: 6, off: 0.002 });
-  for (const t of [0.3, 0.55, 0.8]) patchF('trim', (u, v) => si(u, t + 0.04 * v), { nu: 12, nv: 1, off: 0.005 });
-  for (const t of [0.35, 0.7]) patchF('trim', (u, v) => si(t + 0.05 * u, v), { nu: 1, nv: 6, off: 0.006 });
-  // Punkt (z, y) der Frontansicht auf die Bugfläche abbilden → [x, j] (kleinste Station, deren Profil den Punkt enthält)
-  const inProf = (P, z, y) => { let c = false; for (let a = 0, b = P.length - 1; a < P.length; b = a++) { const [za, ya] = P[a], [zb, yq] = P[b]; if ((ya > y) !== (yq > y) && z < (zb - za) * (y - ya) / (yq - ya) + za) c = !c; } return c; };
-  const toXJ = (z, y) => {
-    let lo = 0, hi = 0.8;
-    for (let q = 0; q < 22; q++) { const m = (lo + hi) / 2; if (inProf(prof(m), z, y)) hi = m; else lo = m; }
-    const P = prof(hi); let best = 1e9, bj = 0;
-    for (let j = 0; j < P.length - 1; j++) {
-      const [za, ya] = P[j], dz = P[j + 1][0] - za, dy = P[j + 1][1] - ya, t = Math.min(1, Math.max(0, ((z - za) * dz + (y - ya) * dy) / (dz * dz + dy * dy || 1e-9)));
-      const d = (za + t * dz - z) ** 2 + (ya + t * dy - y) ** 2; if (d < best) { best = d; bj = j + t; }
-    }
-    return [hi, bj];
-  };
-  // Scheinwerfer: Umriss in der Frontansicht (u innen → außen, v unten → oben), seitlich spitz auslaufend
-  const hlY = (u, v) => { const r = u < 0.18 ? (1 - u / 0.18) ** 2 : 0, yb_ = 0.772 + 0.05 * u + 0.035 * r, yt = 0.875 + 0.058 * u - 0.025 * r; return yb_ + (yt - yb_) * v; };
-  const hl = (u, v) => toXJ(0.43 + 0.47 * u, hlY(u, v));
-  const [hxo] = hl(1, 0.5), hs = (u, v) => { const x = hxo + (0.4 - hxo) * u; return [x, jAt(x, hlY(1, 0) + (0.05 * u) + (hlY(1, 1) - hlY(1, 0) - 0.06 * u) * v)]; };
-  for (const f of [hl, hs]) { patchF('lampHousing', f, { nu: 14, nv: 5, off: 0.003 }); patchF('lens', f, { nu: 14, nv: 5, off: 0.009 }); }
-  patchF('headlight', sub(hl, 0.62, 0.9, 0.3, 0.72), { nu: 6, nv: 3, off: 0.005 });
-  patchF('headlight', sub(hl, 0.4, 0.48, 0.38, 0.62), { nu: 2, nv: 2, off: 0.005 });
-  for (const [u0, v0] of [[0.3, 0.16], [0.52, 0.16], [0.3, 0.74], [0.52, 0.74]]) patchF('drl', sub(hl, u0, u0 + 0.045, v0, v0 + 0.13), { nu: 2, nv: 2, off: 0.006 });
-  patchF('indicator', sub(hs, 0.1, 0.55, 0.15, 0.6), { nu: 4, nv: 1, off: 0.005 });
-  // Innenraum: Sitze, Armaturenbrett, Mittelkonsole, Lenkrad (Fahrer links, +z)
-  k.box('carpet', 1.55, 4.3, 0.3, 0.36, -0.82, 0.82);
-  k.both(s => {
-    k.box('interior', 2.5, 2.98, 0.4, 0.62, s * 0.18 + (s > 0 ? 0 : -0.36), s * 0.18 + (s > 0 ? 0.36 : 0));
-    const bk = new T.BoxGeometry(0.12, 0.62, 0.5); bk.rotateZ(-0.2); bk.translate(3.02, 0.95, s * 0.38); k.add('interior', bk);
-    const hr = new T.BoxGeometry(0.09, 0.16, 0.26); hr.translate(3.11, 1.33, s * 0.38); k.add('interior', hr);
-    k.box('interiorLight', 2.55, 2.94, 0.62, 0.63, s * 0.38 - 0.15, s * 0.38 + 0.15);
-    k.box('interior', 1.62, 3.9, 0.62, 1.05, s > 0 ? 0.8 : -0.86, s > 0 ? 0.86 : -0.8);
-  });
-  k.box('interior', 3.35, 3.78, 0.4, 0.64, -0.75, 0.75);
-  const rb = new T.BoxGeometry(0.1, 0.5, 1.45); rb.rotateZ(-0.32); rb.translate(3.8, 0.9, 0); k.add('interior', rb);
-  for (const z of [-0.45, 0, 0.45]) k.box('interior', 3.86, 3.94, 1.13, 1.27, z - 0.12, z + 0.12);
-  k.box('carpet', 3.9, 4.75, 0.7, 0.74, -0.84, 0.84);
-  k.box('interior', 1.6, 2.02, 0.75, 1.1, -0.8, 0.8);
-  k.box('interiorLight', 1.95, 2.03, 0.96, 0.99, -0.8, 0.8);
-  k.box('interior', 1.95, 2.95, 0.4, 0.72, -0.13, 0.13);
-  const sw = new T.TorusGeometry(0.185, 0.02, 8, 28); sw.rotateY(Math.PI / 2); sw.rotateZ(0.42); sw.translate(2.2, 1.0, 0.38); k.add('interior', sw);
-  const col = new T.CylinderGeometry(0.03, 0.04, 0.3, 10); col.rotateZ(Math.PI / 2 + 0.42); col.translate(2.07, 1.05, 0.38); k.add('interior', col);
-  // Rad: Reifen, 21-Zoll-Felge in Dunkeltitan mit zehn Doppelspeichen, Bremsscheibe, roter Sattel
-  function rad(x, r, w, zc) {
-    const s = Math.sign(zc), hw = w / 2, rimR = 0.272, zf = zc + s * hw * 0.74, Z = q => zc + s * q;
-    const tp = [[rimR - 0.006, -0.82], [r - 0.06, -0.98], [r - 0.025, -0.97], [r - 0.006, -0.8], [r, -0.45], [r, 0.45], [r - 0.006, 0.8], [r - 0.025, 0.97], [r - 0.06, 0.98], [rimR - 0.006, 0.82]];
-    k.lathe('tire', 'z', tp.map(([a, b]) => [a, zc + b * hw]), x, r, 56);
-    k.lathe('rimDark', 'z', [[rimR, zc - hw * 0.8], [rimR, zc + hw * 0.8]], x, r, 40);
-    k.lathe('rimDark', 'z', [[rimR - 0.028, Z(hw * 0.74)], [rimR + 0.006, Z(hw * 0.8)]].sort((a, b) => a[1] - b[1]), x, r, 48);
-    // fünf Doppelspeichen (je Paar zwei Stäbe ±0.1 rad), 5 → 3.4 cm breit, nach innen gewölbt: Nabe 3.5 cm tiefer als der Rand
-    const d0 = 0.07, d1 = rimR - 0.016, zH = zf - s * 0.035, dz = t => -0.035 + 0.057 * t - 0.022 * t * t;
-    for (let q = 0; q < 10; q++) {
-      const a = (q >> 1) * 2 * Math.PI / 5 + (q & 1 ? 0.1 : -0.1) + 0.3, ca = Math.cos(a), sa = Math.sin(a), fr = [];
-      for (let i = 0; i <= 4; i++) {
-        const t = i / 4, d = d0 + (d1 - d0) * t, w = 0.05 - 0.016 * t;
-        fr.push({ p: V(x + ca * d, r + sa * d, zf + s * dz(t)), a: V(-sa * w, ca * w, 0), b: V(0, 0, s) });
-      }
-      tube('rimDark', fr, [[-0.5, 0], [-0.32, 0.0035], [0.32, 0.0035], [0.5, 0], [0.42, -0.022], [-0.42, -0.022]]);
-    }
-    // Nabe, Zentralkappe, Radmuttern; Bremsscheibe mit dunklem Topf
-    k.cyl('rimDark', 'z', zH - s * 0.024, zH + s * 0.006, x, r, 0.092, 0.092, 28);
-    k.cyl('trim', 'z', zH, zH + s * 0.016, x, r, 0.042, 0.042, 20);
-    for (let q = 0; q < 5; q++) { const a = q * 2 * Math.PI / 5 + 0.3 + Math.PI / 5; k.cyl('chrome', 'z', zH, zH + s * 0.012, x + Math.cos(a) * 0.064, r + Math.sin(a) * 0.064, 0.01, 0.01, 8); }
-    k.cyl('disc', 'z', Z(0) - 0.017, Z(0) + 0.017, x, r, 0.19, 0.19, 36);
-    k.cyl('rimDark', 'z', Z(0.017) - (s < 0 ? 0.02 : 0), Z(0.017) + (s > 0 ? 0.02 : 0), x, r, 0.105, 0.105, 28);
-    const ar = (a0, a1, rr_) => { const p = []; for (let q = 0; q <= 8; q++) { const a = a0 + (a1 - a0) * q / 8; p.push([x + Math.cos(a) * rr_, r + Math.sin(a) * rr_]); } return p; };
-    k.shape('calRed', 'xy', [...ar(Math.PI * 0.6, Math.PI * 0.9, 0.15), ...ar(Math.PI * 0.6, Math.PI * 0.9, 0.235).reverse()], Z(0.045) - 0.035, 0.07, { curve: 4 });
-  }
-  for (const [x, r, w, zc] of [[xf, rf, 0.285, 0.835], [xr, rr, 0.315, 0.825]]) { k.arch(x, r, 0.9, { ra: RA - 0.012 }); k.both(s => rad(x, r, w, s * zc)); }
-};
-
-// Mercedes-Benz V-Klasse lang (W447, Modell 2024) in Obsidianschwarz: Großraumlimousine mit kurzer, steiler Haube, langer
-// Frontscheibe, flachem Dach, Schiebetüren auf beiden Seiten und senkrechten Rückleuchten in den D-Säulen. Ohne Stern und Schriftzüge.
-CAR_MODELS.vklasse = k => {
-  const L = 5.14, W = 1.928, H = 1.9, xa = 0.925, xb = 4.125, r = 0.351;
-  CAR_MODELS.vklasse.spec = { L, W, H, wheelbase: xb - xa };
-  const { curve, V3 } = k;
-  // Mittellinie oben (Seitenansicht): Bug, Haube, Frontscheibe, Dach, Heckklappe, Ladekante
-  const yc = curve([[0, 0.55], [0.012, 0.62], [0.03, 0.69], [0.06, 0.78], [0.1, 0.875], [0.15, 0.955], [0.2, 1.015], [0.25, 1.05], [0.32, 1.075],
-    [0.6, 1.15], [0.95, 1.237], [1.06, 1.284], [1.14, 1.33], [1.5, 1.578], [1.8, 1.792], [1.9, 1.855], [2.0, 1.88], [2.15, 1.89], [4.75, 1.89],
-    [4.9, 1.885], [4.95, 1.875], [4.972, 1.855], [4.982, 1.8], [5.05, 1.22], [5.068, 1.0], [5.08, 0.8], [5.088, 0.75], [5.13, 0.738], [5.137, 0.7], [5.14, 0.62]]);
-  // Unterkante Mitte
-  const yb = curve([[0, 0.33], [0.012, 0.28], [0.035, 0.245], [0.08, 0.22], [0.18, 0.2], [0.45, 0.185], [4.6, 0.185], [4.85, 0.215], [5.0, 0.265], [5.1, 0.3], [5.14, 0.37]]);
-  // Gürtellinie (Fensterunterkante) steigt leicht nach hinten; Oberkante Seitenscheibe: A-Säule (Scheibenmitte um 0,15 m versetzt), sonst Dachkante
-  const belt = x => 1.215 + 0.024 * (Math.max(1.2, Math.min(x, 4.85)) - 1.2);
-  const yA = x => Math.max(belt(x), Math.min(1.8, yc(x - 0.15)));
-  // Lage von Front- und Heckfläche (Mitte) je Höhe; daraus die Rundung der Ecken in der Draufsicht
-  const xfT = curve([[0.55, 0], [0.62, 0.012], [0.69, 0.03], [0.78, 0.06], [0.875, 0.1], [0.955, 0.15], [1.015, 0.2], [1.05, 0.25], [1.2, 0.34]]);
-  const xf = y => (y < 0.55 ? 0.012 * Math.max(0, 0.33 - y) / 0.14 : xfT(y));
-  const xeT = curve([[0.42, 5.14], [0.62, 5.14], [0.7, 5.137], [0.738, 5.13], [0.75, 5.088], [0.8, 5.08], [1.0, 5.068], [1.22, 5.05], [1.8, 4.982], [1.855, 4.972], [1.875, 4.95], [1.89, 4.86]]);
-  const xe = y => (y < 0.42 ? 5.14 - 0.3 * (0.42 - y) ** 2 : xeT(y));
-  const planF = d => (d <= 0 ? 0 : Math.min(1, (d / 0.3) ** (1 / 2.2)));
-  const planR = d => (d <= 0 ? 0 : Math.min(1, (d / 0.14) ** (1 / 3)));
-  // Radläufe
-  const archY = x => { let y = -1; for (const c of [xa, xb]) { const d = Math.abs(x - c), R = 0.4; if (d < R) y = Math.max(y, r + Math.sqrt(R * R - d * d)); } return y; };
-  // Querschnitt: halbe Breiten j 0–12 (Boden, Schweller, Flanke, Schulter, Gürtellinie), Seitenscheiben mit Einzug, Dach als Superellipse
-  const ZN = [0, 0.45, 0.84, 0.895, 0.932, 0.952, 0.961, 0.964, 0.964, 0.962, 0.958, 0.948, 0.932];
-  const zg = (y, b) => 0.925 - (y - b) * 0.2;
-  const soft = curve([[0, 0.03], [0.25, 0.1], [0.95, 0.1], [1.2, 0.06], [4.9, 0.06], [5.0, 0.05]]);
-  const capOff = curve([[0, 0.004], [0.2, 0.01], [0.35, 0.03], [1.0, 0.03], [1.15, 0], [4.9, 0], [4.97, 0.004]]);
-  const mTop = curve([[0, 2], [0.3, 3], [1.0, 3], [1.2, 2.5], [1.85, 2.5], [2.1, 4], [4.85, 4], [4.98, 2.2]]);
-  const FT = [0.95, 0.84, 0.62, 0.32, 0];
-  // Rundung der Ecken je Höhe: oben weiter hinten (vorn) bzw. weiter vorn (hinten), gedämpft gegen Falten
-  // hinten ohne die Stufe der Ladekante, damit die Ecken des Stoßfängers glatt bleiben
-  const xeS = curve([[0.42, 5.14], [0.62, 5.14], [0.7, 5.134], [0.85, 5.085], [1.0, 5.068], [1.22, 5.05], [1.8, 4.982], [1.855, 4.972], [1.875, 4.95], [1.89, 4.86]]);
-  const xfE = y => 0.35 * xf(y), xeE = y => { const e = y < 0.42 ? xe(y) : xeS(y); return e + 0.6 * (L - e); };
-  function prof(x) {
-    const top = yc(x), bot = yb(x), b = belt(x), ya = yA(x), ay = archY(x), c = top - capOff(x), s = soft(x);
-    const comp = y => (y <= c - s ? y : c - s * Math.exp(-(y - (c - s)) / s));
-    const fr = planF(x) * planR(L - x), P = [];
-    for (let j = 0; j < 3; j++) P.push([ZN[j] * fr, Math.max(bot + (j === 2 ? 0.01 : 0), ay)]);
-    const lv = [0.255, 0.3, 0.38, 0.5, 0.62, 0.76, 0.76 + (b - 0.76) * 0.35, 0.76 + (b - 0.76) * 0.66, 0.76 + (b - 0.76) * 0.88, b];
-    for (let t = 1; t <= 4; t++) lv.push(b + (ya - b) * t / 4);
-    let yp = P[2][1];
-    lv.forEach((y0, q) => {
-      const j = q + 3, y = Math.max(comp(y0), bot + 0.004 * (j - 2), yp + 0.0004, ay);
-      P.push([(j <= 12 ? ZN[j] : zg(y0, b)) * planF(x - xfE(y)) * planR(xeE(y) - x), y]);
-      yp = y;
-    });
-    const [z16, y16] = P[16], m = mTop(x), tp = Math.max(top, y16 + 0.001);
-    FT.forEach(f => P.push([z16 * f, y16 + (tp - y16) * (1 - f ** m) ** (1 / m)]));
-    return P;
-  }
-  // Halbe Breite des Querschnitts bei Länge x und Höhe y (−1 außerhalb)
-  function hwAt(x, y) {
-    const P = prof(x);
-    if (y < P[2][1]) return -1;
-    for (let j = 2; j < 21; j++) { const [z0, y0] = P[j], [z1, y1] = P[j + 1]; if (y >= y0 && y <= y1 && y1 > y0) return z0 + (z1 - z0) * (y - y0) / (y1 - y0); }
-    return -1;
-  }
-  // Punkt auf der Front- (e = −1) oder Heckfläche (e = 1) bei Höhe y und Querlage z, mit Normale; off nach außen
-  function faceX(y, z, e) {
-    let a = e < 0 ? 0 : 4.6, b2 = e < 0 ? 0.5 : L;   // vor bzw. hinter den Radläufen suchen
-    for (let q = 0; q < 24; q++) { const m = (a + b2) / 2, ok = hwAt(m, y) >= z; if (e < 0 ? ok : !ok) b2 = m; else a = m; }
-    return (a + b2) / 2;
-  }
-  function facePt(e, y, z, off = 0.004) {
-    const s = Math.sign(z) || 1, d = 0.004, az = Math.min(Math.abs(z), hwAt(e < 0 ? 0.5 : 4.62, y) - d - 0.001); z = s * az;
-    const p = V3(faceX(y, az, e), y, z);
-    const ty = V3(faceX(y + d, az, e), y + d, z).sub(p), tz = V3(faceX(y, az + d, e), y, s * (az + d)).sub(p);
-    const n = ty.cross(tz).normalize(); if (n.x * e < 0) n.negate();
-    return { p: p.addScaledVector(n, off), n };
-  }
-  // Gitter aus Punkten {p, n} (nu+1 × nv+1) als Fläche, Dreiecke zur Normale hin ausgerichtet
-  function skin(m, G, nu, nv) {
-    const p = [], nn = [], id = (a, b2) => a * (nv + 1) + b2;
-    for (let a = 0; a < nu; a++) for (let b2 = 0; b2 < nv; b2++) {
-      let tri = [[id(a, b2), id(a + 1, b2), id(a + 1, b2 + 1)], [id(a, b2), id(a + 1, b2 + 1), id(a, b2 + 1)]];
-      const [p0, p1, p2] = tri[0].map(q => G[q].p), fn = p1.clone().sub(p0).cross(p2.clone().sub(p0));
-      if (fn.dot(G[id(a, b2)].n) < 0) tri = tri.map(([u, v, w]) => [u, w, v]);
-      for (const t of tri) for (const q of t) { p.push(G[q].p.x, G[q].p.y, G[q].p.z); nn.push(G[q].n.x, G[q].n.y, G[q].n.z); }
-    }
-    const g = new k.THREE.BufferGeometry(); g.setAttribute('position', new k.THREE.Float32BufferAttribute(p, 3)); g.setAttribute('normal', new k.THREE.Float32BufferAttribute(nn, 3));
-    k.add(m, g);
-  }
-  // Flächenstück auf Front/Heck: fn(u, v) → [y, z] (z ≥ 0), beidseitig gespiegelt oder nur eine Seite
-  function face(m, e, fn, { nu = 8, nv = 4, off = 0.004, sides = [1, -1] } = {}) {
-    for (const s of sides) {
-      const G = [];
-      for (let a = 0; a <= nu; a++) for (let b2 = 0; b2 <= nv; b2++) { const [y, z] = fn(a / nu, b2 / nv); G.push(facePt(e, y, s * z, off)); }
-      skin(m, G, nu, nv);
-    }
-  }
-  // Stationen: vorn und hinten dicht, dazwischen alle 2,5 cm; Kanten der Scheiben als eigene Stationen
-  const xs = new Set();
-  for (let x = 0; x < 0.36; x += 0.004 + x * 0.05) xs.add(+x.toFixed(4));
-  for (let x = 0.36; x < 4.93; x += 0.025) xs.add(+x.toFixed(4));
-  for (let x = 4.93; x < L; x += 0.005) xs.add(+x.toFixed(4));
-  [1.1, 1.42, 1.88, 2.42, 2.52, 3.6, 3.68, 4.8, 4.88, L].forEach(x => xs.add(x));
-  const st = [...xs].sort((a, b) => a - b).map(x => ({ x, p: prof(x) }));
-  // Scheiben: vorn klar (Innenraum sichtbar), ab B-Säule Privacy-Glas; Säulen schwarz; Frontscheibe über den Dachpunkten
-  const sideGlass = [[1.42, 2.42, 'glass'], [2.52, 3.6, 'glassDark'], [3.68, 4.88, 'glassDark']];
-  const H1 = k.hull(st, { mat: (i, j, side, c) => {
-    if (j <= 1 || (j <= 3 && (c.x < 0.5 || c.x > 4.75))) return 'underbody';   // vorn und hinten auch die Unterkante der Stoßfänger
-    if (j >= 12 && j <= 15 && c.x > 1.1 && c.x < 4.88) { for (const [a, e, m] of sideGlass) if (c.x > a && c.x < e) return m; return 'trim'; }
-    if (j >= 17 && c.x > 1.1 && c.x < 1.88) return 'glass';
-    return 'paint';
-  } });
-  // ---- Front: großer, aufrechter Kühlergrill (Trapez) mit Chromrahmen und waagrechten Chromlamellen, ohne Stern
-  const gB = 0.55, gT = 0.995, gz = y => 0.53 - (y - gB) / (gT - gB) * 0.085;   // halbe Breite des Grills je Höhe
-  face('grille', -1, (u, v) => { const y = gB + (gT - gB) * u; return [y, gz(y) * v]; }, { nu: 8, nv: 6, off: 0.006 });
-  const fr = 0.03;   // Rahmenbreite
-  face('chrome', -1, (u, v) => [gB + fr * u, (gz(gB) - 0.012) * v], { nu: 1, nv: 8, off: 0.017 });
-  face('chrome', -1, (u, v) => [gT - fr * u, (gz(gT) - 0.012) * v], { nu: 1, nv: 8, off: 0.017 });
-  face('chrome', -1, (u, v) => { const y = gB + (gT - gB) * u, e = gz(y); return [y, e - fr * (1 - v) - 0.013 * (1 - Math.min(1, Math.min(u, 1 - u) * 13)) ** 2]; }, { nu: 14, nv: 1, off: 0.017 });
-  for (let q = 0; q < 6; q++) {
-    const y = gB + 0.058 + q * 0.064;
-    face('chrome', -1, (u, v) => [y + 0.024 * u, (gz(y) - fr) * v], { nu: 1, nv: 8, off: 0.013 });
-    face('trim', -1, (u, v) => [y - 0.006 + 0.006 * u, (gz(y) - fr) * v], { nu: 1, nv: 6, off: 0.01 });
-  }
-  // Große MULTIBEAM-Scheinwerfer: Oberkante an der Haubenfuge, Unterkante steigt nach außen, Innenkante am Grillrahmen;
-  // um die Ecke weit auf den Kotflügel gezogen, hinten spitz; Tagfahrlicht als Lichtband oben, sechs LED-Module
-  const hz0 = 0.458, hz1 = 0.935, hyB = u => 0.835 + 0.06 * u ** 1.3, hyT = u => 0.998 + 0.018 * u;
-  const hzA = (u, y) => { const z0 = gz(Math.min(y, gT)) + 0.016; return z0 + (hz1 - z0) * u; };
-  const hl = (u, v) => { const y = hyB(u) + (hyT(u) - hyB(u)) * v; return [y, hzA(u, y)]; };
-  face('lampHousing', -1, hl, { nu: 16, nv: 4, off: 0.006 });
-  face('drl', -1, (u, v) => { const t = 0.03 + 0.97 * u, y = hyT(t) - 0.024 + 0.012 * v; return [y, hzA(t, y)]; }, { nu: 16, nv: 1, off: 0.011 });
-  face('drl', -1, (u, v) => { const t = 0.02 + 0.3 * u, y = hyB(t) + 0.012 + 0.01 * v; return [y, hzA(t, y)]; }, { nu: 4, nv: 1, off: 0.011 });
-  for (let q = 0; q < 6; q++) { const t = 0.05 + q * 0.09; face('headlight', -1, (u, v) => hl(t + 0.062 * u, 0.3 + 0.3 * v), { nu: 1, nv: 1, off: 0.01 }); }
-  face('chrome', -1, (u, v) => hl(0.6 + 0.32 * u, 0.36 + 0.2 * v), { nu: 4, nv: 1, off: 0.009 });
-  face('lens', -1, hl, { nu: 16, nv: 4, off: 0.015 });
-  // Seitlicher Teil auf dem Kotflügel: Gitter über H1.at, nach außen versetzt
-  const flank = (m, x0, x1, jB, jT, off, nu = 10, nv = 2) => k.both(s => {
-    const G = [];
-    for (let a = 0; a <= nu; a++) for (let b2 = 0; b2 <= nv; b2++) {
-      const u = a / nu, q = H1.at(x0 + (x1 - x0) * u, jB(u) + (jT(u) - jB(u)) * b2 / nv, s); q.p.addScaledVector(q.n, off); G.push(q);
-    }
-    skin(m, G, nu, nv);
-  });
-  const sjT = u => 10 - 0.1 * u, sjB = u => 8.85 + 0.97 * u ** 1.6;
-  flank('lampHousing', 0.34, 0.585, sjB, sjT, 0.006);
-  flank('drl', 0.34, 0.54, u => sjT(u * 0.816) - 0.24, u => sjT(u * 0.816) - 0.12, 0.011, 8, 1);
-  flank('lens', 0.34, 0.585, sjB, sjT, 0.015);
-  // Stoßfänger: Kennzeichen (weiß, ohne Schrift), breiter unterer Lufteinlass mit Chromleiste, seitliche Einlässe
-  face('trim', -1, (u, v) => [0.418 + 0.124 * u, 0.268 * v], { nu: 2, nv: 4, off: 0.006 });
-  face('plate', -1, (u, v) => [0.425 + 0.11 * u, 0.26 * v], { nu: 2, nv: 4, off: 0.01 });
-  face('grille', -1, (u, v) => { const y = 0.272 + 0.12 * u; return [y, (0.6 - 0.08 * u) * v]; }, { nu: 3, nv: 8, off: 0.005 });
-  face('chrome', -1, (u, v) => [0.252 + 0.013 * u, 0.64 * v], { nu: 1, nv: 8, off: 0.008 });
-  // Vorderkante der Motorhaube als Fuge über Grill und Scheinwerfern
-  face('trim', -1, (u, v) => { const z = 0.93 * u; return [hyT(Math.max(0, (z - hz0) / (hz1 - hz0))) + 0.012 + 0.005 * v, z]; }, { nu: 18, nv: 1, off: 0.003 });
-  face('grille', -1, (u, v) => { const y = 0.3 + 0.24 * u; return [y, 0.665 + 0.035 * u + (0.2 - 0.05 * u) * v]; }, { nu: 4, nv: 3, off: 0.005 });
-  for (const y of [0.37, 0.45]) face('chrome', -1, (u, v) => [y + 0.012 * u, 0.67 + 0.035 * (y - 0.3) / 0.24 + (0.19 - 0.05 * (y - 0.3) / 0.24) * v], { nu: 1, nv: 3, off: 0.009 });
-  // ---- Heck: große Heckscheibe (Privacy-Glas) mit schwarzem Rand, Dachspoiler mit dritter Bremsleuchte, Fugen der Heckklappe
-  const gw = y => 0.712 - (y - 1.17) * 0.05;   // halbe Breite der Scheibe je Höhe
-  face('trim', 1, (u, v) => { const y = 1.165 + 0.645 * u; return [y, (gw(y) + 0.012) * v]; }, { nu: 10, nv: 8, off: 0.003 });
-  face('glassDark', 1, (u, v) => { const y = 1.19 + 0.59 * u; return [y, (gw(y) - 0.012) * v]; }, { nu: 10, nv: 8, off: 0.007 });
-  // Dachkantenspoiler als Körper: Profil der Seitenansicht entlang z extrudiert und der Dachwölbung nachgeführt;
-  // schwarze Unterseite, dritte Bremsleuchte an der Hinterkante
-  const roofZ = []; for (let j = 16.6; j < 21.05; j += 0.2) { const q = H1.at(4.9, j, 1).p; roofZ.push([q.z, q.y]); }
-  const drop = z => {
-    const a = Math.abs(z), c = roofZ[roofZ.length - 1][1];
-    for (let q = 0; q < roofZ.length - 1; q++) { const [z0, y0] = roofZ[q], [z1, y1] = roofZ[q + 1]; if (a <= z0 && a >= z1) return c - (y0 + (y1 - y0) * (a - z0) / (z1 - z0 || 1)); }
-    return a > roofZ[0][0] ? c - roofZ[0][1] : 0;
-  };
-  const extr = (m, pts, z0, z1) => {
-    const g = new k.THREE.ExtrudeGeometry(new k.THREE.Shape(pts.map(([x, y]) => new k.THREE.Vector2(x, y))), { depth: z1 - z0, steps: 16, bevelEnabled: false });
-    g.translate(0, 0, z0);
-    const p = g.attributes.position; for (let q = 0; q < p.count; q++) p.setY(q, p.getY(q) - drop(p.getZ(q)));
-    g.computeVertexNormals(); k.add(m, g);
-  };
-  const spTop = [[4.84, 1.886], [4.88, 1.8895], [4.92, 1.892], [4.96, 1.8935], [5.0, 1.893], [5.025, 1.8905], [5.038, 1.886], [5.045, 1.879], [5.046, 1.872]];
-  const spBot = [[5.043, 1.866], [5.03, 1.861], [5.0, 1.855], [4.975, 1.852], [4.95, 1.858], [4.9, 1.872], [4.84, 1.878]];
-  extr('paint', [...spTop, ...spBot], -0.71, 0.71);
-  const lip = spBot.slice(0, 4);
-  extr('trim', [...lip.map(([x, y]) => [x, y + 0.002]), ...lip.slice().reverse().map(([x, y]) => [x, y - 0.004])], -0.7, 0.7);
-  k.box('taillight', 5.04, 5.049, 1.869, 1.876, -0.22, 0.22);
-  face('trim', 1, (u, v) => [0.8 + 1.018 * u, 0.742 + 0.006 * v], { nu: 12, nv: 1, off: 0.002 });
-  face('trim', 1, (u, v) => [0.775 + 0.006 * u, 0.745 * v], { nu: 1, nv: 8, off: 0.002 });
-  // Senkrechte Rückleuchten in den D-Säulen: rauchrotes Gehäuse mit Chromrand, zwei Lichtleiter mit Bögen, Blinker, Rückfahrlicht
-  const tz0 = 0.755, tz1 = 0.948, ty0 = 0.855, ty1 = 1.34;
-  const tl = (u, v) => [ty0 + (ty1 - ty0) * u, tz0 + (tz1 - tz0) * v];
-  face('lampHousing', 1, (u, v) => tl(-0.015 + 1.03 * u, -0.03 + 1.03 * v), { nu: 10, nv: 6, off: 0.003 });
-  face('taillightDark', 1, tl, { nu: 10, nv: 6, off: 0.006 });
-  // Rauchglas dominiert; zwei schmale senkrechte Lichtleiter, oben mit einem Bogen verbunden; Blinker und Rückfahrlicht als Streifen
-  const gA = tz0 + 0.035, gB2 = tz1 - 0.04, gm = (gA + gB2) / 2, grz = (gB2 - gA) / 2, gyA = ty1 - 0.095, gry = 0.045;
-  for (const zc of [gA, gB2]) face('taillight', 1, (u, v) => [ty0 + 0.17 + (gyA - ty0 - 0.17) * u, zc - 0.005 + 0.01 * v], { nu: 6, nv: 1, off: 0.01 });
-  face('taillight', 1, (u, v) => { const a = Math.PI * u, d = 0.01 * (v - 0.5); return [gyA + (gry + d) * Math.sin(a), gm + (grz + d) * Math.cos(a)]; }, { nu: 10, nv: 1, off: 0.01 });
-  face('indicator', 1, (u, v) => [ty0 + 0.06 + 0.025 * u, tz0 + 0.02 + (tz1 - tz0 - 0.04) * v], { nu: 1, nv: 4, off: 0.009 });
-  face('headlight', 1, (u, v) => [ty0 + 0.11 + 0.025 * u, tz0 + 0.02 + (tz1 - tz0 - 0.04) * v], { nu: 1, nv: 4, off: 0.009 });
-  // Kennzeichen mit Rahmen, Chromleiste mit Griff darüber
-  face('trim', 1, (u, v) => [0.858 + 0.124 * u, 0.268 * v], { nu: 2, nv: 4, off: 0.005 });
-  face('plate', 1, (u, v) => [0.865 + 0.11 * u, 0.26 * v], { nu: 2, nv: 4, off: 0.009 });
-  face('chrome', 1, (u, v) => [1.03 + 0.03 * u, 0.42 * v], { nu: 1, nv: 8, off: 0.009 });
-  // Heckstoßfänger: schwarze Ladekantenschutzleiste mit Rippen, schwarzer Diffusor unten, Rückstrahler
-  k.box('trimMatte', 5.088, 5.134, 0.733, 0.745, -0.66, 0.66);
-  for (let q = 0; q < 6; q++) k.box('trim', 5.094 + q * 0.0065, 5.097 + q * 0.0065, 0.745, 0.748, -0.64, 0.64);
-  // Diffusor nur auf der senkrechten Heckfläche (darunter rundet die Unterseite), dazu ein eigener Körper unter dem Stoßfänger
-  face('trimMatte', 1, (u, v) => [0.37 + 0.06 * u, 0.72 * v], { nu: 2, nv: 10, off: 0.004 });
-  k.box('trimMatte', 5.05, 5.115, 0.282, 0.34, -0.48, 0.48);
-  face('chrome', 1, (u, v) => [0.435 + 0.01 * u, 0.62 * v], { nu: 1, nv: 8, off: 0.007 });
-  face('taillightDark', 1, (u, v) => [0.46 + 0.03 * u, 0.7 + 0.16 * v], { nu: 1, nv: 2, off: 0.006 });
-  // Heckwischer auf der Scheibe
-  face('trim', 1, (u, v) => [1.225 + 0.08 * u - 0.008 + 0.016 * v, 0.03 + 0.5 * u], { nu: 6, nv: 1, off: 0.022, sides: [-1] });
-  k.cyl('trim', 'x', 5.03, 5.065, 1.215, 0.0, 0.025, 0.02, 12);
-  // Endrohr links unter dem Stoßfänger
-  k.cyl('chrome', 'x', 4.98, 5.11, 0.245, -0.52, 0.034, 0.034, 16, true); k.cyl('trimMatte', 'x', 4.98, 5.105, 0.245, -0.52, 0.03, 0.03, 16);
-  // ---- Flanke: Chromleiste an der Fensterunterkante, Führungsschiene der Schiebetür, Fugen, Griffe, Schwellerleiste
-  k.lineJ('chrome', H1, 1.42, 4.87, 12, { dj: 0.16, off: 0.004 });
-  // Scheibenecken: D-Säule schräg mit stark gerundeter oberer Ecke (Lack), obere Ecken an B- und C-Säule gerundet (schwarz).
-  // Masken zwischen Scheibenkante und Ecke als waagrechte Streifen auf der Fläche (Seitenscheibe j 12–16 = Gürtel bis Oberkante)
-  const jW = (x, y) => 12 + 4 * (y - belt(x)) / (yA(x) - belt(x));
-  const mask = (m, pts, x1, off = 0.002, nv = 2) => k.both(s => {
-    const G = [];
-    for (const [x0, y] of pts) for (let b2 = 0; b2 <= nv; b2++) { const x = x0 + (x1 - x0) * b2 / nv, q = H1.at(x, jW(x, y), s); q.p.addScaledVector(q.n, off); G.push(q); }
-    skin(m, G, pts.length - 1, nv);
-  });
-  const arcPts = (cx, cy, r, a0, a1, n = 8) => Array.from({ length: n + 1 }, (_, q) => { const a = a0 + (a1 - a0) * q / n; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
-  {
-    const R = 0.13, P = [4.77, 1.8], B0 = [4.87, belt(4.87)], l = Math.hypot(B0[0] - P[0], B0[1] - P[1]), d1 = [(B0[0] - P[0]) / l, (B0[1] - P[1]) / l];
-    const th = Math.acos(-d1[0]), t = R / Math.tan(th / 2), bl = Math.hypot(d1[0] - 1, d1[1]), cd = R / Math.sin(th / 2);
-    const T1 = [P[0] + d1[0] * t, P[1] + d1[1] * t], C = [P[0] + (d1[0] - 1) / bl * cd, P[1] + d1[1] / bl * cd];
-    const line = [0, 1, 2, 3].map(q => [B0[0] + (T1[0] - B0[0]) * q / 3, B0[1] + (T1[1] - B0[1]) * q / 3]);
-    mask('paint', [...line, ...arcPts(C[0], C[1], R, Math.atan2(T1[1] - C[1], T1[0] - C[0]), Math.PI / 2, 8).slice(1)], 4.885);
-  }
-  const rc = 0.045;
-  for (const xc of [2.42, 3.6]) mask('trim', arcPts(xc - rc, 1.8 - rc, rc, 0, Math.PI / 2, 6), xc + 0.002);
-  for (const xc of [2.52, 3.68]) mask('trim', arcPts(xc + rc, 1.8 - rc, rc, Math.PI, Math.PI / 2, 6), xc - 0.002);
-  k.lineJ('trim', H1, 3.66, 4.86, 9.85, { dj: 0.2, off: 0.004 });
-  k.lineJ('chrome', H1, 1.45, 3.62, 3.6, { dj: 0.3, off: 0.003 });
-  for (const x of [1.4, 2.465, 2.535, 3.645]) k.lineX('trim', H1, x, 3.1, 12, { w: 0.006 });
-  k.lineJ('trim', H1, 0.3, 1.07, 16.3, { dj: 0.08, off: 0.002 });   // Haubenfugen
-  k.both(s => {
-    for (const x of [2.24, 2.71]) {
-      const q = H1.at(x, 10.4, s);
-      k.box('paint', x - 0.085, x + 0.085, q.p.y - 0.016, q.p.y + 0.016, s > 0 ? q.p.z - 0.004 : q.p.z - 0.018, s > 0 ? q.p.z + 0.018 : q.p.z + 0.004);
-      k.box('chrome', x - 0.08, x + 0.08, q.p.y + 0.01, q.p.y + 0.015, s > 0 ? q.p.z : q.p.z - 0.021, s > 0 ? q.p.z + 0.021 : q.p.z);
-    }
-    // Außenspiegel am Türeck: Gehäuse als Loft (hinten abgerundetes Rechteck mit fallender Oberkante, nach vorn zur runden
-    // Nase eingezogen), Spiegelglas mit schwarzem Rand hinten, Blinker als Band unten außen, schwarzer Fuß
-    const mz = 1.055, my = 1.35, mhz = 0.085, mhy = 0.088, mx0 = 1.525, mx1 = 1.645, NU = 7, NV = 24, e = 2 / 4.5;
-    const ring = (t, sc) => {
-      const zr = Math.sign(Math.cos(t)) * Math.abs(Math.cos(t)) ** e, yr = Math.sign(Math.sin(t)) * Math.abs(Math.sin(t)) ** e;
-      return [s * (mz + mhz * sc * zr), my + sc * (mhy * yr - (yr > 0 ? 0.012 * zr * yr : 0))];
-    };
-    const MP = [];
-    for (let a = 0; a <= NU; a++) {
-      const ph = Math.PI / 2 * (0.04 + 0.96 * a / NU), x = mx1 - (mx1 - mx0) * Math.cos(ph), sc = Math.sin(ph) ** 0.55;
-      MP.push(Array.from({ length: NV + 1 }, (_, b2) => { const [z, y] = ring(2 * Math.PI * b2 / NV, sc); return V3(x, y, z); }));
-    }
-    const MG = [];
-    for (let a = 0; a <= NU; a++) for (let b2 = 0; b2 <= NV; b2++) {
-      const ta = MP[Math.min(NU, a + 1)][b2].clone().sub(MP[Math.max(0, a - 1)][b2]), tb = MP[a][(b2 + 1) % NV].clone().sub(MP[a][(b2 + NV - 1) % NV]);
-      const n = ta.cross(tb).normalize(); if (n.dot(MP[a][b2].clone().sub(V3(mx1, my, s * mz))) < 0) n.negate();
-      MG.push({ p: MP[a][b2], n });
-    }
-    skin('paint', MG, NU, NV);
-    const MI = []; for (let a = 2; a <= 5; a++) for (let b2 = 19; b2 <= 23; b2++) { const q = MG[a * (NV + 1) + b2]; MI.push({ p: q.p.clone().addScaledVector(q.n, 0.0015), n: q.n }); }
-    skin('indicator', MI, 3, 4);
-    const outl = sc => Array.from({ length: NV }, (_, b2) => ring(2 * Math.PI * b2 / NV, sc));
-    k.shape('trim', 'zy', outl(1), mx1 - 0.004, 0.006);
-    k.shape('glassDark', 'zy', outl(0.9), mx1 + 0.001, 0.0025);
-    k.box('trim', 1.56, 1.63, 1.25, 1.3, s > 0 ? 0.905 : -0.99, s > 0 ? 0.99 : -0.905);
-    k.box('trim', 1.12, 1.42, belt(1.3) - 0.004, belt(1.3) + 0.012, s > 0 ? 0.9 : -0.935, s > 0 ? 0.935 : -0.9);
-  });
-  // Windlauf schwarz, Scheibenwischer, Haifischflosse
-  k.patch('trimMatte', H1, 1.045, 1.1, 15.5, 21, { nx: 3, nj: 8, off: 0.003 });
-  for (const s of [1, -1]) k.patch('trim', H1, 1.115, 1.13, s > 0 ? 17.6 : 18.2, 20.9, { side: s, nx: 1, nj: 6, off: 0.014 });
-  k.shape('trim', 'xy', [[4.52, 1.888], [4.74, 1.888], [4.735, 1.905], [4.68, 1.935], [4.64, 1.937]], -0.035, 0.07, { bevel: 0.006 });
-  // ---- Innenraum (durch die Scheiben sichtbar): Boden, Armaturenbrett, Lenkrad, Mittelkonsole, Sitze in drei Reihen
-  k.box('carpet', 1.34, 3.7, 0.42, 0.45, -0.86, 0.86); k.box('carpet', 3.7, 4.92, 0.76, 0.79, -0.86, 0.86);
-  // Innenverkleidung (doppelseitig): der einseitige Lack ist von innen unsichtbar, sonst sähe man durch die Gegenseite hindurch
-  k.both(s => {
-    const zz = (a, b2) => [Math.min(s * a, s * b2), Math.max(s * a, s * b2)];
-    k.box('interior', 1.32, 3.7, 0.45, 1.205, ...zz(0.885, 0.905));   // Türen
-    k.box('interior', 3.7, 4.95, 0.8, 1.26, ...zz(0.885, 0.905));     // Seitenwand über dem Radhaus
-    for (const [x0, x1] of [[2.42, 2.52], [3.6, 3.68], [4.86, 4.92]]) k.box('interior', x0, x1, 1.2, 1.75, ...zz(0.79, 0.81));   // B-, C-, D-Säule
-  });
-  k.box('interiorLight', 1.95, 4.93, 1.8, 1.82, -0.8, 0.8);   // Dachhimmel
-  k.box('interior', 5.03, 5.045, 0.8, 1.16, -0.72, 0.72);      // Heckklappe innen
-  k.box('interior', 1.12, 1.58, 0.82, 1.13, -0.86, 0.86);
-  // Kombiinstrument, Lenkrad und Lenksäule auf der Fahrerseite links (+z), wie bei Ferrari und Cayenne
-  k.box('interior', 1.4, 1.56, 1.13, 1.2, 0.18, 0.62);
-  k.box('interiorLight', 1.15, 1.45, 1.12, 1.135, -0.8, 0.8);
-  k.box('interior', 1.6, 2.2, 0.45, 0.74, -0.13, 0.13);
-  const sw = new k.THREE.TorusGeometry(0.19, 0.02, 8, 30); sw.rotateY(Math.PI / 2); sw.rotateZ(0.55); sw.translate(1.7, 1.13, 0.43); k.add('interior', sw);
-  k.cyl('interior', 'x', 1.5, 1.7, 1.06, 0.43, 0.03, 0.03, 10);
-  // Sitz: Kissen, Lehne, Kopfstütze, Sockel; y0 = Boden (dritte Reihe auf erhöhtem Boden über der Hinterachse)
-  const seat = (x0, zc, wz, y0 = 0.45) => {
-    k.box('interiorLight', x0, x0 + 0.5, y0 + 0.1, y0 + 0.23, zc - wz, zc + wz);
-    k.box('interiorLight', x0 + 0.44, x0 + 0.56, y0 + 0.21, y0 + 0.86, zc - wz, zc + wz);
-    k.box('interior', x0 + 0.46, x0 + 0.54, y0 + 0.88, y0 + 1.04, zc - wz * 0.55, zc + wz * 0.55);
-    k.box('interior', x0 + 0.05, x0 + 0.45, y0, y0 + 0.1, zc - wz * 0.8, zc + wz * 0.8);
-  };
-  for (const zc of [-0.43, 0.43]) { seat(1.85, zc, 0.26); seat(2.95, zc, 0.27); }
-  seat(3.9, 0, 0.8, 0.79);
-  // Unterboden: Achsen und Tank verdecken den Durchblick unter dem Wagen
-  k.box('underbody', 0.45, 1.3, 0.2, 0.5, -0.62, 0.62);
-  k.box('underbody', 3.7, 4.5, 0.22, 0.5, -0.66, 0.66);
-  k.box('underbody', 1.9, 3.4, 0.19, 0.3, -0.5, 0.5);
-  // Räder 245/45 R19 mit Vielspeichenfelgen, Sättel silbern; Radhäuser
-  for (const x of [xa, xb]) {
-    k.arch(x, r, 0.95, { ra: 0.392 });
-    k.both(s => k.wheel({ x, r, w: 0.245, zc: s * 0.833, rimR: 0.243, style: 'multi', rim: 'rim', cal: 'calSilver', dish: 0.045 }));
-  }
-};
 
 // Teil 1 des 3D-Modells: build.py setzt alle Dateien in src/view3d/ nach Namen sortiert zu einem Block zusammen (ein gemeinsamer
 // Gültigkeitsbereich). Hier Zustand, Hilfsfunktionen (addGeo, boxPlan, extrude, wallWithHoles …) und alle Materialien M für die anderen Teile.
@@ -3231,6 +2325,16 @@ const View3D = (() => {
       g.fillStyle = 'rgba(120,112,100,0.75)';
       for (let i = 0; i <= n; i++) { g.fillRect(i * c - 1, 0, 2, w); g.fillRect(0, i * c - 1, w, 2); }
     });
+    // Gym: Sportboden aus Gummifliesen 1 × 1 m, anthrazit mit feiner heller und blauer Einstreuung (Kachel 2,00 m)
+    const tGym = canvasTex(512, 512, (g, w) => {
+      const n = 2, c = w / n;
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        g.fillStyle = `hsl(210, 4%, ${21 + rq() * 2}%)`; g.fillRect(i * c, j * c, c, c);
+        for (let k = 0; k < 2200; k++) { g.fillStyle = rq() < 0.82 ? 'rgba(150,150,150,0.35)' : 'rgba(70,120,160,0.45)'; g.fillRect(i * c + rq() * c, j * c + rq() * c, 1.6, 1.6); }
+      }
+      g.fillStyle = 'rgba(10,10,10,0.8)';
+      for (let i = 0; i <= n; i++) { g.fillRect(i * c - 1, 0, 2, w); g.fillRect(0, i * c - 1, w, 2); }
+    });
     // Halle: heller Kalkstein 80 × 80 cm mit kleinen dunklen Cabochons an den Ecken (Kachel 3,20 m)
     const tHall = canvasTex(512, 512, (g, w) => {
       const n = 4, c = w / n;
@@ -3270,7 +2374,7 @@ const View3D = (() => {
       glass: glass(), lamp: std(0x1c1c1c, 0.4, 0.2, { emissive: 0xffd49c, emissiveIntensity: 0 }),
       slab: std(0xb9b2a4, 0.9), beton: std(0xb7b3ab, 0.92),
       inWall: std(0xebe7df, 0.95, 0, { emissive: 0xffd6a6, emissiveIntensity: 0 }), floorOak: std(0xffffff, 0.55, 0, { map: tOak, emissive: 0xffc98a, emissiveIntensity: 0 }),
-      floorTile: std(0xffffff, 0.32, 0, { map: tTile }), floorHall: std(0xffffff, 0.26, 0, { map: tHall }), stairMat: std(0xe9e3d7, 0.4),
+      floorTile: std(0xffffff, 0.32, 0, { map: tTile }), floorHall: std(0xffffff, 0.26, 0, { map: tHall }), floorGym: std(0xffffff, 0.85, 0, { map: tGym }), stairMat: std(0xe9e3d7, 0.4),
       tor: std(0x3b3e42, 0.5, 0.4), door: std(0x1e2226, 0.35, 0.25),
       rampe: std(0xa5a198, 0.92, 0, { side: THREE.DoubleSide }), phInnen: std(0x655d52, 0.9),
       stone: std(0xffffff, 0.75, 0, { map: tSlab }), deck: std(0xffffff, 0.75, 0, { map: tDeck }), kuebel: std(0x3a3d41, 0.6, 0.05), pave: std(0xffffff, 0.9, 0, { map: pave }), lawn: std(0xffffff, 1, 0, { map: grass }),
@@ -3331,10 +2435,10 @@ const View3D = (() => {
       if (k === 'fShade') m.userData.glow = 6; else if (k === 'fFire') m.userData.glow = 9; else m.emissive.copy(m.color).multiply(warm);
       glowMats.push(m);
     }
-    for (const k of ['putz', 'putzRust', 'putzHell', 'putzDS', 'sockel', 'roof', 'zink', 'zinkDS', 'door', 'frame', 'metal', 'glass', 'lamp', 'slab', 'inWall', 'floorOak', 'floorTile', 'floorHall', 'stairMat', 'curtain', ...Object.keys(furn)]) {
+    for (const k of ['putz', 'putzRust', 'putzHell', 'putzDS', 'sockel', 'roof', 'zink', 'zinkDS', 'door', 'frame', 'metal', 'glass', 'lamp', 'slab', 'inWall', 'floorOak', 'floorTile', 'floorHall', 'floorGym', 'stairMat', 'curtain', ...Object.keys(furn)]) {
       houseMats.add(M[k]); M[k].clipShadows = true;
     }
-    M.floorOak.userData.worldUV = 2.4; M.floorTile.userData.worldUV = 2.4; M.floorHall.userData.worldUV = 3.2; M.stone.userData.worldUV = 3.6; M.tgStone.userData.worldUV = 3.2;
+    M.floorOak.userData.worldUV = 2.4; M.floorTile.userData.worldUV = 2.4; M.floorHall.userData.worldUV = 3.2; M.floorGym.userData.worldUV = 2.0; M.stone.userData.worldUV = 3.6; M.tgStone.userData.worldUV = 3.2;
     if (typeof CarKit !== 'undefined') carMats = CarKit.materials(THREE);
     for (const m of [M.inWall, M.floorOak, M.floorTile, M.floorHall, M.stairMat, M.curtain, ...Object.values(furn)]) if (m !== M.fMirror) m.envMapIntensity = 0.55;
     // Stein und Außenmöbel: nur der Geschossschnitt erfasst sie (Balkone und Dachterrasse über der Schnitthöhe)
@@ -3623,10 +2727,10 @@ const View3D = (() => {
     const roof = new THREE.Mesh(roofGeometry(), M.roof); roof.castShadow = roof.receiveShadow = true; g.add(roof);
     const r1 = HOUSE.run1 + HOUSE.run2;
     boxPlan(M.zink, r1 - 0.05, HOUSE.W - r1 + 0.05, -HOUSE.D / 2 - 0.08, -HOUSE.D / 2 + 0.08, Zh.first - 0.03, Zh.first + 0.05);
-    // Decken mit Öffnungen für Treppe und Aufzug; im OG zusätzlich der Luftraum über der Halle (alles zu einer Öffnung zusammengefasst)
-    const { STAIR, LIFT, VOID } = Plans.CORE, rp = ([a, b, c, e]) => [[a, c], [b, c], [b, e], [a, e]];
-    const V = VOID[0], hallHole = [[LIFT[0], LIFT[2]], [V[1], LIFT[2]], [V[1], STAIR[2]], [STAIR[1], STAIR[2]], [STAIR[1], STAIR[3]], [V[0], STAIR[3]], [V[0], LIFT[3]], [LIFT[0], LIFT[3]]];
-    for (const [z0, z1, holes] of [[-0.15, Zh.ffbEG, [rp(STAIR), rp(LIFT)]], [Zh.gurtU, Zh.ffbOG, [hallHole]], [Zh.deckeDG, Zh.ffbDG, [rp(STAIR), rp(LIFT)]]]) {
+    // Decken mit Öffnungen über den Treppenläufen und am Aufzug; im OG der Luftraum über der Halle zusammen mit der Öffnung der Haupttreppe
+    const { HOLES, LIFT, VOID } = Plans.CORE, rp = ([a, b, c, e]) => [[a, c], [b, c], [b, e], [a, e]];
+    const V = VOID[0], H = HOLES.OG, hall = [[V[0], V[3]], [V[1], V[3]], [V[1], V[2]], [H[1], V[2]], [H[1], H[2]], [H[0], H[2]], [H[0], H[3]], [V[0], H[3]]];
+    for (const [z0, z1, holes] of [[-0.15, Zh.ffbEG, [rp(HOLES.EG), rp(LIFT)]], [Zh.gurtU, Zh.ffbOG, [hall, rp(LIFT)]], [Zh.deckeDG, Zh.ffbDG, [rp(HOLES.DG), rp(LIFT)]]]) {
       const sl = extrude([[0.3, -11.35], [15.7, -11.35], [15.7, -0.3], [0.3, -0.3]], M.slab, z0, z1 - z0, holes); sl.castShadow = false; g.add(sl);
     }
     buildInterior();
@@ -3694,8 +2798,8 @@ const View3D = (() => {
   function buildInterior() {
     const lv = { UG: [Zh.ffbUG, -0.15], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
     // Fliesen in Bädern, Küche und Nebenräumen, Kalkstein in Halle und Garderobe, sonst Eichendielen
-    const nass = /bad|wc|dusche|küche|backkitchen|speis|abstell|schleuse|lager|technik|waschen|vorraum/i, halle = /halle|garderobe|foyer/i;
-    const W = HOUSE.W, D = HOUSE.D, roofIn = HOUSE.roofIn, { STAIR, LIFT, VOID } = Plans.CORE;
+    const nass = /bad|wc|dusche|küche|backkitchen|speis|abstell|schleuse|lager|technik|waschen|vorraum/i, halle = /halle|garderobe|foyer/i, gym = /gym/i;
+    const W = HOUSE.W, D = HOUSE.D, roofIn = HOUSE.roofIn, { LINE, HOLES, LIFT, VOID } = Plans.CORE;
     const uniq = a => [...new Set(a.map(v => +v.toFixed(3)))].sort((p, q) => p - q);
     // Rechteck ohne Öffnungen (Treppe, Aufzug, Luftraum) als Liste von Teilrechtecken
     const minus = (r, hs) => {
@@ -3707,13 +2811,28 @@ const View3D = (() => {
       }
       return out;
     };
-    const openings = { UG: [LIFT], EG: [STAIR, LIFT], OG: [STAIR, LIFT, ...VOID], DG: [STAIR, LIFT] };
+    const openings = { UG: [LIFT], EG: [HOLES.EG, LIFT], OG: [HOLES.OG, LIFT, ...VOID], DG: [HOLES.DG, LIFT] };
     const doorRect = d => d.o === 'v' ? [d.x - 0.2, d.x + 0.2, d.y, d.y + d.w] : [d.x, d.x + d.w, d.y - 0.2, d.y + 0.2];
     // Außenwände des Untergeschosses (unter Gelände), mit der Tür zur Tiefgarage in der Südwand
-    const t0 = HOUSE.wall, ug = [[0, W, -D, -D + t0, HOUSE.tg.schleuse.hausTuer], [0, W, -t0, 0], [0, t0, -D + t0, -t0], [W - t0, W, -D + t0, -t0]];
+    const t0 = HOUSE.wall, ug = [[0, W, -D, -D + t0, HOUSE.tg.schleuse.hausTuer], [0, W, -t0, 0], [W - t0, W, -D + t0, -t0]];
     for (const [a, b, c, e, gap] of ug) {
       const segs = gap ? [[a, gap[0]], [gap[1], b]] : [[a, b]];
       for (const [p, q] of segs) { boxPlan(M.inWall, p, q, c, e, Zh.ffbUG - 0.3, -0.15); wallRects.push({ fl: 'UG', r: [p, q, c, e], top: -0.15 }); }
+    }
+    // Westwand des UG mit den Fenstern zum Lichthof vor dem Gym: bis zum Boden, schwarze Rahmen mit Mittelsprosse, darüber ein Sturz
+    {
+      const LH = HOUSE.lichthof, wy = LH.win.map(([a, b]) => [-b, -a]).sort((p, q) => p[0] - q[0]), zt = -0.62;
+      let y = -D + t0;
+      for (const [a, b] of [...wy, [-t0, -t0]]) {
+        if (a > y) { boxPlan(M.inWall, 0, t0, y, a, Zh.ffbUG - 0.3, -0.15); wallRects.push({ fl: 'UG', r: [0, t0, y, a], top: -0.15 }); }
+        if (b > a) {
+          boxPlan(M.inWall, 0, t0, a, b, zt, -0.15);
+          for (const [p, q, z0, z1] of [[a, a + 0.07, Zh.ffbUG, zt], [b - 0.07, b, Zh.ffbUG, zt], [a, b, zt - 0.07, zt], [a, b, Zh.ffbUG, Zh.ffbUG + 0.07], [(a + b) / 2 - 0.035, (a + b) / 2 + 0.035, Zh.ffbUG, zt]])
+            boxPlan(M.frame, 0.1, 0.18, p, q, z0, z1);
+          boxPlan(M.glass, 0.13, 0.15, a + 0.05, b - 0.05, Zh.ffbUG + 0.05, zt - 0.05);
+        }
+        y = Math.max(y, b);
+      }
     }
     // Sturz über der Tür von der Tiefgarage ins Foyer (die Flügel enden bei 2,28 m)
     { const [ta, tb] = HOUSE.tg.schleuse.hausTuer; boxPlan(M.inWall, ta, tb, -D, -D + t0, Zh.ffbUG + 2.3, -0.15); }
@@ -3722,8 +2841,9 @@ const View3D = (() => {
     for (const [y0, y1] of [[-D + 0.12, -D + 0.36], [-0.36, -0.12]]) boxPlan(M.floorOak, 4.45, 11.55, y0, y1, Zh.ffbDG - 0.11, Zh.ffbDG + 0.005);
     for (const fl of ['UG', 'EG', 'OG', 'DG']) {
       const F = Plans.FL[fl], [z0, z1] = lv[fl];
-      for (const rm of F.rooms) for (const rr of [rm.r, ...(rm.ext || [])]) for (const q of minus(rr, openings[fl])) boxPlan(nass.test(rm.n) ? M.floorTile : halle.test(rm.n) ? M.floorHall : M.floorOak, q[0], q[1], q[2], q[3], z0 - 0.02, z0 + 0.005);
-      const free = [...F.rooms.flatMap(r => [r.r, ...(r.ext || [])]), ...(F.open || []), ...F.doors.map(doorRect)];
+      for (const rm of F.rooms) for (const rr of [rm.r, ...(rm.ext || [])]) for (const q of minus(rr, openings[fl])) boxPlan(nass.test(rm.n) ? M.floorTile : halle.test(rm.n) ? M.floorHall : gym.test(rm.n) ? M.floorGym : M.floorOak, q[0], q[1], q[2], q[3], z0 - 0.02, z0 + 0.005);
+      // frei bleiben Räume, Durchgänge, Türen und der Aufzugsschacht (seine Wände kommen eigens)
+      const free = [...F.rooms.flatMap(r => [r.r, ...(r.ext || [])]), ...(F.open || []), ...F.doors.map(doorRect), LIFT];
       const xs = uniq([0.36, 15.64, ...free.flatMap(r => [r[0], r[1]])]).filter(v => v >= 0.36 && v <= 15.64);
       const ys = uniq([-11.29, -0.36, ...free.flatMap(r => [r[2], r[3]])]).filter(v => v >= -11.29 && v <= -0.36);
       for (let j = 0; j < ys.length - 1; j++) {
@@ -3747,22 +2867,23 @@ const View3D = (() => {
       }
     }
     buildStair();
-    // Aufzug unauffällig im Wandblock neben der Halle: geschlossener Schacht, Türen wandbündig in Wandfarbe mit feiner Schattenfuge
-    // und kleinem Rufknopf, so dass sie kaum auffallen
-    const [lx0, lx1, ly0, ly1] = LIFT, lc = (lx0 + lx1) / 2;
+    // Aufzug unauffällig im Wandblock am Treppenpodest: geschlossener Schacht, Türen nach Osten wandbündig in Wandfarbe mit feiner
+    // Schattenfuge und kleinem Rufknopf, so dass sie kaum auffallen
+    const [lx0, lx1, ly0, ly1] = LIFT, ld = -4.2;
     for (const r of [[lx0, lx0 + 0.2, ly0, ly1], [lx1 - 0.2, lx1, ly0, ly1], [lx0, lx1, ly0, ly0 + 0.2], [lx0, lx1, ly1 - 0.2, ly1]]) {
       boxPlan(M.inWall, r[0], r[1], r[2], r[3], Zh.ffbUG, 9.6);
       for (const fl of ['UG', 'EG', 'OG', 'DG']) wallRects.push({ fl, r, top: 9.6 });
     }
     for (const zf of [Zh.ffbUG, Zh.ffbEG, Zh.ffbOG, Zh.ffbDG]) {
-      for (const [x0, x1, z0, z1] of [[lc - 0.47, lc - 0.462, zf, zf + 2.12], [lc + 0.462, lc + 0.47, zf, zf + 2.12], [lc - 0.47, lc + 0.47, zf + 2.112, zf + 2.12], [lc - 0.004, lc + 0.004, zf, zf + 2.12]])
-        boxPlan(M.frame, x0, x1, ly0 - 0.004, ly0, z0, z1);
-      boxPlan(M.metal, lc + 0.62, lc + 0.68, ly0 - 0.01, ly0, zf + 1.02, zf + 1.16);
+      for (const [y0, y1, z0, z1] of [[ld - 0.47, ld - 0.462, zf, zf + 2.12], [ld + 0.462, ld + 0.47, zf, zf + 2.12], [ld - 0.47, ld + 0.47, zf + 2.112, zf + 2.12], [ld - 0.004, ld + 0.004, zf, zf + 2.12]])
+        boxPlan(M.frame, lx1, lx1 + 0.004, y0, y1, z0, z1);
+      boxPlan(M.metal, lx1, lx1 + 0.01, ld + 0.62, ld + 0.68, zf + 1.02, zf + 1.16);
     }
-    // Galerie im OG: schwarzes Geländer an der Kante des Luftraums
-    railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -VOID[0][2] + 0.04), VOID[0][0] + 0.02, VOID[0][1] - 0.02, Zh.ffbOG, Zh.ffbOG + 1.0, 0);
-    // Kronleuchter im Luftraum: Stange vom DG-Boden, zwei Ringe mit Lichtschirmen (leuchten abends)
-    const cx = (VOID[0][0] + VOID[0][1]) / 2, cy = -1.9;
+    // OG: schwarzes Geländer am Luftraum neben dem Antritt der Dachtreppe; DG: Geländer an der Öffnung über der Dachtreppe
+    railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -LINE[3] + 0.04), Plans.CORE.FLIGHTS.OG.x0 + 0.02, VOID[0][1] - 0.02, Zh.ffbOG, Zh.ffbOG + 1.0, 0);
+    railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(HOLES.DG[1] + 0.04, 0, 0)), LINE[2] + 0.02, LINE[3] - 0.02, Zh.ffbDG, Zh.ffbDG + 1.0, 0);
+    // Kronleuchter im Luftraum über der Eingangsachse: Stange vom DG-Boden, zwei Ringe mit Lichtschirmen (leuchten abends)
+    const cx = 8.0, cy = (VOID[0][2] + VOID[0][3]) / 2;
     addCyl(M.metal, cx, cy, Zh.deckeDG - 0.06, Zh.deckeDG, 0.11, 0.11, 18); addCyl(M.metal, cx, cy, 5.0, Zh.deckeDG - 0.06, 0.012, 0.012, 8);
     addCyl(M.metal, cx, cy, 4.42, 5.0, 0.035, 0.035, 12); addCyl(M.metal, cx, cy, 4.34, 4.42, 0.07, 0.02, 12);
     for (const [zr, rr, nn] of [[4.62, 0.62, 10], [4.95, 0.4, 6]]) {
@@ -3774,47 +2895,38 @@ const View3D = (() => {
     }
     buildFurniture();
   }
-  // Treppe: zweiläufig mit Halbpodest. Massive weiße Läufe mit glatter Untersicht und Stufen aus hellem Naturstein, durchgehende
-  // Mittelwand, geschlossene Brüstung mit Steinabdeckung und Pfosten zur Halle hin; im EG eine breite, gerundete Antrittsstufe.
+  // Treppen: drei gerade Läufe in der Treppenbahn an der Rückwand der Halle, je ein Geschoss, alle nach Westen steigend und genau
+  // übereinander. Weiße Läufe mit Stufen aus hellem Naturstein; zur Halle hin eine geschlossene Brüstung mit Steinabdeckung, die im EG
+  // bis zum Boden reicht (dahinter liegt die Kellertreppe), mit Pfosten am Antritt und im EG einer breiten, gerundeten Antrittsstufe.
   function buildStair() {
-    const prism = (mat, pts, xa, xb) => {
-      const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([y, z]) => v2(y, z))), { depth: xb - xa, bevelEnabled: false });
-      addGeo(mat, g, new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 0, 0)).setPosition(xa, 0, 0));
+    const { LINE, FLIGHTS } = Plans.CORE, ly0 = LINE[2], ly1 = LINE[3], h = 0.92, t = 0.13;
+    // Prisma aus einem Längsschnitt (Punkte [x, z]) über die Breite y0 … y1 der Bahn
+    const prism = (mat, pts, y0, y1) => {
+      const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, z]) => v2(x, z))), { depth: y1 - y0, bevelEnabled: false });
+      addGeo(mat, g, new THREE.Matrix4().makeTranslation(0, 0, -y1));
     };
-    let top = null;
     for (const fl of ['UG', 'EG', 'OG']) {
-      const F = Plans.stairFlights(fl), { x0, x1, y0, y1, yl, fw, za, zb, zm, rise, n, a, b } = F, solid = fl === 'UG', zt = i => za + (i + 1) * rise;
-      // Lauf 1 nach Norden
-      const p1 = [[a[0], za]];
-      for (let i = 0; i < n - 1; i++) p1.push([a[i], zt(i)], [a[i + 1], zt(i)]);
-      p1.push(...(solid ? [[yl, za]] : [[yl, zm - 0.28], [a[0] + 0.45, za]]));
-      prism(M.putzHell, p1, x0, x0 + fw);
-      for (let i = 0; i < n - 1; i++) boxPlan(M.stairMat, x0 + 0.13, x0 + fw, a[i] - 0.03, a[i + 1], zt(i) - 0.035, zt(i) + 0.005);
-      if (F.flare) {
-        boxPlan(M.stairMat, x0 - 0.3, x0 + 0.14, a[0] - 0.03, a[1], za, zt(0) + 0.005);
-        addCyl(M.stairMat, x0 - 0.3, (a[0] - 0.03 + a[1]) / 2, za, zt(0) + 0.005, (a[1] - a[0] + 0.03) / 2, (a[1] - a[0] + 0.03) / 2, 28);
+      const { x0, x1, n, za, zb } = FLIGHTS[fl], rise = (zb - za) / n, g = (x0 - x1) / (n - 1), zt = i => za + (i + 1) * rise, xs = i => x0 - i * g;
+      // Stufenprofil von unten (Osten) nach oben (Westen); die Kellertreppe ist massiv, die anderen tragen als Laufplatte frei darüber
+      const steps = [[x0, za]];
+      for (let i = 0; i < n - 1; i++) steps.push([xs(i), zt(i)], [xs(i + 1), zt(i)]);
+      steps.push([x1, zb]);
+      prism(M.putzHell, [...steps, ...(fl === 'UG' ? [[x1, za]] : [[x1, zb - 0.32], [x0 - 0.5, za]])], ly0, ly1);
+      const yt = fl === 'UG' ? ly1 : ly1 - t;
+      for (let i = 0; i < n - 1; i++) boxPlan(M.stairMat, xs(i + 1), xs(i) + 0.03, ly0, yt, zt(i) - 0.035, zt(i) + 0.005);
+      if (fl === 'UG') continue;
+      // Brüstung an der Nordseite mit Steinabdeckung: im EG bis zum Boden geschlossen, im OG unter dem Lauf offen zum Luftraum
+      const top = [[x0, za + rise + h], [x1, zb + h]];
+      prism(M.putzHell, [...top, ...(fl === 'EG' ? [[x1, za], [x0, za]] : [[x1, zb - 0.32], [x0 - 0.5, za], [x0, za]])], yt, ly1);
+      prism(M.stairMat, [...top, [x1, zb + h + 0.06], [x0, za + rise + h + 0.06]], yt - 0.025, ly1 + 0.025);
+      boxPlan(M.putzHell, x0 - 0.26, x0, yt - 0.065, ly1 + 0.065, za, za + rise + 1.02);
+      boxPlan(M.stairMat, x0 - 0.285, x0 + 0.025, yt - 0.09, ly1 + 0.09, za + rise + 1.02, za + rise + 1.09);
+      if (fl === 'EG') {
+        // breite Antrittsstufe, zur Halle hin 40 cm vorgezogen und gerundet
+        boxPlan(M.stairMat, x0 - g, x0 - 0.2, ly1, ly1 + 0.4, za, zt(0) + 0.005); boxPlan(M.stairMat, x0 - 0.2, x0, ly1, ly1 + 0.2, za, zt(0) + 0.005);
+        addCyl(M.stairMat, x0 - 0.2, ly1 + 0.2, za, zt(0) + 0.005, 0.2, 0.2, 20);
       }
-      // Podest und Lauf 2 nach Süden
-      boxPlan(M.putzHell, x0, x1, yl, y1, zm - 0.28, zm - 0.035); boxPlan(M.stairMat, x0 + 0.13, x1, yl - 0.03, y1, zm - 0.035, zm + 0.005);
-      const zu = j => zm + (j + 1) * rise, p2 = [[yl, zm - 0.28], [yl, zm]];
-      for (let j = 0; j < n - 1; j++) p2.push([b[j], zu(j)], [b[j + 1], zu(j)]);
-      p2.push([y0, zb - 0.32]);
-      prism(M.putzHell, p2, x1 - fw, x1);
-      for (let j = 0; j < n - 1; j++) boxPlan(M.stairMat, x1 - fw, x1, b[j + 1], b[j] + 0.03, zu(j) - 0.035, zu(j) + 0.005);
-      // Brüstung zur Halle mit Pfosten am Antritt
-      const ys = a[0] + 0.07, zs = zt(0), h = 0.92;
-      prism(M.putzHell, [[ys, za], [ys, zs + h], [yl, zm + h], [y1 - 0.02, zm + h], [y1 - 0.02, zm - 0.3], [yl, zm - 0.3], solid ? [yl, za] : [a[0] + 0.5, za]], x0, x0 + 0.13);
-      prism(M.stairMat, [[ys, zs + h], [yl, zm + h], [y1 - 0.02, zm + h], [y1 - 0.02, zm + h + 0.06], [yl, zm + h + 0.06], [ys, zs + h + 0.06]], x0 - 0.025, x0 + 0.155);
-      boxPlan(M.putzHell, x0 - 0.065, x0 + 0.195, ys, ys + 0.26, za, zs + 1.02); boxPlan(M.stairMat, x0 - 0.09, x0 + 0.22, ys - 0.025, ys + 0.285, zs + 1.02, zs + 1.09);
-      top = F;
     }
-    // Mittelwand durch alle Geschosse, oben mit der Brüstungslinie des obersten Laufs; im DG eine Brüstung um die Öffnung
-    const { x0, y0, y1, yl, fw, spine, zm, zb } = top, h = 0.92;
-    prism(M.putzHell, [[y0, Zh.ffbUG], [yl, Zh.ffbUG], [yl, zm + h], [y0, zb + h - 0.1]], x0 + fw, x0 + fw + spine);
-    prism(M.stairMat, [[yl, zm + h], [y0, zb + h - 0.1], [y0, zb + h - 0.04], [yl, zm + h + 0.06]], x0 + fw - 0.02, x0 + fw + spine + 0.02);
-    const zd = Zh.ffbDG;
-    boxPlan(M.putzHell, x0, x0 + fw, y0 - 0.13, y0, zd - 0.35, zd + h); boxPlan(M.putzHell, x0 - 0.13, x0, y0 - 0.13, y1, zd - 0.35, zd + h);
-    boxPlan(M.stairMat, x0 - 0.155, x0 + fw, y0 - 0.155, y0 + 0.025, zd + h, zd + h + 0.06); boxPlan(M.stairMat, x0 - 0.155, x0 + 0.025, y0 - 0.155, y1, zd + h, zd + h + 0.06);
   }
   // Möbel nach dem Grundriss-Vorschlag: dieselben Positionen wie im 2D-Plan, Höhen nach üblichen Maßen, im DG unter der Schräge gekappt
   function buildFurniture() {
@@ -4104,6 +3216,23 @@ const View3D = (() => {
     im.castShadow = im.receiveShadow = true;
     grp.add(im, cardMesh(cards, M.leafHedge));
     return grp;
+  }
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Lichthof vor dem Gym im UG (Westseite)
+  // Lichthof vor dem Gym (Daniel, 4.11.2026; Größe nach Ortsgestaltungssatzung § 8, siehe house.js): bis zum UG-Boden, Stützwände aus Sichtbeton, unten heller Steinbelag, oben auf
+  // Geländehöhe eine Abdeckung mit Geländer aus schwarzem Metall. Die Fenster sitzen in der Westwand des UG (siehe buildInterior).
+  function lichthofPoly() {
+    const LH = HOUSE.lichthof;
+    return [[-LH.tief, -LH.u1], [-0.002, -LH.u1], [-0.002, -LH.u0], [-LH.tief, -LH.u0]];
+  }
+  function buildLichthof() {
+    const LH = HOUSE.lichthof, y0 = -LH.u1, y1 = -LH.u0, x0 = -LH.tief, zb = Zh.ffbUG, t = 0.25;
+    for (const [a, b, c, e] of [[x0 - t, x0, y0 - t, y1 + t], [x0, 0, y0 - t, y0], [x0, 0, y1, y1 + t]]) boxPlan(M.beton, a, b, c, e, zb - 0.3, 0.04);
+    for (const [a, b, c, e] of [[x0 - t - 0.03, x0 + 0.02, y0 - t - 0.03, y1 + t + 0.03], [x0, 0, y0 - t - 0.03, y0 + 0.02], [x0, 0, y1 - 0.02, y1 + t + 0.03]]) boxPlan(M.coping, a, b, c, e, 0.04, 0.09);
+    boxPlan(M.stone, x0, 0, y0, y1, zb - 0.3, zb - 0.02);
+    // Geländer an den drei Seiten, auf der Abdeckung
+    const zr = 0.09, hr = 1.0;
+    railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(x0 - t / 2, 0, 0)), y0 - t / 2, y1 + t / 2, zr, zr + hr, 0);
+    for (const y of [y0 - t / 2, y1 + t / 2]) railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -y), x0 - t / 2, -0.02, zr, zr + hr, 0);
   }
   // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Rampe, Tiefgarage mit Eingangsbereich vor dem Foyer, Autos (Modelle aus src/car-*.js, sonst Ersatzform)
   // Offene Rampe zur Tiefgarage: Fahrbahn nach dem Längsprofil, Betonwände mit Geländer, Durchfahrt unter dem Poolhaus bis zum Tor
@@ -4568,18 +3697,19 @@ const View3D = (() => {
   function buildSite() {
     const g = new THREE.Group(), C = SITE.concept, R0 = HOUSE.rampe;
     groundAO();
-    const poolOuter = C.pool, trench = [[R0.x0, R0.y0], [R0.x1, R0.y0], [R0.x1, R0.yPortal], [R0.x0, R0.yPortal]];
+    const poolOuter = C.pool, trench = [[R0.x0, R0.y0], [R0.x1, R0.y0], [R0.x1, R0.yPortal], [R0.x0, R0.yPortal]], lh = lichthofPoly();
     const ground = new THREE.Shape(rectPts(-260, -260, 280, 260));
-    for (const h of [poolOuter, trench, C.haus]) ground.holes.push(new THREE.Path(h.map(q => v2(q[0], q[1]))));
+    for (const h of [poolOuter, trench, C.haus, lh]) ground.holes.push(new THREE.Path(h.map(q => v2(q[0], q[1]))));
     const gg = addUV1(new THREE.ShapeGeometry(ground)); gg.rotateX(-Math.PI / 2);
     const gm = new THREE.Mesh(gg, M.ground); gm.position.y = -0.03; gm.receiveShadow = true; g.add(gm);
     L.grund = [gm];
     for (const s of SITE.streets) { const m = flat(s, M.street, -0.01); g.add(m); L.grund.push(m); }
-    const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter, trench, C.haus]); g.add(lawn); L.grund.push(lawn);
+    const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter, trench, C.haus, lh]); g.add(lawn); L.grund.push(lawn);
     // Zufahrt: vorne eben, dahinter die offene Rampe in die Tiefgarage
     const zufahrtEben = [[19.732, -50.499], [24.731, -51.342], [24.731, -44.471], [R0.x1 + R0.wand, -44.471], [R0.x1 + R0.wand, R0.y0], [19.732, R0.y0]];
     for (const P0 of [C.zuwegung, zufahrtEben]) { const m = flat(P0, M.pave, 0.016); g.add(m); L.grund.push(m); }
     buildRamp(g);
+    buildLichthof();
     // Pool: Rand, Becken 1,40 m tief, Wasser 12 cm unter dem Rand, Stufen über die ganze Breite an der Nordseite
     const PO = HOUSE.pool, pw = C.poolWasser, w = pw[1][0] - pw[0][0], d = pw[0][1] - pw[2][1];
     g.add(extrude(poolOuter, M.coping, 0, 0.06, [pw]));

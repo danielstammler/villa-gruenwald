@@ -14,14 +14,27 @@ const Plans = (() => {
   const pts = P => P.map(p => `${f(p[0])},${f(-p[1])}`).join(' ');
   const area = r => (r[1] - r[0]) * (r[3] - r[2]);
   const area2 = P => Math.abs(P.reduce((t, p, i) => { const q = P[(i + 1) % P.length]; return t + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
-  // Treppenhalle: zweiläufige Treppe mit 1,29 m breiten Läufen und massiver Mittelwand. Der Aufzug liegt unauffällig in einem
-  // Wandblock neben der Halle (wandbündige Türen). Über dem Eingang ein zweigeschossiger Luftraum, im OG mit Galerie und Geländer.
-  const STAIR = [8.9, 11.68, -3.9, -0.36], LIFT = [4.72, 6.72, -3.98, -1.98];
-  const VOID = [[6.72, 8.9, -3.98, -0.36]];
+  // Treppenhalle (Daniel, 4.11.2026: „so, dass man beim Reinkommen auf sie zuschaut, nicht so zick zack“): eine gerade, 1,30 m
+  // breite Treppenbahn an der Rückwand der Halle (LINE). Kellertreppe UG→EG, Haupttreppe EG→OG und Dachtreppe OG→DG sind je ein
+  // gerader Lauf, steigen nach Westen und liegen genau übereinander, je ein Geschoss versetzt (Kopfhöhe überall über 2,9 m).
+  // Antritt im Osten, Austritt im Westen auf das Podest vor dem Aufzug. Der Aufzug sitzt im Wandblock westlich davon, Türen nach Osten.
+  const LINE = [4.72, 11.68, -4.88, -3.58];
+  const FLIGHTS = {
+    UG: { x0: 10.69, x1: 6.01, n: 19, za: HOUSE.Z.ffbUG, zb: HOUSE.Z.ffbEG },   // 19 Steigungen à 18,9 cm, Auftritt 26 cm
+    EG: { x0: 10.6, x1: 6.01, n: 18, za: HOUSE.Z.ffbEG, zb: HOUSE.Z.ffbOG },    // 18 à 18,6 cm, Auftritt 27 cm
+    OG: { x0: 10.6, x1: 6.28, n: 17, za: HOUSE.Z.ffbOG, zb: HOUSE.Z.ffbDG },    // 17 à 18,2 cm, Auftritt 27 cm
+  };
+  // Deckenöffnung über einem Lauf: so weit, wie man unter der Decke sonst keine 2,00 m Kopfhöhe hätte
+  const holeOver = (fl, under) => { const F = FLIGHTS[fl]; return [F.x1, F.x0 - (under - 2 - F.za) / (F.zb - F.za) * (F.x0 - F.x1), LINE[2], LINE[3]]; };
+  const HOLES = { EG: holeOver('UG', HOUSE.Z.ffbEG - 0.35), OG: holeOver('EG', HOUSE.Z.gurtU), DG: holeOver('OG', HOUSE.Z.deckeDG) };
+  const LIFT = [2.92, 4.72, -4.88, -3.08];
+  // Luftraum über dem vorderen Teil der Halle, im OG mit Geländer an der Treppe
+  const VOID = [[6.25, 11.68, -3.58, -0.36]];
   // Fläche eines Raums ohne Treppe, Aufzug und (im OG) Luftraum, soweit sie darin liegen
   const cutA = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[2], b[2]));
-  const coreIn = (fl, r) => cutA(r, STAIR) + cutA(r, LIFT) + (fl === 'OG' ? VOID.reduce((t, v) => t + cutA(r, v), 0) : 0);
-  const STAIR_SP = { spine: 0.2, land: 1.2, n: 10, flare: 0.4 };
+  const STAIRUSE = { UG: [FLIGHTS.UG.x1, FLIGHTS.UG.x0, LINE[2], LINE[3]], EG: [FLIGHTS.EG.x1, FLIGHTS.EG.x0, LINE[2], LINE[3]],
+    OG: [FLIGHTS.EG.x1, FLIGHTS.OG.x0, LINE[2], LINE[3]], DG: HOLES.DG };
+  const coreIn = (fl, r) => cutA(r, STAIRUSE[fl]) + cutA(r, LIFT) + (fl === 'OG' ? VOID.reduce((t, v) => t + cutA(r, v), 0) : 0);
 
   // ---------- Möbel und Ausstattung ----------
   const fu = {
@@ -97,29 +110,36 @@ const Plans = (() => {
     UG: {
       titel: 'Untergeschoss mit Tiefgarage', ffb: HOUSE.Z.ffbUG,
       rooms: [
-        { n: 'Fitness', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Sauna', r: [6.72, 9.4, -11.29, -8.0] },
-        { n: 'Dusche / WC', r: [9.52, 11.28, -11.29, -8.0] }, { n: 'Flur', r: [6.72, 11.28, -7.88, -5.12] },
-        // Foyer hinter dem Eingangsbereich der Tiefgarage: großzügig, mit Garderobe, Bank und Spiegel
-        { n: 'Foyer', r: [11.52, 15.64, -11.29, -5.12], at: [13.7, -8.4] },
-        { n: 'Technik', r: [11.92, 15.64, -4.88, -0.36] }, { n: 'Waschen', r: [0.36, 4.48, -4.88, -0.36] },
-        { n: 'Vorraum', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.8, -1.2] },
+        // Gym im Westen mit Sportboden und Lichthof davor (Daniel, 4.11.2026)
+        { n: 'Gym', r: [0.36, 6.48, -11.29, -6.56], ext: [[0.36, 4.48, -6.56, -5.12]], at: [3.0, -8.9] },
+        // Zugang von der Tiefgarage mittig, wo früher die Fahrräder standen: Foyer, Flur und Treppenbahn
+        { n: 'Foyer', r: [6.72, 9.28, -11.29, -6.32], ext: [[4.72, 11.68, -6.32, -5.12], LINE], core: true, at: [8.0, -8.9] },
+        { n: 'Ruheraum', r: [9.52, 15.64, -8.26, -6.56], ext: [[11.92, 15.64, -6.56, -5.12]], at: [12.6, -7.0] },
+        { n: 'Sauna', r: [9.52, 12.2, -11.29, -8.5], at: [10.86, -9.9] }, { n: 'Dusche / WC', r: [12.44, 15.64, -11.29, -8.5], at: [13.9, -9.9] },
+        { n: 'Technik', r: [11.92, 15.64, -4.88, -0.36], at: [13.8, -2.6] },
+        // Waschen und ein richtiger Abstellraum nebeneinander (Hauswirtschaft); der Aufzug sitzt im Wandblock daneben
+        { n: 'Waschen', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, -4.88, -2.84]], at: [2.3, -1.6] },
+        { n: 'Abstellraum', r: [4.72, 11.68, -3.34, -0.36], at: [8.2, -1.85] },
       ],
-      open: [[7.0, 9.0, -5.12, -4.88]],
+      // Durchgänge vom Flur zur Treppenbahn: im Westen zum Aufzug und Abstellraum, im Osten zum Antritt der Kellertreppe
+      open: [[4.72, FLIGHTS.UG.x1, -5.12, -4.88], [FLIGHTS.UG.x0, 11.68, -5.12, -4.88]],
       doors: [
-        { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 11.8, y: -4.78, w: 0.85, o: 'v', s: 1, h: 0 },
-        { x: 6.6, y: -7.6, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 7.3, y: -7.94, w: 0.7, o: 'h', s: -1, h: 0 },
-        { x: 9.9, y: -7.94, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -6.02, w: 0.9, o: 'v', s: 1, h: 0 },
-        { x: 12.9, y: -11.47, w: 0.7, o: 'h', s: 1, h: 0, t: 0.5 }, { x: 13.6, y: -11.47, w: 0.7, o: 'h', s: 1, h: 1, t: 0.5 },
+        { x: 7.3, y: -11.47, w: 0.7, o: 'h', s: 1, h: 0, t: 0.5 }, { x: 8.0, y: -11.47, w: 0.7, o: 'h', s: 1, h: 1, t: 0.5 },
+        { x: 6.6, y: -8.0, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 11.8, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 },
+        { x: 10.4, y: -8.38, w: 0.7, o: 'h', s: -1, h: 0 }, { x: 13.4, y: -8.38, w: 0.8, o: 'h', s: -1, h: 0 },
+        { x: 11.8, y: -4.8, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 4.85, y: -3.46, w: 0.8, o: 'h', s: 1, h: 0 },
+        { x: 4.6, y: -2.6, w: 0.85, o: 'v', s: -1, h: 0 },
       ],
       furn: () => [
         fu.box(0.9, 1.7, -10.9, -9.0, 'Laufband'), fu.box(2.3, 3.1, -10.9, -9.3, 'Rad'), fu.box(3.9, 6.1, -10.9, -9.8, 'Matte'),
-        fu.box(4.3, 6.0, -7.2, -5.6, 'Kraftstation'),
-        fu.box(6.72, 9.4, -11.29, -10.69, '', 'saunabank'), fu.box(6.72, 7.32, -10.69, -8.7, '', 'saunabank'), fu.box(8.5, 9.0, -9.0, -8.5, 'Ofen'),
-        fu.shower(9.52, 10.72, -11.29, -10.09), fu.wc(11.28, -9.1, 'E'), fu.basin(10.5, -8.0, 0.6, 'N'),
-        fu.box(9.5, 11.0, -7.55, -7.0, 'Liege'), fu.box(9.5, 11.0, -6.6, -6.05, 'Liege'),
-        fu.shelf(15.04, 15.64, -10.7, -6.3), fu.box(11.52, 11.97, -10.5, -8.5, 'Bank'), fu.box(12.8, 14.6, -5.52, -5.12, '', 'konsole'),
+        fu.box(1.0, 2.8, -6.9, -5.6, 'Kraftstation'),
+        fu.box(6.72, 7.17, -10.5, -8.6, 'Bank'), fu.shelf(8.68, 9.28, -10.7, -7.2),
+        fu.box(9.52, 12.2, -11.29, -10.69, '', 'saunabank'), fu.box(9.52, 10.12, -10.69, -8.9, '', 'saunabank'), fu.box(11.4, 11.9, -9.2, -8.7, 'Ofen'),
+        fu.shower(14.44, 15.64, -11.29, -10.09), fu.wc(15.64, -9.3, 'E'), fu.basin(13.2, -11.29, 0.6, 'S'),
+        fu.box(9.9, 11.5, -7.9, -7.2, 'Liege'), fu.box(12.0, 13.6, -7.9, -7.2, 'Liege'), fu.shelf(15.04, 15.64, -8.0, -5.5),
         fu.box(12.2, 13.8, -1.5, -0.6, 'Wärmepumpe'), Ci(14.8, -1.25, 0.5, 'g-furn'), T(14.8, -1.33, 'Speicher', 'g-ftxt'), fu.box(12.2, 13.4, -3.6, -2.8, 'Anschluss'),
         fu.box(0.6, 1.2, -1.0, -0.4, 'WM'), fu.box(1.3, 1.9, -1.0, -0.4, 'TR'), fu.box(2.1, 3.3, -0.96, -0.4, 'Spüle', 'spuelzeile'), fu.shelf(0.36, 0.86, -4.6, -2.2),
+        fu.shelf(5.0, 11.4, -0.96, -0.36), fu.shelf(9.2, 11.68, -3.34, -2.74),
       ],
     },
     EG: {
@@ -128,16 +148,18 @@ const Plans = (() => {
         { n: 'Wohnen', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Essen', r: [6.72, 11.28, -11.29, -5.12], at: [9.0, -10.6] },
         // Küche L-förmig: 1 m weiter nach Norden, dafür ist die Backkitchen kleiner (Daniel, 4.11.2026)
         { n: 'Küche', r: [11.52, 15.64, -11.29, -5.12], ext: [[11.92, 15.64, -5.12, -4.12]], at: [13.6, -10.4] },
-        { n: 'Halle', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.8, -4.15] },
-        { n: 'Garderobe', r: [0.36, 4.48, -2.95, -0.36], at: [2.4, -1.75] }, { n: 'Gäste-WC', r: [2.74, 4.48, -4.88, -3.07], at: [3.6, -3.75] },
-        { n: 'Abstellraum', r: [0.36, 2.62, -4.88, -3.07], at: [1.5, -3.75] },
+        // Halle mit der Treppenbahn an der Rückwand: beim Hereinkommen steigt die Haupttreppe quer vor einem auf
+        { n: 'Halle', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.6, -2.2] },
+        // Gäste-WC dort, wo früher der kleine Abstellraum war; an der alten WC-Stelle sitzt jetzt der Aufzug
+        { n: 'Garderobe', r: [0.36, 4.48, -2.84, -0.36], at: [2.4, -1.65] }, { n: 'Gäste-WC', r: [0.36, 2.68, -4.88, -3.08], at: [1.52, -3.98] },
         { n: 'Backkitchen', r: [11.92, 15.64, -3.88, -0.36], at: [13.75, -1.65] },
       ],
-      open: [[7.0, 9.0, -5.12, -4.88], [6.48, 6.72, -10.4, -5.9], [11.28, 11.52, -10.4, -6.2]],
+      open: [[6.48, 6.72, -10.4, -5.9], [11.28, 11.52, -10.4, -6.2]],
       doors: [
-        { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 3.2, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 },
-        { x: 0.95, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.8, y: -4.84, w: 0.7, o: 'v', s: 1, h: 0 },
-        { x: 12.3, y: -4.0, w: 0.9, o: 'h', s: 1, h: 1 },
+        { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 1.1, y: -2.96, w: 0.8, o: 'h', s: -1, h: 0 },
+        { x: 11.8, y: -4.84, w: 0.7, o: 'v', s: 1, h: 0 }, { x: 12.3, y: -4.0, w: 0.9, o: 'h', s: 1, h: 1 },
+        // vom Podest unter dem Treppenaustritt ins Wohnzimmer
+        { x: 4.95, y: -5.0, w: 0.9, o: 'h', s: -1, h: 0 },
         { x: 7.35, y: -0.18, w: 1.3, o: 'h', s: -1, h: 0, t: 0.5 },
       ],
       furn: () => [
@@ -148,12 +170,12 @@ const Plans = (() => {
         fu.box(12.6, 14.6, -7.2, -6.2, 'Insel'),
         // kleiner Esstisch für vier vor den Gartentüren der Küche
         fu.table(12.75, 13.95, -10.45, -9.65, 2, false),
-        fu.shelf(1.8, 3.1, -2.95, -2.35), fu.box(3.95, 4.48, -2.9, -2.15, 'Bank'),
-        fu.wc(3.65, -4.88, 'S'), fu.basin(2.74, -3.95, 0.45, 'W'), fu.shelf(0.36, 0.81, -4.7, -3.2),
+        fu.shelf(1.8, 3.1, -2.84, -2.24), fu.box(3.95, 4.48, -2.8, -2.05, 'Bank'),
+        fu.wc(1.6, -4.88, 'S'), fu.basin(0.36, -3.7, 0.45, 'W'),
         fu.box(12.2, 15.64, -1.0, -0.36, '', 'zeile'), fu.box(12.8, 13.6, -0.95, -0.42, 'Spüle'), fu.box(15.0, 15.64, -3.6, -1.0, '', 'hochschrank'),
         fu.shelf(11.92, 12.5, -3.85, -1.4), fu.box(13.2, 14.6, -2.9, -2.1, 'Arbeitsfläche'),
-        // Halle: Konsole mit Spiegel an der Nordwand neben dem Eingang
-        fu.box(5.0, 6.4, -0.76, -0.36, '', 'konsole'),
+        // Halle: Konsole mit Spiegel an der Nordwand neben dem Eingang, Garderobenschrank für Gäste in der Nordostecke
+        fu.box(5.0, 6.4, -0.76, -0.36, '', 'konsole'), fu.box(11.08, 11.68, -2.9, -0.36, '', 'hochschrank'),
         // draußen: Lounge mittig unter dem Balkon (Blick in den Garten, vor der Fassade bleibt ein Gang), Esstisch auf dem Freisitz;
         // Liegen stehen am Pool, nicht am Haus
         fu.sofa(6.8, 9.2, -13.95, -13.1, 'N'), fu.box(7.4, 8.6, -14.85, -14.35, '', 'couchtisch'),
@@ -164,31 +186,30 @@ const Plans = (() => {
     OG: {
       titel: 'Obergeschoss', ffb: HOUSE.Z.ffbOG,
       rooms: [
-        { n: 'Kind 1', r: [0.36, 4.48, -11.29, -7.5], at: [2.4, -10.2] }, { n: 'Kinderbad West', r: [0.36, 4.48, -7.26, -5.2], at: [2.2, -6.5] },
-        { n: 'Kind 2', r: [0.36, 4.48, -4.96, -0.36], at: [2.4, -2.2] },
-        { n: 'Familienraum', r: [4.72, 11.28, -11.29, -6.24], at: [8.0, -10.5] }, { n: 'Flur', r: [4.72, 11.28, -6.0, -4.96], at: [6.0, -5.55] },
-        // Galerie = Umgang am Geländer; Luftraum, Treppe und Aufzug sind frei (open), damit dort keine Wände entstehen
-        { n: 'Galerie', r: [4.72, 11.68, -4.96, -3.9], core: true, at: [7.8, -4.4] },
-        // nördlich neben dem Aufzug ein Schrankraum für Kind 2, mit Wand zum Luftraum (x 6,52–6,72)
-        { n: 'Schrank Kind 2', r: [4.72, 6.52, -1.98, -0.36], at: [5.62, -1.17] },
-        { n: 'Kind 3', r: [11.52, 15.64, -11.29, -7.5], at: [13.6, -9.9] }, { n: 'Kinderbad Ost', r: [11.52, 15.64, -7.26, -5.2], at: [13.8, -6.5] },
-        { n: 'Kind 4', r: [11.92, 15.64, -4.96, -0.36], at: [13.8, -2.4] },
+        // vier größere Kinderzimmer (Daniel, 4.11.2026: kein Wohnzimmer im OG) und zwei Bäder mit Wanne, die sich je zwei Kinder teilen
+        { n: 'Kind 1', r: [0.36, 4.48, -11.29, -7.24], ext: [[4.72, 6.48, -11.29, -6.56]], at: [2.5, -9.7] },
+        { n: 'Bad West', r: [0.36, 4.48, -7.0, -5.12], at: [2.4, -6.06] },
+        { n: 'Kind 2', r: [0.36, 6.01, -2.84, -0.36], ext: [[0.36, 2.68, -4.88, -2.84], [4.72, 6.01, -3.34, -2.84]], at: [3.4, -1.75] },
+        { n: 'Kind 3', r: [11.52, 15.64, -11.29, -7.24], ext: [[9.52, 11.28, -11.29, -6.56]], at: [13.5, -9.7] },
+        { n: 'Bad Ost', r: [11.52, 15.64, -7.0, -5.12], at: [13.6, -6.06] },
+        { n: 'Kind 4', r: [11.92, 15.64, -4.88, -0.36], at: [13.8, -2.4] },
+        // Flur mit Treppenbahn: die Haupttreppe kommt im Westen an, die Dachtreppe beginnt im Osten; Mittelgang bis zur Balkontür
+        { n: 'Flur', r: [4.72, 11.28, -6.32, -5.12], ext: [[6.72, 9.28, -11.29, -6.32], LINE], core: true, at: [8.0, -9.2] },
       ],
-      open: [[7.0, 9.0, -6.24, -6.0], [6.72, 11.68, -3.9, -0.36], [4.72, 6.72, -3.98, -1.98]],
+      open: [...VOID, [4.72, FLIGHTS.EG.x1, -5.12, -4.88], [FLIGHTS.OG.x0, 11.28, -5.12, -4.88]],
       doors: [
-        { x: 4.6, y: -9.6, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 4.6, y: -5.95, w: 0.75, o: 'v', s: -1, h: 0 },
-        { x: 4.6, y: -4.92, w: 0.85, o: 'v', s: -1, h: 0 }, { x: 11.4, y: -9.6, w: 0.9, o: 'v', s: 1, h: 0 },
-        { x: 11.4, y: -5.95, w: 0.75, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.92, w: 0.85, o: 'v', s: 1, h: 0 },
-        { x: 4.6, y: -1.6, w: 0.75, o: 'v', s: 1, h: 0 },
+        { x: 5.2, y: -6.44, w: 0.85, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -6.2, w: 0.75, o: 'v', s: -1, h: 0 },
+        { x: 4.9, y: -3.46, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 10.0, y: -6.44, w: 0.85, o: 'h', s: -1, h: 1 },
+        { x: 11.4, y: -6.2, w: 0.75, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
-        fu.bed(1.0, 2.0, -9.5, -7.5, 'N'), fu.desk(2.7, 4.1, -11.29, -10.6, 'N'), fu.shelf(2.3, 4.4, -8.1, -7.5),
-        fu.shower(3.28, 4.48, -7.26, -6.06), fu.wc(0.36, -6.75, 'W'), fu.basin(2.0, -5.2, 1.4, 'N'),
-        fu.bed(1.0, 2.0, -4.96, -2.96, 'S'), fu.desk(2.7, 4.1, -1.06, -0.36, 'S'), fu.shelf(3.88, 4.48, -3.9, -2.3),
-        fu.sofa(6.8, 9.2, -8.1, -7.2, 'N'), fu.box(7.4, 8.6, -9.2, -8.5, '', 'couchtisch'), fu.shelf(10.68, 11.28, -8.4, -6.5),
-        fu.bed(11.52, 13.52, -8.7, -7.7, 'W'), fu.desk(13.9, 15.3, -11.29, -10.6, 'N'), fu.shelf(11.52, 12.12, -11.2, -9.7),
-        fu.shower(11.52, 12.72, -7.26, -6.06), fu.wc(15.64, -6.75, 'E'), fu.basin(14.0, -5.2, 1.4, 'N'),
-        fu.bed(14.0, 15.0, -4.96, -2.96, 'S'), fu.desk(12.2, 13.6, -1.06, -0.36, 'S'), fu.shelf(11.92, 12.52, -3.8, -1.6),
+        fu.bed(1.0, 2.4, -9.24, -7.24, 'N'), fu.desk(2.7, 4.1, -11.29, -10.6, 'N'), fu.shelf(3.0, 4.48, -7.84, -7.24), fu.shelf(4.72, 5.32, -11.0, -8.6),
+        fu.tub(0.5, 2.2, -7.0, -6.25), fu.basin(3.0, -5.12, 1.2, 'N'), fu.wc(4.48, -6.65, 'E'),
+        fu.bed(0.5, 2.5, -4.78, -3.38, 'W'), fu.desk(2.8, 4.2, -1.06, -0.36, 'S'), fu.shelf(5.41, 6.01, -2.8, -0.6),
+        fu.bed(13.64, 15.04, -9.24, -7.24, 'N'), fu.desk(11.92, 13.32, -11.29, -10.6, 'N'), fu.shelf(11.52, 13.0, -7.84, -7.24), fu.shelf(10.68, 11.28, -11.0, -8.6),
+        fu.tub(13.8, 15.5, -7.0, -6.25), fu.basin(12.8, -5.12, 1.2, 'N'), fu.wc(11.52, -6.65, 'W'),
+        fu.bed(13.9, 15.3, -4.88, -2.88, 'S'), fu.desk(12.2, 13.6, -1.06, -0.36, 'S'), fu.shelf(11.92, 12.52, -4.2, -1.6),
+        fu.box(6.72, 7.17, -10.6, -8.6, 'Bank'),
         // draußen auf dem Balkon über der Terrasse
         fu.table(7.4, 8.6, -13.6, -12.9, 1, false),
       ],
@@ -196,27 +217,30 @@ const Plans = (() => {
     DG: {
       titel: 'Dachgeschoss', ffb: HOUSE.Z.ffbDG,
       rooms: [
-        { n: 'Büro', r: [4.72, 11.28, -11.29, -7.8], at: [8.0, -10.4] }, { n: 'Flur', r: [4.72, 11.68, -4.0, -0.36], core: true, at: [7.8, -1.2] },
-        { n: 'Lesezone', r: [4.72, 11.28, -7.56, -4.0], at: [8.0, -5.4] },
-        { n: 'Lounge', r: [0.36, 4.48, -11.29, -4.88], at: [2.0, -10.4] }, { n: 'Abstellraum', r: [0.36, 4.48, -4.64, -0.36], wf: 0, at: [2.5, -3.2] },
-        // Elternsuite: vom Flur ins Schlafzimmer, dahinter Ankleide und Bad (en suite, nur über das Schlafzimmer erreichbar)
-        { n: 'Eltern', r: [11.52, 15.64, -11.29, -6.6], at: [13.6, -10.4] }, { n: 'Ankleide', r: [11.52, 15.64, -6.36, -4.2], at: [13.9, -5.3] },
-        { n: 'Elternbad', r: [11.92, 15.64, -3.96, -0.36], at: [13.2, -2.0] },
+        // Büro vorne mittig im Zwerchhaus mit Balkon (Daniel, 4.11.2026); Elternbereich im Westen, en suite: Flur → Schlafzimmer → Ankleide → Bad
+        { n: 'Büro', r: [4.72, 11.28, -11.29, -6.56], at: [8.0, -10.4] },
+        { n: 'Flur', r: [4.72, 11.28, -6.32, -5.12], ext: [LINE], core: true, at: [8.0, -5.72] },
+        { n: 'Schlafzimmer', r: [0.36, 4.48, -11.29, -5.12], at: [2.4, -9.9] },
+        { n: 'Ankleide', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, -4.88, -2.84]], at: [2.6, -1.75] },
+        { n: 'Bad', r: [4.72, 9.28, -3.34, -0.36], at: [6.9, -2.1] },
+        // die Ostseite ist frei geworden: Gästezimmer und Abstellraum
+        { n: 'Gäste', r: [11.52, 15.64, -11.29, -5.12], at: [13.6, -9.9] },
+        { n: 'Abstellraum', r: [11.92, 15.64, -4.88, -0.36], ext: [[9.52, 11.92, -3.34, -0.36]], wf: 0, at: [13.8, -2.6] },
       ],
+      open: [[4.72, FLIGHTS.OG.x1, -5.12, -4.88], [HOLES.DG[1], 11.28, -5.12, -4.88]],
       doors: [
-        { x: 6.15, y: -7.68, w: 0.9, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -5.95, w: 0.9, o: 'v', s: -1, h: 0 },
-        { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 11.4, y: -7.45, w: 0.8, o: 'v', s: 1, h: 0 },
-        { x: 11.6, y: -6.48, w: 0.85, o: 'h', s: -1, h: 0 }, { x: 12.0, y: -4.08, w: 0.85, o: 'h', s: 1, h: 0 },
+        { x: 7.6, y: -6.44, w: 0.9, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -6.2, w: 0.85, o: 'v', s: -1, h: 0 },
+        { x: 1.0, y: -5.0, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 4.6, y: -1.2, w: 0.8, o: 'v', s: 1, h: 0 },
+        { x: 11.4, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
-        fu.desk(7.2, 8.8, -9.3, -8.5, 'N'), fu.shelf(4.72, 5.22, -10.9, -8.0), fu.box(10.1, 10.9, -10.6, -9.8, '', 'sessel-E'),
-        fu.shelf(8.6, 10.6, -7.56, -7.1), fu.box(8.7, 9.5, -7.0, -6.2, '', 'sessel-S'), fu.box(9.7, 10.5, -7.0, -6.2, '', 'sessel-S'),
-        fu.bed(12.6, 14.4, -8.7, -6.6, 'N'), fu.box(12.08, 12.56, -7.08, -6.6, '', 'nacht'), fu.box(14.44, 14.92, -7.08, -6.6, '', 'nacht'),
-        fu.box(11.52, 12.02, -10.6, -9.0, '', 'kommode'),
-        fu.shelf(13.0, 15.64, -4.8, -4.2), fu.shelf(12.6, 15.64, -6.36, -5.76),
-        fu.tub(12.6, 14.4, -1.36, -0.56), fu.shower(13.2, 14.4, -3.96, -2.76), fu.basin(11.92, -2.4, 1.2, 'W'), fu.wc(15.0, -3.96, 'S'),
-        fu.sofa(3.58, 4.48, -9.8, -7.4, 'E'), fu.box(2.4, 3.2, -9.1, -8.1, '', 'couchtisch'), fu.box(1.0, 1.8, -9.0, -8.2, '', 'sessel-W'),
-        fu.shelf(1.0, 3.8, -5.48, -4.88), fu.shelf(1.2, 3.9, -1.65, -1.15),
+        fu.desk(7.2, 8.8, -9.3, -8.5, 'N'), fu.shelf(4.72, 5.22, -10.9, -8.0), fu.box(10.1, 10.9, -10.6, -9.8, '', 'sessel-E'), fu.shelf(9.8, 11.28, -7.06, -6.56),
+        fu.bed(2.38, 4.48, -9.1, -7.3, 'E'), fu.box(4.0, 4.48, -7.3, -6.82, '', 'nacht'), fu.box(4.0, 4.48, -9.58, -9.1, '', 'nacht'),
+        fu.box(1.6, 3.2, -11.0, -10.5, '', 'kommode'), fu.box(1.2, 2.0, -6.6, -5.8, '', 'sessel-W'),
+        fu.shelf(1.0, 4.4, -1.6, -1.1), fu.shelf(2.0, 4.48, -2.84, -2.34), fu.shelf(0.9, 1.5, -4.8, -2.9),
+        fu.tub(6.6, 8.4, -1.2, -0.45), fu.shower(4.72, 5.92, -3.34, -2.14), fu.basin(9.28, -2.0, 1.4, 'E'), fu.wc(7.0, -3.34, 'S'),
+        fu.bed(12.6, 14.4, -8.7, -6.7, 'N'), fu.desk(13.9, 15.3, -11.29, -10.6, 'N'), fu.shelf(11.52, 12.02, -10.6, -8.8),
+        fu.shelf(12.2, 15.4, -1.6, -1.1), fu.shelf(9.52, 11.6, -3.34, -2.84),
         // draußen auf dem Balkon vor dem Büro, neben der Tür
         fu.table(10.1, 10.5, -12.45, -11.85, 1, false),
       ],
@@ -235,14 +259,13 @@ const Plans = (() => {
   }));
   const tall = (r, inner) => clip(r, inner) + ZWERCH.reduce((t, z) => t + clip(r, z) - clip(r, inter(inner, z)), 0);
   function roomArea(fl, rm) {
-    // ext: weitere Rechtecke desselben Raums (L-förmige Räume, z. B. die Küche)
-    let a = area(rm.r) + (rm.ext || []).reduce((t, q) => t + area(q), 0);
-    if (rm.core) a -= coreIn(fl, rm.r);
+    // ext: weitere Rechtecke desselben Raums (L-förmige Räume, z. B. die Küche); Treppe, Aufzug und Luftraum zählen bei core nicht
+    const rs = [rm.r, ...(rm.ext || [])], core = q => (rm.core ? coreIn(fl, q) : 0);
+    const a = rs.reduce((t, q) => t + area(q) - core(q), 0);
     if (fl !== 'DG') return { a, wf: fl === 'UG' ? 0 : (rm.wf ?? 1) * a };
     // Wohnfläche nach WoFlV: unter 1 m lichter Höhe 0 %, 1–2 m 50 %, ab 2 m 100 %; Zwerchhäuser zählen voll, Gauben nicht (eher zu niedrig)
-    const full = tall(rm.r, inset(sAt(2))), half = tall(rm.r, inset(sAt(1))) - full;
-    const coreFull = rm.core ? coreIn(fl, rm.r) : 0;
-    return { a, wf: (rm.wf ?? 1) * (full - coreFull + 0.5 * half) };
+    const wf = rs.reduce((t, q) => { const full = tall(q, inset(sAt(2))), half = tall(q, inset(sAt(1))) - full; return t + full - core(q) + 0.5 * half; }, 0);
+    return { a, wf: (rm.wf ?? 1) * wf };
   }
 
   // ---------- Zeichnen ----------
@@ -267,6 +290,12 @@ const Plans = (() => {
   }
   function outerOpenings(fl) {
     let s = '';
+    if (fl === 'UG') {
+      // Lichthof vor dem Gym: große Fenster bis zum Boden in der Westwand
+      const LH = HOUSE.lichthof;
+      s += R(...planSeg(LH.side, LH.u0, LH.u1, -LH.tief, 0), 'g-outside', `Lichthof vor dem Gym · ${num(LH.u1 - LH.u0, 2)} × ${num(LH.tief, 2)} m, bis zum UG-Boden, Steinbelag, oben Geländer`);
+      for (const [a, b] of LH.win) s += R(...planSeg(LH.side, a, b, -0.01, 0.37), 'g-gap') + R(...planSeg(LH.side, a, b, 0.13, 0.19), 'g-glass');
+    }
     if (fl === 'EG' || fl === 'OG') {
       const [za, zb] = fl === 'EG' ? [0, 3] : [3, 6.5];
       for (const side of ['S', 'N', 'E', 'W']) for (const o of HOUSE.fas[side].open) {
@@ -293,50 +322,51 @@ const Plans = (() => {
     }
     return s;
   }
-  // Treppenläufe eines Geschosses (für Grundriss und 3D): Lauf 1 im Westen nach Norden, Podest, Lauf 2 im Osten zurück nach Süden.
-  // Je Lauf zehn Steigungen; im EG beginnt Lauf 1 mit einer 40 cm tiefen, nach Westen ausschwingenden Antrittsstufe.
-  function stairFlights(fl) {
-    const [x0, x1, y0, y1] = STAIR, { spine, land, n, flare } = STAIR_SP, fw = (x1 - x0 - spine) / 2, yl = y1 - land;
-    const span = { UG: [HOUSE.Z.ffbUG, HOUSE.Z.ffbEG], EG: [HOUSE.Z.ffbEG, HOUSE.Z.ffbOG], OG: [HOUSE.Z.ffbOG, HOUSE.Z.ffbDG] }[fl];
-    if (!span) return null;
-    const [za, zb] = span, rise = (zb - za) / (2 * n), zm = za + n * rise, big = fl === 'EG';
-    const a = big ? [y0 - flare, ...Array.from({ length: n - 1 }, (_, i) => y0 + (yl - y0) * i / (n - 2))] : Array.from({ length: n }, (_, i) => y0 + (yl - y0) * i / (n - 1));
-    const b = Array.from({ length: n }, (_, i) => yl - (yl - y0) * i / (n - 1));
-    return { x0, x1, y0, y1, yl, fw, spine, za, zb, zm, rise, n, flare: big ? flare : 0, a, b };
-  }
+  // Treppenbahn eines Geschosses: der Lauf nach oben mit Stufen und Laufpfeil (Antritt im Osten, Austritt im Westen); im EG eine
+  // breitere, zur Halle ausschwingende Antrittsstufe; im DG die Öffnung über dem heraufkommenden Lauf mit Geländer
+  const TREPPE = { UG: 'Kellertreppe', EG: 'Haupttreppe', OG: 'Treppe ins DG' };
   function stair(fl) {
-    const [x0, x1, y0, y1] = STAIR, F = stairFlights(fl) || stairFlights('OG'), { fw, spine, yl } = F;
-    let s = R(x0, x1, y0, y1, 'g-stair');
-    if (F.flare && fl === 'EG') s += `<path d="M${f(x0 + fw)} ${f(-F.a[0])} H${f(x0 - 0.3)} A0.2 0.2 0 0 1 ${f(x0 - 0.3)} ${f(-y0)} H${f(x0 + fw)} Z" class="g-stair" data-tip="Antrittsstufe · 40 cm tief, nach Westen ausschwingend"/>`;
-    const tr = fl === 'EG' ? F.a : stairFlights('OG').a;
-    for (let i = 1; i < tr.length; i++) if (tr[i] > y0 + 0.01) s += L(x0, tr[i], x0 + fw, tr[i], 'g-tread');
-    for (const y of F.b.slice(1, -1)) s += L(x1 - fw, y, x1, y, 'g-tread');
-    s += L(x0, yl, x1, yl, 'g-tread') + R(x0 + fw, x0 + fw + spine, y0, yl, 'g-wall', 'Massive Mittelwand der Treppe');
-    // geschlossene Brüstung an der offenen Westseite (zur Halle)
-    s += L(x0 + 0.06, y0 + 0.05, x0 + 0.06, y1 - 0.02, 'g-railing');
-    const xa = x0 + fw / 2, xb = x1 - fw / 2, ym = yl + STAIR_SP.land / 2;
-    if (fl !== 'DG') s += `<polyline points="${pts([[xa, (fl === 'EG' ? F.a[0] : y0) + 0.2], [xa, ym], [xb, ym], [xb, y0 + 0.45]])}" class="g-walk"/>` +
-      `<polygon points="${pts([[xb - 0.14, y0 + 0.5], [xb + 0.14, y0 + 0.5], [xb, y0 + 0.22]])}" class="g-walkhead"/>`;
-    const lbl = { UG: '↑ EG', EG: '↑ OG  ↓ UG', OG: '↑ DG  ↓ EG', DG: '↓ OG' }[fl];
-    return s + T((x0 + x1) / 2 + 0.3, y1 - 0.75, lbl, 'g-stairtxt') + (fl === 'DG' ? L(x0 + 0.05, y0 + 0.08, x0 + fw, y0 + 0.08, 'g-railing') : '');
+    const ly0 = LINE[2], ly1 = LINE[3], ym = (ly0 + ly1) / 2, up = FLIGHTS[fl];
+    let s = '';
+    if (up) {
+      const g = (up.x0 - up.x1) / (up.n - 1), h = (up.zb - up.za) / up.n;
+      s += R(up.x1, up.x0, ly0, ly1, 'g-stair', `${TREPPE[fl]} · gerade, 1,30 m breit · ${up.n} Steigungen à ${num(h * 100)} cm, Auftritt ${num(g * 100, 0)} cm`);
+      for (let i = 1; i < up.n - 1; i++) s += L(up.x1 + i * g, ly0, up.x1 + i * g, ly1, 'g-tread');
+      if (fl === 'EG') s += `<path d="M${f(up.x0)} ${f(-ly0)} V${f(-(ly1 + 0.2))} A0.2 0.2 0 0 0 ${f(up.x0 - 0.2)} ${f(-(ly1 + 0.4))} H${f(up.x0 - g)} V${f(-ly1)} H${f(up.x0)} Z" class="g-stair" data-tip="Antrittsstufe · zur Halle hin 40 cm breiter, gerundet"/>`;
+      // geschlossene Brüstung an der Nordseite (zur Halle bzw. zum Luftraum)
+      s += L(up.x1, ly1 + 0.04, up.x0, ly1 + 0.04, 'g-railing');
+      s += `<polyline points="${pts([[up.x0 - 0.15, ym], [up.x1 + 0.5, ym]])}" class="g-walk"/>` +
+        `<polygon points="${pts([[up.x1 + 0.55, ym + 0.14], [up.x1 + 0.55, ym - 0.14], [up.x1 + 0.27, ym]])}" class="g-walkhead"/>`;
+    } else {
+      const [h0, h1] = HOLES[fl], F = FLIGHTS.OG, g = (F.x0 - F.x1) / (F.n - 1);
+      s += R(h0, h1, ly0, ly1, 'g-void', 'Öffnung über der Treppe aus dem OG');
+      for (let i = 1; F.x1 + i * g < h1; i++) s += L(F.x1 + i * g, ly0, F.x1 + i * g, ly1, 'g-tread');
+      s += L(h1 + 0.03, ly0, h1 + 0.03, ly1, 'g-railing');
+    }
+    // Beschriftung: aufwärts auf dem Lauf, abwärts am Podest im Westen, wo der Lauf von unten ankommt
+    const [hoch, runter] = { UG: ['↑ EG', ''], EG: ['↑ OG', '↓ UG'], OG: ['↑ DG', '↓ EG'], DG: ['', '↓ OG'] }[fl];
+    if (hoch) s += T((up.x1 + up.x0) / 2, ym + 0.3, hoch, 'g-stairtxt');
+    if (runter) s += T((LINE[0] + FLIGHTS.EG.x1) / 2 + 0.05, ym - 0.08, runter, 'g-stairtxt');
+    return s;
   }
-  // Luftraum über der Halle (im OG): schraffiert, Geländer an der Galerie
+  // Luftraum über der Halle (im OG): schraffiert; Geländer am Antritt der Dachtreppe
   function voidArea() {
     const [a] = VOID;
-    let s = R(a[0], a[1], a[2], a[3], 'g-void', 'Luftraum über dem Eingang · Halle zweigeschossig, 6,10 m hoch');
+    let s = R(a[0], a[1], a[2], a[3], 'g-void', 'Luftraum über der Halle · zweigeschossig, 6,10 m hoch, mit dem Fenster über der Haustür');
     s += L(a[0], a[3], a[1], a[2], 'g-thin') + L(a[0], a[2], a[1], a[3], 'g-thin');
-    return s + L(a[0], a[2] - 0.06, a[1], a[2] - 0.06, 'g-railing') + T((a[0] + a[1]) / 2, -1.25, 'Luftraum', 'g-ftxt');
+    return s + L(FLIGHTS.OG.x0, a[2] - 0.04, a[1], a[2] - 0.04, 'g-railing') + T((a[0] + a[1]) / 2, -1.25, 'Luftraum', 'g-ftxt');
   }
+  // Aufzug im Wandblock westlich der Treppenbahn, Tür nach Osten auf das Podest
   function lift() {
-    const [x0, x1, y0, y1] = LIFT, t = 0.2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-    return R(x0, x1, y0, y1, 'g-wall') + R(x0 + t, x1 - t, y0 + t, y1 - t, 'g-shaft', 'Personenaufzug · Kabine 1,10 × 1,40 m · UG bis DG · unauffällig im Wandblock, wandbündige Türen') +
+    const [x0, x1, y0, y1] = LIFT, t = 0.2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, dy = -4.2;
+    return R(x0, x1, y0, y1, 'g-wall') + R(x0 + t, x1 - t, y0 + t, y1 - t, 'g-shaft', 'Personenaufzug · Kabine 1,10 × 1,40 m · UG bis DG · im Wandblock am Treppenpodest, wandbündige Türen nach Osten') +
       L(x0 + t, y0 + t, x1 - t, y1 - t, 'g-thin') + L(x0 + t, y1 - t, x1 - t, y0 + t, 'g-thin') +
-      R(cx - 0.55, cx + 0.55, cy - 0.7, cy + 0.7, 'g-cabin') + R(cx - 0.45, cx + 0.45, y0 - 0.02, y0 + t + 0.02, 'g-gap') + T(cx, cy - 0.08, 'Aufzug', 'g-ftxt g-lifttxt');
+      R(cx - 0.55, cx + 0.55, cy - 0.7, cy + 0.7, 'g-cabin') + R(x1 - t - 0.02, x1 + 0.02, dy - 0.45, dy + 0.45, 'g-gap') + T(cx, cy - 0.08, 'Aufzug', 'g-ftxt g-lifttxt');
   }
   function tiefgarage() {
     const tg = C.tg, ph = C.poolhaus, rp = HOUSE.rampe, PL = SITE.plot, wx0 = rp.x0 - rp.wand, wx1 = rp.x1 + rp.wand, rc = (rp.x0 + rp.x1) / 2;
     const kote = v => (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + num(Math.abs(v), 2);
-    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · drei Stellplätze, Eingangsbereich vor dem Foyer, unter der Terrasse Fahrräder und Lager"/>`;
+    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · drei Stellplätze, mittig unter der Terrasse der Eingangsbereich zum Haus, östlich daneben die Fahrräder"/>`;
     // Rampe: offen in der Zufahrt, dann unter dem Poolhaus bis in den Anschluss der Tiefgarage
     s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · offen in der Zufahrt, dann unter dem Poolhaus · 2,80 m breit · ${num(rp.y1 - rp.y0)} m lang · oben und unten ${num(rp.s0 * 100, 0)} %, dazwischen ${num(rp.s * 100, 0)} %`);
     for (let y = rp.y0 + 1; y < rp.y1 - 0.2; y += 1) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
@@ -363,8 +393,9 @@ const Plans = (() => {
         L(x0 + c.L * 0.3, cy - c.W / 2 + 0.12, x0 + c.L * 0.3, cy + c.W / 2 - 0.12, 'g-furn-l') + L(x0 + c.L * 0.72, cy - c.W / 2 + 0.12, x0 + c.L * 0.72, cy + c.W / 2 - 0.12, 'g-furn-l') +
         T(x0 + c.L / 2, cy - 0.1, c.name.replace(/^(Ferrari|Porsche|Mercedes) /, ''), 'g-ftxt') + T(G.x1 + 0.55, cy - 0.1, `P${i + 1}`, 'g-ftxt');
     });
-    for (let x = 5.2; x < 11.0; x += 0.65) s += L(x, -12.0, x, -13.7, 'g-furn-l');
-    s += T(8.0, -14.2, 'Fahrräder · Lager', 'g-ftxt') + T(20.2, -18.2, 'Fahrgasse 6,00 m', 'g-ftxt');
+    // Fahrräder östlich des Eingangsbereichs an der Hauswand, davor der Weg von den Stellplätzen zum Eingang
+    for (let x = 12.4; x < 17.0; x += 0.65) s += L(x, -12.0, x, -13.7, 'g-furn-l');
+    s += T(14.5, -14.65, 'Fahrräder', 'g-ftxt') + T(20.2, -18.2, 'Fahrgasse 6,00 m', 'g-ftxt');
     s += T(20.2, -15.0, 'Tiefgarage', 'g-roomtxt') + T(20.2, -15.7, `${num(area2(tg))} m² · lichte Höhe ${num(G.lichte, 2)} m`, 'g-areatxt');
     return s;
   }
@@ -443,5 +474,5 @@ const Plans = (() => {
     const aussen = 0.25 * (area([B.x0, B.x1, B.y0, B.y1]) + 15.0 + area([BD.x0, BD.x1, BD.y0, BD.y1]));
     return { eg: part[0], og: part[1], dg: part[2], aussen, sum: part[0] + part[1] + part[2] + aussen };
   }
-  return { render, table, wohnflaeche, items, FL, num, CORE: { STAIR, LIFT, VOID }, stairFlights };
+  return { render, table, wohnflaeche, items, FL, num, CORE: { LINE, FLIGHTS, HOLES, LIFT, VOID } };
 })();

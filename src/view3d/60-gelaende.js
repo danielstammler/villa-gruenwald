@@ -2,18 +2,19 @@
   function buildSite() {
     const g = new THREE.Group(), C = SITE.concept, R0 = HOUSE.rampe;
     groundAO();
-    const poolOuter = C.pool, trench = [[R0.x0, R0.y0], [R0.x1, R0.y0], [R0.x1, R0.yPortal], [R0.x0, R0.yPortal]];
+    const poolOuter = C.pool, trench = [[R0.x0, R0.y0], [R0.x1, R0.y0], [R0.x1, R0.yPortal], [R0.x0, R0.yPortal]], lh = lichthofPoly();
     const ground = new THREE.Shape(rectPts(-260, -260, 280, 260));
-    for (const h of [poolOuter, trench, C.haus]) ground.holes.push(new THREE.Path(h.map(q => v2(q[0], q[1]))));
+    for (const h of [poolOuter, trench, C.haus, lh]) ground.holes.push(new THREE.Path(h.map(q => v2(q[0], q[1]))));
     const gg = addUV1(new THREE.ShapeGeometry(ground)); gg.rotateX(-Math.PI / 2);
     const gm = new THREE.Mesh(gg, M.ground); gm.position.y = -0.03; gm.receiveShadow = true; g.add(gm);
     L.grund = [gm];
     for (const s of SITE.streets) { const m = flat(s, M.street, -0.01); g.add(m); L.grund.push(m); }
-    const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter, trench, C.haus]); g.add(lawn); L.grund.push(lawn);
+    const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter, trench, C.haus, lh]); g.add(lawn); L.grund.push(lawn);
     // Zufahrt: vorne eben, dahinter die offene Rampe in die Tiefgarage
     const zufahrtEben = [[19.732, -50.499], [24.731, -51.342], [24.731, -44.471], [R0.x1 + R0.wand, -44.471], [R0.x1 + R0.wand, R0.y0], [19.732, R0.y0]];
     for (const P0 of [C.zuwegung, zufahrtEben]) { const m = flat(P0, M.pave, 0.016); g.add(m); L.grund.push(m); }
     buildRamp(g);
+    buildLichthof();
     // Pool: Rand, Becken 1,40 m tief, Wasser 12 cm unter dem Rand, Stufen über die ganze Breite an der Nordseite
     const PO = HOUSE.pool, pw = C.poolWasser, w = pw[1][0] - pw[0][0], d = pw[0][1] - pw[2][1];
     g.add(extrude(poolOuter, M.coping, 0, 0.06, [pw]));
@@ -180,7 +181,8 @@
     // Lavendel und Hortensien am Rand der durchgehenden Terrasse, die Mitte bleibt frei für die Stufe zum Pool
     bed(0.1, 6.2, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
     bed(9.8, 18.9, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
-    bed(-0.95, -0.15, -11.4, -0.6, ['hortensie', 'gruen', 'lavendel'], 4);
+    // Westseite nur südlich des Lichthofs (house.js lichthof), davor ist der Schacht mit Geländer
+    bed(-0.95, -0.15, -HOUSE.lichthof.u0 + 0.4, -0.6, ['hortensie', 'gruen', 'lavendel'], 4);
     bed(19.1, 19.8, -10.8, -5.9, ['hortensie', 'lavendel'], 5);
     bed(0.3, 5.3, 0.15, 0.85, ['gruen', 'hortensie'], 4);
     bed(10.7, 15.7, 0.15, 0.85, ['gruen', 'hortensie'], 4);

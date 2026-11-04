@@ -121,7 +121,8 @@ const HOUSE = (() => {
   // Drei Stellplätze 2,85 m breit an der Fahrgasse, die Autos mit der Front zur Holzwand. Vor dem Haus ein offener Eingangsbereich
   // (schleuse, 5,40 × 3,35 m, seit 4.11.2026 ohne Glaswände) mit Steinboden, von dort eine zweiflügelige Tür ins Foyer des Untergeschosses.
   const tg = { decke: -0.7, platte: 0.3, bucht: 2.85, y0: -23.85, x0: 12.0, x1: 17.2,
-    schleuse: { x0: 11.8, x1: 17.2, y0: -15.0, y1: -11.65, hausTuer: [12.9, 14.3] },
+    // Eingangsbereich (seit 4.11.2026 mittig, wo vorher die Fahrräder standen; die Fahrräder stehen jetzt östlich davon)
+    schleuse: { x0: 4.8, x1: 11.8, y0: -14.352, y1: -11.65, hausTuer: [7.3, 8.7] },
     autos: [
       { k: 'ferrari', name: 'Ferrari F8 Tributo', L: 4.61, W: 1.98 }, { k: 'cayenne', name: 'Porsche Cayenne Coupé', L: 4.93, W: 1.98 },
       { k: 'vklasse', name: 'Mercedes V-Klasse', L: 5.14, W: 1.93 },
@@ -129,9 +130,10 @@ const HOUSE = (() => {
   tg.lichte = tg.decke - Z.ffbUG;
   tg.mitte = i => tg.y0 + tg.bucht * (i + 0.5);
 
-  // Pool aus dem Konzept: Wasser 12 cm unter dem Rand, 1,40 m tief, an der Nordseite vier Stufen über die ganze Breite.
+  // Pool aus dem Konzept: Wasser 12 cm unter dem Rand, 1,40 m tief, an der Nordseite vier Stufen über die ganze Breite,
+  // gleichmäßig je etwa 29 cm vom Rand (+0,06) bis zum Boden.
   // Ringsum eine Natursteinterrasse, im Osten breit mit Liegen und bis an die Veranda des Poolhauses; ein Weg führt von der Terrasse herüber.
-  const pool = { wasser: -0.12, boden: -1.4, stufen: [-0.36, -0.62, -0.88, -1.14], tritt: 0.35 };
+  const pool = { wasser: -0.12, boden: -1.4, stufen: [-0.23, -0.52, -0.82, -1.11], tritt: 0.35 };
   const poolDeck = { z: 0.04, poly: [[4.5, -23.15], [13.5, -23.15], [13.5, -27.652], [19.384, -27.652], [19.384, -33.651], [13.5, -33.651], [13.5, -38.15], [4.5, -38.15]] };
   const poolWeg = { x0: 7.4, x1: 8.6, y0: -23.15, y1: -15.65 };
   // Poolhaus auf der Fläche aus dem Konzept (3,50 × 6,00 m) im Stil des Hauses: weißer Putz, Gesims, flaches Walmdach mit Schiefer.
@@ -142,6 +144,9 @@ const HOUSE = (() => {
   // Zaun an der Straße: weißer Sockel mit schwarzen Stäben zwischen Pfeilern; Einfahrtstor zweiflügelig, daneben die Gartentür
   const zaun = { hoehe: 1.65, sockel: 0.45, pfeiler: 0.42, tor: [19.732, 23.33], tuer: [23.75, 24.73] };
 
+  // Lichthof vor dem Gym im UG (Westseite, u wie in der Westansicht von Norden gemessen): bis zum UG-Boden, Fenster bis zum Boden.
+  // Ortsgestaltungssatzung Grünwald § 8: Lichtschächte höchstens 1,50 m tief und höchstens ein Drittel der Ansichtsbreite (11,65 / 3 = 3,88 m)
+  const lichthof = { side: 'W', u0: 6.6, u1: 10.45, tief: 1.5, win: [[6.9, 8.4], [8.65, 10.15]] };
   return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe,
-    tg, pool, poolDeck, poolWeg, poolhaus, zaun };
+    tg, pool, poolDeck, poolWeg, poolhaus, zaun, lichthof };
 })();

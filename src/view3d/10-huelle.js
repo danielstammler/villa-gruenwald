@@ -203,10 +203,10 @@
     const roof = new THREE.Mesh(roofGeometry(), M.roof); roof.castShadow = roof.receiveShadow = true; g.add(roof);
     const r1 = HOUSE.run1 + HOUSE.run2;
     boxPlan(M.zink, r1 - 0.05, HOUSE.W - r1 + 0.05, -HOUSE.D / 2 - 0.08, -HOUSE.D / 2 + 0.08, Zh.first - 0.03, Zh.first + 0.05);
-    // Decken mit Öffnungen für Treppe und Aufzug; im OG zusätzlich der Luftraum über der Halle (alles zu einer Öffnung zusammengefasst)
-    const { STAIR, LIFT, VOID } = Plans.CORE, rp = ([a, b, c, e]) => [[a, c], [b, c], [b, e], [a, e]];
-    const V = VOID[0], hallHole = [[LIFT[0], LIFT[2]], [V[1], LIFT[2]], [V[1], STAIR[2]], [STAIR[1], STAIR[2]], [STAIR[1], STAIR[3]], [V[0], STAIR[3]], [V[0], LIFT[3]], [LIFT[0], LIFT[3]]];
-    for (const [z0, z1, holes] of [[-0.15, Zh.ffbEG, [rp(STAIR), rp(LIFT)]], [Zh.gurtU, Zh.ffbOG, [hallHole]], [Zh.deckeDG, Zh.ffbDG, [rp(STAIR), rp(LIFT)]]]) {
+    // Decken mit Öffnungen über den Treppenläufen und am Aufzug; im OG der Luftraum über der Halle zusammen mit der Öffnung der Haupttreppe
+    const { HOLES, LIFT, VOID } = Plans.CORE, rp = ([a, b, c, e]) => [[a, c], [b, c], [b, e], [a, e]];
+    const V = VOID[0], H = HOLES.OG, hall = [[V[0], V[3]], [V[1], V[3]], [V[1], V[2]], [H[1], V[2]], [H[1], H[2]], [H[0], H[2]], [H[0], H[3]], [V[0], H[3]]];
+    for (const [z0, z1, holes] of [[-0.15, Zh.ffbEG, [rp(HOLES.EG), rp(LIFT)]], [Zh.gurtU, Zh.ffbOG, [hall, rp(LIFT)]], [Zh.deckeDG, Zh.ffbDG, [rp(HOLES.DG), rp(LIFT)]]]) {
       const sl = extrude([[0.3, -11.35], [15.7, -11.35], [15.7, -0.3], [0.3, -0.3]], M.slab, z0, z1 - z0, holes); sl.castShadow = false; g.add(sl);
     }
     buildInterior();

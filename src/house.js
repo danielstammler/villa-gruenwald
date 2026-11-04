@@ -5,9 +5,10 @@
 // Alles andere (Geschosshöhen, Dachneigungen, Nord-/Ost-/Westfassade) ist eine plausible Annahme.
 const HOUSE = (() => {
   const W = 16.0, D = 11.65, wall = 0.36;
+  // deckeSpitz: Unterseite der flachen Decke im DG (lichte Höhe 2,60 m), darüber der Spitzboden
   const Z = {
     ffbUG: -3.4, gelaende: 0, sockel: 0.2, ffbEG: 0.2, gurtU: 3.2, gurtO: 3.45, ffbOG: 3.55,
-    sturzOG: 6.05, deckeDG: 6.3, ffbDG: 6.65, gesimsU: 6.55, gesimsO: 6.83, wand: 7.25, knick: 10.35, first: 11.12,
+    sturzOG: 6.05, deckeDG: 6.3, ffbDG: 6.65, gesimsU: 6.55, gesimsO: 6.83, wand: 7.25, deckeSpitz: 9.25, knick: 10.35, first: 11.12,
   };
   // Klassisches Mansarddach wie im Rendering: unten steil (~70°), oben flach (~9°)
   const run1 = 1.15;
@@ -23,8 +24,10 @@ const HOUSE = (() => {
   const ax7 = [[0.9, 1.9], [2.8, 3.8], [5.2, 6.2], [7.0, 9.0], [9.8, 10.8], [12.2, 13.2], [14.1, 15.1]];
   const pilLang = [[0, 0.5], [4.4, 4.95], [11.05, 11.6], [15.5, 16]];
   const pilKurz = [[0, 0.5], [11.15, 11.65]];
-  // Alle Fenster und Fenstertüren mit senkrechter Mittelsprosse, also zwei Glasfelder (Daniel, 4.11.2026); die Haustür bleibt einflügelig
-  const op = (u0, u1, z0, z1, kind, extra = {}) => ({ u0, u1, z0, z1, kind, leaves: 2, ...extra });
+  // Alle Fenster und Fenstertüren mit senkrechter Mittelsprosse, also zwei Glasfelder (Daniel, 4.11.2026); die Haustür bleibt einflügelig.
+  // Türen bis 1,10 m Breite einflügelig mit aufgesetzter Sprosse (zwei Flügel à ~0,37 m wären unbrauchbar), sonst zwei Flügel
+  const fluegel = (u0, u1, kind) => kind === 'tuer' && u1 - u0 <= 1.1 ? { leaves: 1, sprosse: true } : { leaves: 2 };
+  const op = (u0, u1, z0, z1, kind, extra = {}) => ({ u0, u1, z0, z1, kind, ...fluegel(u0, u1, kind), ...extra });
   const gaube = (u0, u1, win, extra = {}) => ({ u0, u1, top: 9.4, clad: 'putz', front: 0.2, win, ...extra });
   const gWin = (c, w = 0.9, z1 = 9.05) => ({ u0: c - w / 2, u1: c + w / 2, z0: 7.9, z1, leaves: 2 });
   // Dachfenster in der steilen Dachfläche: Mitte c entlang der Traufe, v0..v1 die Fläche hinauf (Meter ab Traufe)
@@ -40,9 +43,10 @@ const HOUSE = (() => {
         ...ax7.map(([a, b], i) => i >= 2 && i <= 4 ? op(a, b, Z.ffbOG, Z.sturzOG, 'tuer') : op(a, b, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 })),
       ],
       dormers: [
-        // Zwerchhaus in der Fassadenflucht über den Pilastern der Mittelachse; davor tritt der DG-Balkon nach vorne (siehe balkonDG)
+        // Zwerchhaus in der Fassadenflucht über den Pilastern der Mittelachse; davor tritt der DG-Balkon nach vorne (siehe balkonDG).
+        // Seitliche Balkontüren 1,00 m breit in den Achsen der OG-Türen darunter; alle Türen ab FFB DG
         { u0: 4.45, u1: 11.55, top: 9.75, clad: 'putz', front: 0, zwerch: true,
-          win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.75, z1: 9.0, leaves: 2, kind: 'tuer', move: a === 7.1 })) },
+          win: [ax7[2], [7.1, 8.9], ax7[4]].map(([a, b]) => op(a, b, Z.ffbDG, 9.0, 'tuer', { move: a === 7.1 })) },
       ],
       // Links und rechts keine Gauben, sondern flache Dachfenster wie im Rendering
       roofWindows: [dachfenster(3.3), dachfenster(12.7)],
@@ -54,7 +58,8 @@ const HOUSE = (() => {
         // Haustür einflügelig, 1,30 m breit, mit zwei verglasten Seitenteilen je 0,75 m und durchgehendem Oberlicht
         op(6.6, 9.4, Z.ffbEG, 2.85, 'eingang', { side: 0.75, single: true }),
         ...[0, 1, 5, 6].map(i => op(ax7[i][0], ax7[i][1], 1.1, 2.85, 'fenster')),
-        ...[0, 1, 2, 4, 5, 6].map(i => op(ax7[i][0], ax7[i][1], 4.25, Z.sturzOG, 'fenster')),
+        // OG-Fenster mit 0,80 m Brüstung über FFB OG (BayBO Art. 36), Sturz wie bei allen OG-Öffnungen
+        ...[0, 1, 2, 4, 5, 6].map(i => op(ax7[i][0], ax7[i][1], Z.ffbOG + 0.8, Z.sturzOG, 'fenster')),
         op(7.0, 9.0, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 }),
       ],
       // Auch hinten ein Zwerchhaus in der Mitte (französische Fenster mit Geländer), daneben Dachfenster wie im Süden
@@ -69,7 +74,7 @@ const HOUSE = (() => {
       name: 'Ost', titel: 'Ansicht Ost · Freisitz', len: D, pil: pilKurz, quelle: 'annahme',
       open: [
         op(2.325, 4.325, Z.ffbEG, 2.85, 'tuer'), op(8.825, 9.825, 1.1, 2.85, 'fenster'),
-        op(2.825, 3.825, Z.ffbOG, Z.sturzOG, 'tuer'), op(5.325, 6.325, 4.25, Z.sturzOG, 'fenster'),
+        op(2.825, 3.825, Z.ffbOG, Z.sturzOG, 'tuer'), op(5.325, 6.325, Z.ffbOG + 0.8, Z.sturzOG, 'fenster'),
         op(8.825, 9.825, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 }),
       ],
       dormers: [gaube(5.175, 6.475, [gWin(5.825)])],
@@ -100,8 +105,9 @@ const HOUSE = (() => {
   // Balkon über der Terrasse, vorne nur auf den beiden äußeren, quadratischen Pfeilern
   const balkon = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, slab: [3.1, 3.5], rail: 4.5, cols: [4.75, 11.25], colY: -14.38, colW: 0.4 };
   // Balkon im DG vor dem Zwerchhaus: tritt 1,00 m nach vorne, gleiche Breite wie Terrasse und OG-Balkon;
-  // getragen von zwei schlankeren quadratischen Pfeilern, die auf dem OG-Balkon stehen (wie unten)
-  const balkonDG = { x0: 4.5, x1: 11.5, y0: -12.65, y1: -11.65, slab: [6.45, 6.75], rail: 7.75, cols: [4.75, 11.25], colY: -12.47, colW: 0.34 };
+  // getragen von zwei schlankeren quadratischen Pfeilern, die auf dem OG-Balkon stehen (wie unten).
+  // Belag 10 cm unter FFB DG, vor den Türen eine Rinne mit Gitterrost (rinne: von x, bis x, Breite), Geländer 1,00 m über dem Belag
+  const balkonDG = { x0: 4.5, x1: 11.5, y0: -12.65, y1: -11.65, slab: [6.25, 6.55], rail: 7.55, cols: [4.75, 11.25], colY: -12.47, colW: 0.34, rinne: [5.05, 10.95, 0.15] };
   // Zwei Kamine auf der oberen Dachfläche, wie im Referenzbild links und rechts der Mitte
   const kamine = [{ x: 4.0, y: -D / 2, w: 0.75, d: 0.55, top: 11.9 }, { x: 12.0, y: -D / 2, w: 0.75, d: 0.55, top: 11.9 }];
 

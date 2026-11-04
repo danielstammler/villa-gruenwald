@@ -7,19 +7,21 @@
 #   tools/carshot.sh ferrari detail "x=0.3&y=0.6&z=0.6&cx=-1&cy=0.9&cz=1.6&fov=25"
 # Braucht den Server „villa-dev“ (Port 8766, Repo-Wurzel). Bilder liegen in tools/shots/ (nicht im Git).
 set -euo pipefail
+# PORT=8767 tools/… für eine zweite Arbeitskopie (eigener Server, sonst 8766)
+port="${PORT:-8766}"
 car="${1:?Aufruf: tools/carshot.sh <auto> [ansicht] [parameter]}"; view="${2:-all}"; extra="${3:-}"
 cd "$(dirname "$0")/.."
 mkdir -p tools/shots
 tag="$view"; [ -n "$extra" ] && tag="$view-$(printf '%s' "$extra" | tr -c 'A-Za-z0-9.' '_' | cut -c1-40)"
 out="tools/shots/$car-$tag.png"
 w=1500; h=1000; [ "$view" != all ] && { w=1200; h=900; }
-url="http://127.0.0.1:8766/tools/carstudio.html?car=$car&view=$view&w=$w&h=$h&v=$(date +%s%N)${extra:+&$extra}"
-up() { curl -fs -o /dev/null http://127.0.0.1:8766/tools/carstudio.html; }
+url="http://127.0.0.1:$port/tools/carstudio.html?car=$car&view=$view&w=$w&h=$h&v=$(date +%s%N)${extra:+&$extra}"
+up() { curl -fs -o /dev/null http://127.0.0.1:$port/tools/carstudio.html; }
 if ! up; then
   # Server fehlt: selbst starten (bleibt im Hintergrund laufen, nur lokal erreichbar)
-  nohup python3 -m http.server 8766 --bind 127.0.0.1 --directory "$(pwd -P)" >/dev/null 2>&1 &
+  nohup python3 -m http.server $port --bind 127.0.0.1 --directory "$(pwd -P)" >/dev/null 2>&1 &
   for _ in 1 2 3 4 5 6 7 8 9 10; do sleep 0.3; up && break; done
-  up || { echo "FEHLER: Server auf Port 8766 lässt sich nicht starten"; exit 1; }
+  up || { echo "FEHLER: Server auf Port $port lässt sich nicht starten"; exit 1; }
 fi
 # eigenes Profil je Aufruf, damit parallele Aufrufe sich nicht sperren
 prof="$(mktemp -d)"; trap 'rm -rf "$prof"' EXIT

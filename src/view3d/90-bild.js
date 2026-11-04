@@ -69,13 +69,19 @@
       renderFrame();
     }
   }
-  // Türen und Tore öffnen sich, wenn die Kamera nahe kommt
+  // Türen und Tore öffnen sich, wenn die Kamera nahe kommt; Drehflügel um ihre Angel, Tore mit eigener Bewegung über d.set(t), t = 0 zu bis 1 offen
+  // (d.v: Anteil je Sekunde, sonst 1,4)
   function updateDoors(dt) {
     const q = camP.position;
     let moved = false;
     for (const d of doors) {
-      const want = cam === camP && Math.hypot(q.x - d.c.x, q.z - d.c.z) < 2.4 && Math.abs(q.y - d.c.y) < 2.2 ? 1 : 0;
-      if (d.open !== want) { d.open = want > d.open ? Math.min(1, d.open + dt * 1.4) : Math.max(0, d.open - dt * 1.4); d.grp.rotation[d.axis || 'y'] = d.sign * d.max * d.open * d.open * (3 - 2 * d.open); moved = true; }
+      const want = cam === camP && Math.hypot(q.x - d.c.x, q.z - d.c.z) < 2.4 && Math.abs(q.y - d.c.y) < 2.2 ? 1 : 0, v = dt * (d.v || 1.4);
+      if (d.open !== want) {
+        d.open = want > d.open ? Math.min(1, d.open + v) : Math.max(0, d.open - v);
+        const e = d.open * d.open * (3 - 2 * d.open);
+        if (d.set) d.set(e); else d.grp.rotation[d.axis || 'y'] = d.sign * d.max * e;
+        moved = true;
+      }
     }
     return moved;
   }

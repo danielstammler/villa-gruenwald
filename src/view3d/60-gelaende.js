@@ -2,7 +2,9 @@
   function buildSite() {
     const g = new THREE.Group(), C = SITE.concept, R0 = HOUSE.rampe;
     groundAO();
-    const poolOuter = C.pool, trench = [[R0.x0, R0.y0], [R0.x1, R0.y0], [R0.x1, R0.yPortal], [R0.x0, R0.yPortal]], lh = lichthofPoly();
+    // Aussparung für Vorplatz und offene Rampe: von der schrägen Grenze (2 mm dahinter, damit sich die Umrisse nicht berühren) bis zum Poolhaus
+    const gr = R0.grenze, trench = [[R0.x0, gr(R0.x0) + 0.002], [R0.x1, gr(R0.x1) + 0.002], [R0.x1, R0.yPortal], [R0.x0, R0.yPortal]];
+    const poolOuter = C.pool, lh = lichthofPoly();
     const ground = new THREE.Shape(rectPts(-260, -260, 280, 260));
     for (const h of [poolOuter, trench, C.haus, lh]) ground.holes.push(new THREE.Path(h.map(q => v2(q[0], q[1]))));
     const gg = addUV1(new THREE.ShapeGeometry(ground)); gg.rotateX(-Math.PI / 2);
@@ -10,8 +12,8 @@
     L.grund = [gm];
     for (const s of SITE.streets) { const m = flat(s, M.street, -0.01); g.add(m); L.grund.push(m); }
     const lawn = flat(SITE.plot, M.lawn, 0.004, [poolOuter, trench, C.haus, lh]); g.add(lawn); L.grund.push(lawn);
-    // Zufahrt: vorne eben, dahinter die offene Rampe in die Tiefgarage
-    const zufahrtEben = [[19.732, -50.499], [24.731, -51.342], [24.731, -44.471], [R0.x1 + R0.wand, -44.471], [R0.x1 + R0.wand, R0.y0], [19.732, R0.y0]];
+    // Zufahrt: östlich der Rampe eben gepflastert; Vorplatz und Rampe selbst baut buildRamp
+    const zufahrtEben = [[R0.x1 + R0.wand, gr(R0.x1 + R0.wand)], [24.731, -51.342], [24.731, -44.471], [R0.x1 + R0.wand, -44.471]];
     for (const P0 of [C.zuwegung, zufahrtEben]) { const m = flat(P0, M.pave, 0.016); g.add(m); L.grund.push(m); }
     buildRamp(g);
     buildLichthof();

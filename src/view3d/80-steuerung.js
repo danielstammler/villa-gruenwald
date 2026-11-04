@@ -42,11 +42,11 @@
     // Start am Garteneingang an der Straße, über die Zufahrt die Rampe hinunter (Höhen nach dem Längsprofil) und durchs Tor
     garage: [
       [24.25, -53.0, 0, { label: 'Garteneingang', wait: 1.4, look: [22.0, -40.0, 0.6] }], [24.25, -50.6, 0.016], [22.6, -50.1, 0.016],
-      [21.13, -49.4, 0.016, { label: 'Rampe zur Tiefgarage' }],
+      [21.13, -49.4, HOUSE.rampe.z(-49.4), { label: 'Rampe zur Tiefgarage' }],
       ...rampWay(),
       [21.0, -23.3, UG, { label: 'Tiefgarage', wait: 1.8, look: [14.0, -19.5, UG + 0.8] }], [19.2, -19.0, UG, { label: 'Ferrari F8 · Cayenne Coupé · V-Klasse' }],
-      // Vom Fahrgassenende nach Westen zum Eingangsbereich mittig vor dem Haus, durch die Doppeltür ins Foyer
-      [18.6, -14.0, UG], [12.0, -13.9, UG], [9.6, -13.2, UG, { label: 'Eingang zum Haus', wait: 1.2, look: [8.0, -11.2, UG + 1.3] }], [8.0, -12.4, UG],
+      // Vom Fahrgassenende auf dem Gang zwischen P3 und den Fahrrädern nach Westen zum Eingangsbereich mittig vor dem Haus, durch die Doppeltür ins Foyer
+      [18.6, -13.75, UG], [12.2, -13.75, UG], [9.6, -13.2, UG, { label: 'Eingang zum Haus', wait: 1.2, look: [8.0, -11.2, UG + 1.3] }], [8.0, -12.4, UG],
       [8.0, -10.4, UG, { label: 'Foyer' }], [8.0, -6.9, UG], [8.5, -5.7, UG], [11.18, -5.7, UG, { label: 'Untergeschoss' }], [11.18, TY, UG, { label: 'Treppe' }],
       // Drei gerade Läufe übereinander, alle nach Westen: oben am Westpodest an, durch Halle bzw. Flur zurück zum nächsten Antritt im Osten
       ...lauf('UG', UG, EG), [5.4, TY, EG], [6.0, -2.9, EG], [7.0, -2.6, EG, { label: 'Halle', wait: 1.4, look: [8.4, -4.3, 2.0] }], [11.15, -2.9, EG], [11.15, TY, EG],

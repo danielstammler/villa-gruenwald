@@ -23,7 +23,7 @@ Maßstäbliche Konzeptstudie für den Neubau an der Ebertstraße 14 in Grünwald
 - Rendering als Gestaltungsvorlage für Fassade und Dach; Wandhöhe 7,25 m und First 11,12 m nach seinen Proportionen. Ein Referenzbild für Putz, Rahmen und Details.
 - Luftbilder der Umgebung: Dachfarben und Bäume der Nachbarn, Ziegelmauer an der Straßenecke.
 
-Die Pläne selbst liegen nicht im Repo, nur die daraus gemessenen Koordinaten (`src/data.js`). Geschosshöhen, Dachneigungen, Nord-, Ost- und Westfassade sowie das Längsprofil der Rampe (oben und unten 8 %, dazwischen 16 %, unter dem Poolhaus gut 2 m lichte Höhe) sind Annahmen. Überschlägige Rekonstruktion ohne Gewähr; baurechtliche Fragen klärt der Architekt.
+Die Pläne selbst liegen nicht im Repo, nur die daraus gemessenen Koordinaten (`src/data.js`). Geschosshöhen, Dachneigungen, Nord-, Ost- und Westfassade sowie das Längsprofil der Rampe (3,00 m Vorplatz mit 4 %, 15 %, unten 2,77 m mit 7,5 % und 0,40 m eben vor dem Sektionaltor; unter dem Poolhaus 2,05 m lichte Höhe) sind Annahmen. Überschlägige Rekonstruktion ohne Gewähr; baurechtliche Fragen klärt der Architekt.
 
 ## Aufbau
 

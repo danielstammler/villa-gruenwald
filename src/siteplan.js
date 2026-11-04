@@ -38,12 +38,17 @@ const Site = (() => {
 
   const plotArea = area(SITE.plot);
   const tgUnterZuwegung = (23.499 - 22.885) * (24.151 - 11.65);
+  // Überlappung zweier Rechtecke [x0, x1, y0, y1]
+  const cut = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[2], b[2]));
+  const T = HOUSE.terrasse, PD = HOUSE.poolDeck, PW = HOUSE.poolWeg;
+  const tgUnterTerrasse = [[4.5, 11.498, -14.652, -11.65], [11.498, 23.499, -24.151, -11.65]].reduce((s, r) => s + cut(r, [T.x0, T.x1, T.y0, T.y1]), 0);
   const FL = [
-    ['Wohnhaus', area(C.haus)], ['Freisitz', area(C.freisitz)], ['Terrasse', area(C.terrasse)], ['Podest', area(C.podest)],
-    ['Poolhaus', area(C.poolhaus)], ['Pool', area(C.pool)], ['Zuwegung', area(C.zuwegung)], ['Zufahrt', area(C.zufahrt)],
+    ['Wohnhaus', area(C.haus)], ['Freisitz', area(C.freisitz)], ['Terrasse', area(T.poly)], ['Podest', area(C.podest)],
+    ['Poolhaus', area(C.poolhaus)], ['Pool', area(C.pool)], ['Poolterrasse', area(PD.poly) - area(C.pool)], ['Weg zum Pool', (PW.x1 - PW.x0) * (PW.y1 - PW.y0)],
+    ['Zuwegung', area(C.zuwegung)], ['Zufahrt', area(C.zufahrt)],
   ];
   const befestigt = FL.reduce((s, [, a]) => s + a, 0);
-  const tgGarten = area(C.tg) - tgUnterZuwegung - area(C.terrasse);
+  const tgGarten = area(C.tg) - tgUnterZuwegung - tgUnterTerrasse;
   const STATS = { plotArea, befestigt, tgGarten, tg: area(C.tg), gruen: plotArea - befestigt, gruenOhneTG: plotArea - befestigt - tgGarten, FL };
 
   function northArrow(c, rot) {
@@ -82,12 +87,22 @@ const Site = (() => {
     s.push(poly([[rc - 0.5, -38.2], [rc + 0.5, -38.2], [rc, -36.9]], 's-ramparrow') + text([rc + 0.25, -43.4], `Rampe ${num(rp.s * 100, 0)} %`, 's-lbl s-tiny', -90));
     const PL = SITE.plot, hk = [[25.059, -44.0], PL[4], PL[5], PL[6], PL[0]];
     s.push(`<polyline points="${pts(hk.map(([x, y], i) => [x + (i === 0 || i === 1 ? -0.45 : 0), y]))}" class="s-hedge" data-tip="Hecke · ca. 1,30 m hoch · West-, Nord- und Ostgrenze"/>`);
-    s.push(poly(C.terrasse, 's-stone', 'Terrasse · 7,00 × 3,00 m · Lounge-Möbel, darüber Balkon auf zwei Pfeilern'));
+    s.push(poly(T.poly, 's-stone', `Terrasse · durchgehend 19,00 × 4,00 m bis an den Freisitz · ${num(area(T.poly), 1)} m² · Lounge unter dem Balkon, Liegen`));
     s.push(poly(C.podest, 's-stone', 'Podest am Eingang · 5,00 × 1,00 m'));
     s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · Esstisch für sechs, überdacht, darüber Dachterrasse'));
-    s.push(poly(C.pool, 's-coping', 'Pool · 4,00 × 12,00 m'));
+    s.push(poly(rect(PW.x0, PW.y0, PW.x1, PW.y1), 's-stone', 'Weg von der Terrasse zum Pool · 1,20 m breit'));
+    s.push(poly(PD.poly, 's-stone', `Poolterrasse · Naturstein · ${num(area(PD.poly) - area(C.pool), 1)} m² · Liegen und Sonnenschirm, bis an die Veranda des Poolhauses`));
+    s.push(poly(C.pool, 's-coping', 'Pool · 4,00 × 12,00 m · Stufen über die ganze Breite an der Nordseite'));
     s.push(poly(C.poolWasser, 's-water', 'Pool · Wasserfläche ca. 3,50 × 11,50 m'));
-    s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m · darunter führt die Rampe in die Tiefgarage'));
+    const PH = HOUSE.poolhaus;
+    s.push(poly(rect(PH.x0 - PH.veranda, PH.y0, PH.x0, PH.y1), 's-balkon', 'Veranda des Poolhauses · 1,80 × 6,00 m · überdacht, zwei Pfeiler'));
+    s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m · Walmdach, drei Glastüren zum Pool · darunter führt die Rampe in die Tiefgarage'));
+    // Zaun an der Straße mit Einfahrtstor und Gartentür, an der Ostgrenze bis zur Hecke
+    const Z0 = HOUSE.zaun, P0 = SITE.plot, onB = x => [x, P0[2][1] + (x - P0[2][0]) * (P0[3][1] - P0[2][1]) / (P0[3][0] - P0[2][0])];
+    s.push(`<polyline points="${pts([P0[0], P0[1], P0[2], onB(Z0.tor[0])])}" class="s-fence" data-tip="Zaun · weißer Sockel mit schwarzen Stäben zwischen Pfeilern · 1,65 m hoch"/>`);
+    s.push(`<polyline points="${pts([onB(Z0.tuer[1]), P0[3], [25.059, -44.0]])}" class="s-fence" data-tip="Zaun · weißer Sockel mit schwarzen Stäben"/>`);
+    s.push(`<polyline points="${pts([onB(Z0.tor[0]), onB(Z0.tor[1])])}" class="s-gate" data-tip="Einfahrtstor · zweiflügelig, schwarzer Stahl · 3,60 m breit"/>`);
+    s.push(`<polyline points="${pts([onB(Z0.tuer[0]), onB(Z0.tuer[1])])}" class="s-gate" data-tip="Gartentür für Fußgänger mit Klingel und Briefkasten im Pfeiler"/>`);
     s.push(poly(C.haus, 's-house', 'Wohnhaus · 16,00 × 11,65 m · 186,4 m² · Wandhöhe 7,25 m · First 11,12 m'));
     for (const o of HOUSE.fas.S.open.filter(q => q.z0 < 1)) s.push(poly(rect(o.u0, -HOUSE.D, o.u1, -HOUSE.D + 0.2), 's-win'));
     const bk = HOUSE.balkon;
@@ -100,7 +115,8 @@ const Site = (() => {
     s.push(poly(rect(HOUSE.W - pk.u1, 0, HOUSE.W - pk.u0, pk.depth), 's-balkon', `Vordach über dem Eingang · ${num(pk.u1 - pk.u0)} × ${num(pk.depth)} m · zwei Pfeiler`) +
       pk.pillars.map(u => sq(HOUSE.W - u, pk.py, pk.pw)).join(''));
     s.push(text([8, -4.6], 'Wohnhaus', 's-houselabel') + text([8, -6.0], '16,00 × 11,65', 's-houselabel s-small') + text([8, -7.2], '186,4 m²', 's-houselabel s-small'));
-    s.push(text([8, -13.4], 'Terrasse', 's-lbl s-small') + text([17.5, -8.6], 'Freisitz', 's-lbl s-small', -90) + text([8, 0.35], 'Podest', 's-lbl s-tiny'));
+    s.push(text([2.4, -14.1], 'Terrasse', 's-lbl s-small') + text([17.5, -8.6], 'Freisitz', 's-lbl s-small', -90) + text([8, 0.35], 'Podest', 's-lbl s-tiny'));
+    s.push(text([11.8, -36.9], 'Poolterrasse', 's-lbl s-tiny'));
     s.push(poly([[8, 1.1], [7.55, 2.05], [8.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));
     s.push(text([8, -30.65], 'Pool 4,00 × 12,00', 's-lbl s-small', -90) + text([21.13, -30.65], 'Poolhaus 3,50 × 6,00', 's-lbl s-tiny', -90));
     s.push(text([23.63, -21], 'Zuwegung 1,50', 's-lbl s-tiny', -90) + text([22.6, -49.75], 'Zufahrt', 's-lbl s-small'));
@@ -131,7 +147,7 @@ const Site = (() => {
       dim([westX(-0.6), -0.6], [0, -0.6]) + dim([westX(-D + 0.6), -D + 0.6], [0, -D + 0.6]) +
       dim([0.8, 0], [0.8, northY(0.8)], null, 's-dim', -0.5) + dim([W - 0.8, 0], [W - 0.8, northY(W - 0.8)], null, 's-dim', -0.5) +
       dim([W, -1.4], [eastX(-1.4), -1.4]) + dim([19, -9.6], [eastX(-9.6), -9.6]) +
-      dim([3, -D], [3, southY(3)], null, 's-dim', -0.5) + dim([8, -14.652], [8, -24.651], null, 's-dim', -0.5) +
+      dim([3, -D], [3, southY(3)], null, 's-dim', -0.5) + dim([10.6, -15.65], [10.6, -24.651], null, 's-dim', -0.5) +
       dim([22.885, -30.6], [eastX(-30.6), -30.6]) +
       dim([0, 2.9], [W, 2.9], '16,00') + dim([-0.9, 0], [-0.9, -D], '11,65', 's-dim', 0.5) + '</g>');
     s.push(northArrow([-10.5, 9], SITE.north.grid) + scaleBar([-9, -60]));

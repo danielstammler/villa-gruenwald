@@ -6,7 +6,7 @@
 const HOUSE = (() => {
   const W = 16.0, D = 11.65, wall = 0.36;
   const Z = {
-    ffbUG: -3.1, gelaende: 0, sockel: 0.2, ffbEG: 0.2, gurtU: 3.2, gurtO: 3.45, ffbOG: 3.55,
+    ffbUG: -3.4, gelaende: 0, sockel: 0.2, ffbEG: 0.2, gurtU: 3.2, gurtO: 3.45, ffbOG: 3.55,
     sturzOG: 6.05, deckeDG: 6.3, ffbDG: 6.65, gesimsU: 6.55, gesimsO: 6.83, wand: 7.25, knick: 10.35, first: 11.12,
   };
   // Klassisches Mansarddach wie im Rendering: unten steil (~70°), oben flach (~9°)
@@ -34,13 +34,14 @@ const HOUSE = (() => {
     S: {
       name: 'Süd', titel: 'Ansicht Süd · Garten', len: W, pil: pilLang, quelle: 'plan',
       open: [
-        ...ax7.map(([a, b]) => op(a, b, Z.ffbEG, 2.85, 'tuer')),
+        // Die mittlere Gartentür öffnet sich beim Rundgang (move)
+        ...ax7.map(([a, b], i) => op(a, b, Z.ffbEG, 2.85, 'tuer', i === 3 ? { move: true } : {})),
         ...ax7.map(([a, b], i) => i >= 2 && i <= 4 ? op(a, b, Z.ffbOG, Z.sturzOG, 'tuer') : op(a, b, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 })),
       ],
       dormers: [
         // Zwerchhaus in der Fassadenflucht über den Pilastern der Mittelachse; davor tritt der DG-Balkon nach vorne (siehe balkonDG)
         { u0: 4.45, u1: 11.55, top: 9.75, clad: 'putz', front: 0, zwerch: true,
-          win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.75, z1: 9.0, leaves: b - a > 1.5 ? 2 : 1, kind: 'tuer' })) },
+          win: [[5.3, 6.1], [7.1, 8.9], [9.9, 10.7]].map(([a, b]) => ({ u0: a, u1: b, z0: 6.75, z1: 9.0, leaves: b - a > 1.5 ? 2 : 1, kind: 'tuer', move: a === 7.1 })) },
       ],
       // Links und rechts keine Gauben, sondern flache Dachfenster wie im Rendering
       roofWindows: [dachfenster(3.3), dachfenster(12.7)],
@@ -91,12 +92,15 @@ const HOUSE = (() => {
   };
 
   const freisitz = { x0: 16, x1: 19, y0: -10.825, y1: -5.825, z: 0.18, slab: [3.0, 3.45], rail: 4.45, col: 0.35 };
-  const terrasse = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, z: 0.18 };
+  // Durchgehende Terrasse vor der ganzen Gartenseite, 4,00 m tief und im Osten bis an den Freisitz; in der Mitte eine Stufe zum Weg an den Pool
+  const terrasse = { x0: 0, x1: 19, y0: -15.65, y1: -11.65, z: 0.18, stufe: [6.6, 9.4] };
+  terrasse.poly = [[0, -11.65], [16, -11.65], [16, -10.825], [19, -10.825], [19, -15.65], [0, -15.65]];
   const podest = { x0: 5.5, x1: 10.5, y0: 0, y1: 1.0, z: 0.18 };
   // Balkon über der Terrasse, vorne nur auf den beiden äußeren, quadratischen Pfeilern
   const balkon = { x0: 4.5, x1: 11.5, y0: -14.652, y1: -11.65, slab: [3.1, 3.5], rail: 4.5, cols: [4.75, 11.25], colY: -14.38, colW: 0.4 };
-  // Balkon im DG vor dem Zwerchhaus: tritt 1,00 m nach vorne, gleiche Breite wie Terrasse und OG-Balkon, auf Konsolen
-  const balkonDG = { x0: 4.5, x1: 11.5, y0: -12.65, y1: -11.65, slab: [6.45, 6.75], rail: 7.75, consoles: [4.75, 6.6, 9.4, 11.25] };
+  // Balkon im DG vor dem Zwerchhaus: tritt 1,00 m nach vorne, gleiche Breite wie Terrasse und OG-Balkon;
+  // getragen von zwei schlankeren quadratischen Pfeilern, die auf dem OG-Balkon stehen (wie unten)
+  const balkonDG = { x0: 4.5, x1: 11.5, y0: -12.65, y1: -11.65, slab: [6.45, 6.75], rail: 7.75, cols: [4.75, 11.25], colY: -12.47, colW: 0.34 };
   // Zwei Kamine auf der oberen Dachfläche, wie im Referenzbild links und rechts der Mitte
   const kamine = [{ x: 4.0, y: -D / 2, w: 0.75, d: 0.55, top: 11.9 }, { x: 12.0, y: -D / 2, w: 0.75, d: 0.55, top: 11.9 }];
 
@@ -112,5 +116,28 @@ const HOUSE = (() => {
   };
   rampe.lichte = rampe.decke - rampe.z(rampe.yPortal);
 
-  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe };
+  // Tiefgarage: Boden auf Höhe des Untergeschosses, Decke 30 cm, darüber 40 cm Aufbau für Terrasse und Rasen; 2,70 m lichte Höhe.
+  // Vier Stellplätze 2,70 m breit an der Fahrgasse, die Autos mit der Front zur Holzwand
+  const tg = { decke: -0.7, platte: 0.3, bucht: 2.7, y0: -23.85, x0: 12.0, x1: 17.2,
+    autos: [
+      { k: 'ferrari', name: 'Ferrari F8 Tributo', L: 4.61, W: 1.98 }, { k: 'cayenne', name: 'Porsche Cayenne Coupé', L: 4.93, W: 1.98 },
+      { k: 'troc', name: 'VW T-Roc R', L: 4.23, W: 1.82 }, { k: 'vklasse', name: 'Mercedes V-Klasse', L: 5.14, W: 1.93 },
+    ] };
+  tg.lichte = tg.decke - Z.ffbUG;
+  tg.mitte = i => tg.y0 + tg.bucht * (i + 0.5);
+
+  // Pool aus dem Konzept: Wasser 12 cm unter dem Rand, 1,40 m tief, an der Nordseite vier Stufen über die ganze Breite.
+  // Ringsum eine Natursteinterrasse, im Osten breit mit Liegen und bis an die Veranda des Poolhauses; ein Weg führt von der Terrasse herüber.
+  const pool = { wasser: -0.12, boden: -1.4, stufen: [-0.36, -0.62, -0.88, -1.14], tritt: 0.35 };
+  const poolDeck = { z: 0.04, poly: [[4.5, -23.15], [13.5, -23.15], [13.5, -27.652], [19.384, -27.652], [19.384, -33.651], [13.5, -33.651], [13.5, -38.15], [4.5, -38.15]] };
+  const poolWeg = { x0: 7.4, x1: 8.6, y0: -23.15, y1: -15.65 };
+  // Poolhaus auf der Fläche aus dem Konzept (3,50 × 6,00 m) im Stil des Hauses: weißer Putz, Gesims, flaches Walmdach mit Schiefer,
+  // zum Pool drei Glastüren, davor eine überdachte Veranda auf zwei Pfeilern. Darunter führt die Rampe in die Tiefgarage.
+  const poolhaus = { x0: 19.384, x1: 22.885, y0: -33.651, y1: -27.652, z: 0.05, wand: 0.25, gesims: 2.75, traufe: 2.95, neigung: 27,
+    veranda: 1.8, pfeiler: 0.3, tueren: [[0.35, 1.75], [2.3, 3.7], [4.25, 5.65]] };
+  // Zaun an der Straße: weißer Sockel mit schwarzen Stäben zwischen Pfeilern; Einfahrtstor zweiflügelig, daneben die Gartentür
+  const zaun = { hoehe: 1.65, sockel: 0.45, pfeiler: 0.42, tor: [19.732, 23.33], tuer: [23.75, 24.73] };
+
+  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe,
+    tg, pool, poolDeck, poolWeg, poolhaus, zaun };
 })();

@@ -71,21 +71,20 @@ const Elev = (() => {
     s += r(ua, fz.slab[0], ub, fz.slab[1], 'e-pil');
     return s + rail(ua + 0.06, ub - 0.06, fz.slab[1], fz.rail);
   }
-  // Quadratischer Pfeiler mit schlichtem Sockel und Kapitell von der Terrasse bis unter die Balkonplatte
-  function column(u, w) {
-    const z0 = HOUSE.terrasse.z, z1 = HOUSE.balkon.slab[0], h = w / 2;
+  // Quadratischer Pfeiler mit schlichtem Sockel und Kapitell von z0 bis unter die Platte z1 (Seitenlänge w)
+  function column(u, w, z0 = HOUSE.terrasse.z, z1 = HOUSE.balkon.slab[0]) {
+    const h = w / 2;
     return r(u - h - 0.05, z0, u + h + 0.05, z0 + 0.14, 'e-pil') + r(u - h, z0 + 0.14, u + h, z1 - 0.16, 'e-pil') +
       r(u - h - 0.04, z1 - 0.16, u + h + 0.04, z1 - 0.06, 'e-pil') + r(u - h - 0.07, z1 - 0.06, u + h + 0.07, z1, 'e-pil');
   }
   function balkon(side) {
     const b = HOUSE.balkon, bd = HOUSE.balkonDG, D = HOUSE.D;
     const slab = (B, a, c) => r(a, B.slab[0], c, B.slab[1] - 0.12, 'e-pil') + r(a - 0.06, B.slab[1] - 0.12, c + 0.06, B.slab[1], 'e-pil') + rail(a + 0.05, c - 0.05, B.slab[1], B.rail);
-    // Konsolen unter dem DG-Balkon: von vorn als Stütze, von der Seite gestuft
-    const consoleFront = u => r(u - 0.11, bd.slab[0] - 0.62, u + 0.11, bd.slab[0], 'e-pil');
-    const consoleSide = (uw, dir) => r(uw, bd.slab[0] - 0.3, uw + dir * 0.7, bd.slab[0], 'e-pil') + r(uw, bd.slab[0] - 0.62, uw + dir * 0.38, bd.slab[0] - 0.3, 'e-pil');
-    if (side === 'S') return b.cols.map(x => column(x, b.colW)).join('') + slab(b, b.x0, b.x1) + bd.consoles.map(consoleFront).join('') + slab(bd, bd.x0, bd.x1);
-    if (side === 'E') return column(b.colY + D, b.colW) + slab(b, b.y0 + D, b.y1 + D) + consoleSide(0, -1) + slab(bd, bd.y0 + D, bd.y1 + D);
-    if (side === 'W') return column(-b.colY, b.colW) + slab(b, -b.y1, -b.y0) + consoleSide(D, 1) + slab(bd, -bd.y1, -bd.y0);
+    // Pfeiler des DG-Balkons stehen auf dem OG-Balkon
+    const upper = u => column(u, bd.colW, b.slab[1], bd.slab[0]);
+    if (side === 'S') return b.cols.map(x => column(x, b.colW)).join('') + slab(b, b.x0, b.x1) + bd.cols.map(upper).join('') + slab(bd, bd.x0, bd.x1);
+    if (side === 'E') return column(b.colY + D, b.colW) + slab(b, b.y0 + D, b.y1 + D) + upper(bd.colY + D) + slab(bd, bd.y0 + D, bd.y1 + D);
+    if (side === 'W') return column(-b.colY, b.colW) + slab(b, -b.y1, -b.y0) + upper(-bd.colY) + slab(bd, -bd.y1, -bd.y0);
     return '';
   }
   // Eingangsportikus der Nordseite: von vorn Pfeiler, Gebälk und Türrahmung, von Osten und Westen im Profil
@@ -144,8 +143,16 @@ const Elev = (() => {
   const LEVELS = [[0, 'Gelände'], [Z.ffbEG, 'FFB EG'], [Z.ffbOG, 'FFB OG'], [Z.ffbDG, 'FFB DG'], [Z.wand, 'Wandhöhe'], [Z.knick, 'Dachknick'], [Z.first, 'First']];
 
   function facade(side, opt) {
-    const F = HOUSE.fas[side], L = F.len, x0 = -5.6, x1 = L + (side === 'S' ? 6.2 : 5.4);
-    let s = r(x0 + 0.3, -0.55, x1 - 0.3, 0, 'e-earth');
+    const F = HOUSE.fas[side], L = F.len, x0 = side === 'E' ? -13.4 : -5.6, x1 = L + (side === 'S' ? 8.0 : side === 'W' ? 13.0 : 5.4);
+    // Untergeschoss und Tiefgarage unter dem Gelände, gestrichelt (verdeckt); die Tiefgarage liegt vor dem Haus unter Terrasse und Garten
+    const G = HOUSE.tg, zu = Z.ffbUG - 0.3, tgSpan = { S: [4.5, 23.499], E: [-12.501, 0], W: [HOUSE.D, 24.151] }[side];
+    let s = r(x0 + 0.3, zu - 0.45, x1 - 0.3, 0, 'e-earth');
+    s += r(0, zu, L, -0.02, 'e-under') + ln(0, Z.ffbUG, L, Z.ffbUG, 'e-under') + tx(L / 2, (Z.ffbUG - 0.15) / 2 - 0.15, 'Untergeschoss', 'e-label');
+    if (tgSpan) {
+      const a = Math.max(tgSpan[0], x0 + 0.3), b = Math.min(tgSpan[1], x1 - 0.3), lx = side === 'S' ? (L + b) / 2 : (a + b) / 2;
+      s += r(a, zu, b, G.decke + G.platte, 'e-under') + ln(a, G.decke, b, G.decke, 'e-under');
+      s += tx(lx, (Z.ffbUG + G.decke) / 2 + 0.1, 'Tiefgarage', 'e-label') + tx(lx, (Z.ffbUG + G.decke) / 2 - 0.45, `lichte Höhe ${num(G.lichte)} m`, 'e-dimtxt');
+    }
     if (side === 'N') s += freisitz('N');
     s += r(0, Z.sockel, L, Z.gesimsU, 'e-wall');
     for (const op of F.open) s += opening(op);
@@ -167,10 +174,10 @@ const Elev = (() => {
     s += ln(x0 + 0.3, 0, x1 - 0.3, 0, 'e-ground');
     if (opt.mass) {
       const eg = F.open.filter(q => q.z0 < 1.5).sort((a, b) => a.u0 - b.u0);
-      s += chain([0, ...eg.flatMap(q => [q.u0, q.u1]), L], -0.85) + chain([0, L], -1.6);
+      s += chain([0, ...eg.flatMap(q => [q.u0, q.u1]), L], zu - 0.85) + chain([0, L], zu - 1.6);
     }
-    if (opt.koten) s += koten(LEVELS, -4.2, -0.4);
-    return { svg: s, vb: [x0, -12.6, x1 - x0, 15.0] };
+    if (opt.koten) s += koten([[Z.ffbUG, 'FFB UG'], ...LEVELS], -4.2, -0.4);
+    return { svg: s, vb: [x0, -12.6, x1 - x0, 12.6 - zu + 2.2] };
   }
 
   function offsetPolyline(pts, d) {
@@ -201,11 +208,17 @@ const Elev = (() => {
       [D - r1, Z.knick], [D - nB, N1.top], [D, N1.top], [D, Z.gesimsU]];
     const inner = offsetPolyline(prof, 0.3);
     const x0 = -6.4, x1 = D + 6.8;
-    let s = r(x0 + 0.3, -4.1, x1 - 0.3, 0, 'e-earth');
-    s += r(t, Z.ffbUG, D - t, -0.15, 'e-room') + r(-3.0, 0, 0, HOUSE.terrasse.z, 'e-stone') + r(D, 0, D + 1.0, HOUSE.podest.z, 'e-stone');
-    s += r(0, -3.4, D, Z.ffbUG, 'e-cut');
-    for (const [z0, z1] of [[-0.15, Z.ffbEG], [Z.gurtU, Z.ffbOG], [Z.deckeDG, Z.ffbDG]]) s += r(t, z0, D - t, z1, 'e-cut');
-    for (const [a, b] of [[0, t], [D - t, D]]) for (const [z0, z1] of [[-3.4, Z.ffbEG], [2.85, Z.ffbOG], [Z.sturzOG, 7.0]]) s += r(a, z0, b, z1, 'e-cut');
+    const G = HOUSE.tg, uT0 = HOUSE.balkon.y0 + D, uV = Plans.CORE.VOID[0][2] + D;
+    let s = r(x0 + 0.3, Z.ffbUG - 0.7, x1 - 0.3, 0, 'e-earth');
+    s += r(t, Z.ffbUG, D - t, -0.15, 'e-room') + r(HOUSE.terrasse.y0 + D, 0, 0, HOUSE.terrasse.z, 'e-stone') + r(D, 0, D + 1.0, HOUSE.podest.z, 'e-stone');
+    s += r(0, Z.ffbUG - 0.3, D, Z.ffbUG, 'e-cut');
+    // Tiefgarage unter der Terrasse: 2,70 m lichte Höhe, Decke 30 cm, darüber der Aufbau der Terrasse
+    s += r(uT0 + 0.3, Z.ffbUG, 0, G.decke, 'e-room') + r(uT0, Z.ffbUG - 0.3, 0, Z.ffbUG, 'e-cut') + r(uT0, Z.ffbUG - 0.3, uT0 + 0.3, G.decke + G.platte, 'e-cut') + r(uT0, G.decke, 0, G.decke + G.platte, 'e-cut');
+    s += tx(uT0 / 2 + 0.15, (Z.ffbUG + G.decke) / 2 + 0.2, 'Tiefgarage', 'e-label') + tx(uT0 / 2 + 0.15, (Z.ffbUG + G.decke) / 2 - 0.3, `lichte Höhe ${num(G.lichte)} m`, 'e-dimtxt');
+    // Decken; im OG fehlt die Decke über der Halle (Luftraum)
+    for (const [z0, z1] of [[-0.15, Z.ffbEG], [Z.gurtU, Z.ffbOG], [Z.deckeDG, Z.ffbDG]]) s += r(t, z0, z0 === Z.gurtU ? uV : D - t, z1, 'e-cut');
+    s += tx((uV + D) / 2, 4.6, 'Halle', 'e-label') + tx((uV + D) / 2, 4.15, 'Luftraum', 'e-dimtxt');
+    for (const [a, b] of [[0, t], [D - t, D]]) for (const [z0, z1] of [[Z.ffbUG - 0.3, Z.ffbEG], [2.85, Z.ffbOG], [Z.sturzOG, 7.0]]) s += r(a, z0, b, z1, 'e-cut');
     for (const [a, b] of [[0, t], [D - t, D]]) for (const [z0, z1] of [[Z.ffbEG, 2.85], [Z.ffbOG, Z.sturzOG]]) s += r(a, z0, b, z1, 'e-beyond') + ln((a + b) / 2, z0, (a + b) / 2, z1, 'e-glassline');
     s += poly([...prof, ...inner.slice().reverse()], 'e-cutroof');
     // Balkontüren im Zwerchhaus (geschnitten) und Gaubenfenster im Norden (dahinter)
@@ -218,7 +231,7 @@ const Elev = (() => {
     // OG-Balkon und DG-Balkon: Platten geschnitten, seitliches Geländer, Pfeiler und Konsolen dahinter
     s += r(b.y0 + D, b.slab[0], 0, b.slab[1], 'e-cut') + rail(b.y0 + D + 0.06, -0.02, b.slab[1], b.rail) + r(b.colY + D - b.colW / 2, HOUSE.terrasse.z, b.colY + D + b.colW / 2, b.slab[0], 'e-beyond');
     s += r(bd.y0 + D, bd.slab[0], 0, bd.slab[1], 'e-cut') + rail(bd.y0 + D + 0.06, -0.02, bd.slab[1], bd.rail);
-    s += r(-0.7, bd.slab[0] - 0.3, 0, bd.slab[0], 'e-beyond') + r(-0.38, bd.slab[0] - 0.62, 0, bd.slab[0] - 0.3, 'e-beyond');
+    s += r(bd.colY + D - bd.colW / 2, b.slab[1], bd.colY + D + bd.colW / 2, bd.slab[0], 'e-beyond');
     s += tx((bd.y0 + D) / 2, bd.slab[1] + 1.25, 'Balkon', 'e-dimtxt') + tx((b.y0 + D) / 2, b.slab[1] + 1.25, 'Balkon', 'e-dimtxt');
     // 2,30 m lichte Höhe im DG
     const zc = Z.ffbDG + 2.3, xs = [];
@@ -236,7 +249,7 @@ const Elev = (() => {
   }
   // Schnitt B–B in der Achse der Rampe, Blick nach Westen: links Straße und Zufahrt, rechts die Tiefgarage.
   function rampSection(opt) {
-    const R0 = HOUSE.rampe, PL = SITE.plot, yS = -53.2, u = y => y - yS, yEnd = -19.2, uE = u(yEnd), n = 72, zPH = 0.2;
+    const R0 = HOUSE.rampe, G = HOUSE.tg, PL = SITE.plot, yS = -53.2, u = y => y - yS, yEnd = -19.2, uE = u(yEnd), n = 72, zPH = HOUSE.poolhaus.z;
     const xc = (R0.x0 + R0.x1) / 2, yG = PL[2][1] + (xc - PL[2][0]) * (PL[3][1] - PL[2][1]) / (PL[3][0] - PL[2][0]);
     const prof = [];
     for (let i = 0; i <= n; i++) { const y = R0.y0 + (R0.yTor - R0.y0) * i / n; prof.push([u(y), R0.z(y)]); }
@@ -245,16 +258,20 @@ const Elev = (() => {
     const x0 = -0.6, x1 = uE + 0.6;
     let s = r(x0 + 0.3, -4.1, x1 - 0.3, 0, 'e-earth');
     // Luftraum: offener Graben, Durchfahrt unter dem Poolhaus, Anschluss und Tiefgarage
-    s += poly([[u0, 0], [uP, 0], [uP, R0.decke], [uH, R0.decke], [uH, -0.9], [uE, -0.9], ...back], 'e-room');
+    s += poly([[u0, 0], [uP, 0], [uP, R0.decke], [uH, R0.decke], [uH, G.decke], [uE, G.decke], ...back], 'e-room');
     // Rampenwand mit Geländer jenseits der Schnittebene
     s += poly([[u0, 0.15], [uP, 0.15], [uP, zP], ...prof.filter(p => p[0] < uP).reverse()], 'e-beyond');
     s += rail(u0 + 0.3, uP - 0.06, 0.15, 1.05).replace(/class="e-bar"/g, 'class="e-bar e-railx"');
     // Fahrbahnplatte, Unterzug unter der Nordwand des Poolhauses, Decke der Tiefgarage, Tor
-    s += poly([...prof, ...back.map(([a, b]) => [a, b - 0.3])], 'e-cut') + r(uH - 0.3, -0.9, uH, R0.decke, 'e-cut') + r(uH, -0.9, uE, -0.6, 'e-cut');
-    s += r(uT - 0.04, R0.zTG, uT + 0.04, -0.9, 'e-bar') + tx(uT + 0.25, -1.25, 'Tor', 'e-mark');
-    // Poolhaus: Boden zugleich Decke der Durchfahrt, Wände geschnitten, dahinter die Glasfront zum Pool
-    s += r(uP, R0.decke, uH, zPH, 'e-cut') + r(uP + 0.3, zPH, uH - 0.3, 3.0, 'e-room') + r(uP + 0.5, 0.25, uH - 0.5, 2.7, 'e-beyond');
-    s += r(uP, zPH, uP + 0.3, 3.0, 'e-cut') + r(uH - 0.3, zPH, uH, 3.0, 'e-cut') + r(uP - 0.15, 3.0, uH + 0.15, 3.22, 'e-cut');
+    s += poly([...prof, ...back.map(([a, b]) => [a, b - 0.3])], 'e-cut') + r(uH - 0.3, G.decke, uH, R0.decke, 'e-cut') + r(uH, G.decke, uE, G.decke + G.platte, 'e-cut');
+    s += r(uT - 0.04, R0.zTG, uT + 0.04, G.decke, 'e-bar') + tx(uT + 0.25, -1.25, 'Tor', 'e-mark');
+    // Poolhaus: Boden zugleich Decke der Durchfahrt, Wände geschnitten, dahinter die drei Glastüren zum Pool; flaches Walmdach im Schnitt
+    const PH = HOUSE.poolhaus, tn = Math.tan(PH.neigung * Math.PI / 180), ov = 0.25, ex = Math.min(xc - (PH.x0 - PH.veranda - ov), PH.x1 + ov - xc);
+    const rY0 = u(PH.y0 - ov), rY1 = u(PH.y1 + ov), rz = PH.traufe + tn * ex, uDoor = v => u(PH.y1 - v);
+    s += r(uP, R0.decke, uH, zPH, 'e-cut') + r(uP + PH.wand, zPH, uH - PH.wand, PH.gesims, 'e-room');
+    for (const [a, b] of PH.tueren) s += r(uDoor(b), zPH, uDoor(a), 2.45, 'e-beyond') + ln((uDoor(a) + uDoor(b)) / 2, zPH, (uDoor(a) + uDoor(b)) / 2, 2.45, 'e-glassline');
+    s += r(uP, zPH, uP + PH.wand, PH.gesims, 'e-cut') + r(uH - PH.wand, zPH, uH, PH.gesims, 'e-cut') + r(uP - 0.1, PH.gesims, uH + 0.1, PH.traufe, 'e-cut');
+    s += poly([[rY0, PH.traufe], [rY0 + ex, rz], [rY1 - ex, rz], [rY1, PH.traufe], [rY1, PH.traufe - 0.18], [rY1 - ex, rz - 0.2], [rY0 + ex, rz - 0.2], [rY0, PH.traufe - 0.18]], 'e-cutroof');
     s += ln(x0 + 0.3, 0, u0, 0, 'e-ground') + ln(uH, 0, x1 - 0.3, 0, 'e-ground');
     s += ln(uG, -0.7, uG, 1.7, 'e-dim e-dash') + tx(uG, 1.9, 'Grenze', 'e-label');
     s += tx(uG / 2, 0.45, 'Straße', 'e-label') + tx((uG + u0) / 2, 0.45, 'Zufahrt', 'e-label') + tx((u0 + uP) / 2, 1.6, 'offene Rampe · 2,80 m breit', 'e-label');

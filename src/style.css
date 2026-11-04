@@ -168,6 +168,7 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .e-kote { font: 500 0.32px var(--font-data); fill: var(--ink); text-anchor: end; }
 .e-kname { font: 400 0.24px var(--font-ui); fill: var(--ink-2); text-anchor: start; }
 .e-beyond { fill: var(--m-reveal); opacity: 0.6; }
+.e-under { fill: none; stroke: var(--ink-2); stroke-width: 1px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
 .e-kmark { fill: var(--ink); }
 .e-cut { fill: var(--ink); }
 .e-cutroof { fill: var(--ink-2); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
@@ -252,6 +253,7 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .g-walkhead { fill: var(--accent); }
 .g-stairtxt { font: 600 0.24px var(--font-ui); fill: var(--accent); text-anchor: middle; }
 .g-railing { stroke: var(--ink); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
+.g-void { fill: color-mix(in srgb, var(--accent) 7%, transparent); stroke: var(--ink-2); stroke-width: 0.8px; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
 .g-cabin { fill: color-mix(in srgb, var(--accent) 16%, transparent); stroke: var(--accent); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
 .g-thin { stroke: var(--ink-2); stroke-width: 0.4px; vector-effect: non-scaling-stroke; }
 .g-lifttxt { fill: var(--accent); font-weight: 600; }
@@ -318,4 +320,6 @@ body.noscroll { overflow: hidden; }
 .e-railx { fill: var(--ink-2); }
 .g-grenze { fill: none; stroke: var(--ink); stroke-width: 1.4px; stroke-dasharray: 10 3 2 3; vector-effect: non-scaling-stroke; }
 .s-hedge { fill: none; stroke: var(--lawn-2); stroke-width: 0.6; stroke-linejoin: round; opacity: 0.9; }
+.s-fence { fill: none; stroke: var(--ink); stroke-width: 0.22; stroke-dasharray: 0.9 0.25; }
+.s-gate { fill: none; stroke: var(--accent); stroke-width: 0.32; stroke-linecap: round; }
 .hint-text { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); margin: 8px 0 0; }

@@ -1,7 +1,7 @@
 // Bedienung: Tabs, 3D-Steuerung, Ansichten, Grundrisse, Lageplan-Ebenen, Kennzahlen.
 (() => {
   const noop = () => {};
-  const View3D = window.View3D || { ready: false, init() { throw new Error("three.js konnte nicht geladen werden"); }, show: noop, goTo: noop, rotate: noop, setDate: noop, setTime: noop, play: noop, setLayer: noop, setCut: noop, setLevel: noop, snapshot: () => "" };
+  const View3D = window.View3D || { ready: false, init() { throw new Error("three.js konnte nicht geladen werden"); }, show: noop, goTo: noop, rotate: noop, setDate: noop, setTime: noop, play: noop, setLayer: noop, setCut: noop, setLevel: noop, tour: noop, snapshot: () => "" };
   const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const VIEWS = ['modell', 'ansichten', 'grundrisse', 'lageplan', 'daten'];
   const ELEV = { sued: 'S', nord: 'N', ost: 'E', west: 'W', schnitt: 'A', rampe: 'B' };
@@ -77,8 +77,22 @@
     const a = $('#levelChips [data-level="alle"]');
     if (a.getAttribute('aria-pressed') !== 'true') { press($('#levelChips'), a); View3D.setLevel('alle'); }
   };
+  // Rundgang: Knopf startet, nochmal drücken beendet; die Stationen erscheinen unten im Bild
+  const tourOff = () => press($('#tourChips'), null);
+  $('#tourChips').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.getAttribute('aria-pressed') === 'true') { View3D.tour(null); tourOff(); return; }
+    wholeHouse();
+    if ($('#optCut').checked) { $('#optCut').checked = false; View3D.setCut(false); }
+    $('#optRotate').checked = false; View3D.rotate(false);
+    press($('#camChips'), null); press($('#tourChips'), b);
+    $('#stage3d .hud-view').textContent = b.textContent;
+    View3D.tour(b.dataset.tour, { onLabel: t => { $('#stage3d .hud-view').textContent = t; }, onEnd: tourOff });
+    if (window.innerWidth < 900) $('#stage3d').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   $('#camChips').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
+    tourOff();
     wholeHouse();
     press($('#camChips'), b); View3D.goTo(b.dataset.cam);
     $('#stage3d .hud-view').textContent = b.dataset.label || b.textContent;
@@ -87,7 +101,7 @@
   $('#levelChips').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.level !== 'alle' && $('#optCut').checked) { $('#optCut').checked = false; View3D.setCut(false); }
-    press($('#levelChips'), b); View3D.setLevel(b.dataset.level);
+    tourOff(); press($('#levelChips'), b); View3D.setLevel(b.dataset.level);
     press($('#camChips'), null);
     $('#stage3d .hud-view').textContent = b.dataset.level === 'alle' ? 'Ganzes Haus' : `Geschoss ${b.dataset.label || b.textContent} von oben`;
   });

@@ -50,8 +50,8 @@ const HOUSE = (() => {
     N: {
       name: 'Nord', titel: 'Ansicht Nord · Eingang', len: W, pil: pilLang, quelle: 'annahme',
       open: [
-        // Haustür 1,80 m mit zwei verglasten Seitenteilen je 0,50 m und durchgehendem Oberlicht
-        op(6.6, 9.4, Z.ffbEG, 2.85, 'eingang', { side: 0.5 }),
+        // Haustür einflügelig, 1,30 m breit, mit zwei verglasten Seitenteilen je 0,75 m und durchgehendem Oberlicht
+        op(6.6, 9.4, Z.ffbEG, 2.85, 'eingang', { side: 0.75, single: true }),
         ...[0, 1, 5, 6].map(i => op(ax7[i][0], ax7[i][1], 1.1, 2.85, 'fenster')),
         ...[0, 1, 2, 4, 5, 6].map(i => op(ax7[i][0], ax7[i][1], 4.25, Z.sturzOG, 'fenster')),
         op(7.0, 9.0, Z.ffbOG, Z.sturzOG, 'franz', { rail: 4.5 }),
@@ -117,11 +117,13 @@ const HOUSE = (() => {
   rampe.lichte = rampe.decke - rampe.z(rampe.yPortal);
 
   // Tiefgarage: Boden auf Höhe des Untergeschosses, Decke 30 cm, darüber 40 cm Aufbau für Terrasse und Rasen; 2,70 m lichte Höhe.
-  // Vier Stellplätze 2,70 m breit an der Fahrgasse, die Autos mit der Front zur Holzwand
-  const tg = { decke: -0.7, platte: 0.3, bucht: 2.7, y0: -23.85, x0: 12.0, x1: 17.2,
+  // Drei Stellplätze 2,85 m breit an der Fahrgasse, die Autos mit der Front zur Holzwand. Vor dem Haus eine verglaste Eingangsschleuse
+  // (5,40 × 3,35 m) mit Glastür zur Fahrgasse und zum Fahrradraum, von dort eine zweiflügelige Tür ins Foyer des Untergeschosses.
+  const tg = { decke: -0.7, platte: 0.3, bucht: 2.85, y0: -23.85, x0: 12.0, x1: 17.2,
+    schleuse: { x0: 11.8, x1: 17.2, y0: -15.0, y1: -11.65, tuer: [-14.35, -12.95], hausTuer: [12.9, 14.3], radTuer: [-13.95, -13.0] },
     autos: [
       { k: 'ferrari', name: 'Ferrari F8 Tributo', L: 4.61, W: 1.98 }, { k: 'cayenne', name: 'Porsche Cayenne Coupé', L: 4.93, W: 1.98 },
-      { k: 'troc', name: 'VW T-Roc R', L: 4.23, W: 1.82 }, { k: 'vklasse', name: 'Mercedes V-Klasse', L: 5.14, W: 1.93 },
+      { k: 'vklasse', name: 'Mercedes V-Klasse', L: 5.14, W: 1.93 },
     ] };
   tg.lichte = tg.decke - Z.ffbUG;
   tg.mitte = i => tg.y0 + tg.bucht * (i + 0.5);
@@ -131,10 +133,11 @@ const HOUSE = (() => {
   const pool = { wasser: -0.12, boden: -1.4, stufen: [-0.36, -0.62, -0.88, -1.14], tritt: 0.35 };
   const poolDeck = { z: 0.04, poly: [[4.5, -23.15], [13.5, -23.15], [13.5, -27.652], [19.384, -27.652], [19.384, -33.651], [13.5, -33.651], [13.5, -38.15], [4.5, -38.15]] };
   const poolWeg = { x0: 7.4, x1: 8.6, y0: -23.15, y1: -15.65 };
-  // Poolhaus auf der Fläche aus dem Konzept (3,50 × 6,00 m) im Stil des Hauses: weißer Putz, Gesims, flaches Walmdach mit Schiefer,
-  // zum Pool drei Glastüren, davor eine überdachte Veranda auf zwei Pfeilern. Darunter führt die Rampe in die Tiefgarage.
+  // Poolhaus auf der Fläche aus dem Konzept (3,50 × 6,00 m) im Stil des Hauses: weißer Putz, Gesims, flaches Walmdach mit Schiefer.
+  // Zum Pool ganz offen: eine 5,40 m breite Glas-Schiebewand (zwei Flügel zur Seite geschoben), nach Norden ein großes Fenster,
+  // davor eine überdachte Veranda auf zwei Pfeilern. Darunter führt die Rampe in die Tiefgarage.
   const poolhaus = { x0: 19.384, x1: 22.885, y0: -33.651, y1: -27.652, z: 0.05, wand: 0.25, gesims: 2.75, traufe: 2.95, neigung: 27,
-    veranda: 1.8, pfeiler: 0.3, tueren: [[0.35, 1.75], [2.3, 3.7], [4.25, 5.65]] };
+    veranda: 1.8, pfeiler: 0.3, front: [0.3, 5.7], fenster: [20.75, 22.45] };
   // Zaun an der Straße: weißer Sockel mit schwarzen Stäben zwischen Pfeilern; Einfahrtstor zweiflügelig, daneben die Gartentür
   const zaun = { hoehe: 1.65, sockel: 0.45, pfeiler: 0.42, tor: [19.732, 23.33], tuer: [23.75, 24.73] };
 

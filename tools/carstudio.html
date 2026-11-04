@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Auto-Studio</title>
+<!-- Prüfseite für die Automodelle: http://localhost:8766/tools/carstudio.html?car=ferrari&view=all
+     view: all (sechs Ansichten), fl (vorn links), fr, rl, rr (hinten rechts), side, front, rear, top, wheel (Rad nah), detail&x=..&y=..&z=..&d=.. -->
+<style>
+  html, body { margin: 0; background: #23262a; color: #d8d8d8; font: 12px system-ui, sans-serif; }
+  #info { position: fixed; left: 8px; top: 6px; white-space: pre; pointer-events: none; text-shadow: 0 1px 2px #000; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="info">lädt …</div>
+<script src="../src/cars.js"></script>
+<script src="../src/car-ferrari.js"></script>
+<script src="../src/car-cayenne.js"></script>
+<script src="../src/car-vklasse.js"></script>
+<script src="car-demo.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const q = new URLSearchParams(location.search), name = q.get('car') || 'ferrari';
+const W = +(q.get('w') || 1500), H = +(q.get('h') || 1000), info = document.getElementById('info');
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H, false); renderer.toneMapping = THREE.AgXToneMapping; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.append(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x3a3e44);
+const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.9;
+const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(-3, 8, 5); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 0.5, far: 30 }); scene.add(sun, new THREE.HemisphereLight(0xdfe8f2, 0x504a40, 0.5));
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: 0x8d9094, roughness: 0.85 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+let stats = '', box = new THREE.Box3(), spec = null;
+try {
+  const M = CarKit.materials(THREE), parts = CarKit.build(name, THREE, { mergeGeometries, toCreasedNormals }, M);
+  let tris = 0; const per = [];
+  for (const [mat, geos] of parts) {
+    const g = mergeGeometries(geos, false); const mesh = new THREE.Mesh(g, mat); mesh.castShadow = mesh.receiveShadow = true; scene.add(mesh);
+    const t = g.attributes.position.count / 3; tris += t; per.push(`${Object.keys(M).find(k => M[k] === mat) || '?'} ${t | 0}`);
+  }
+  scene.traverse(o => { if (o.isMesh && o !== floor) box.expandByObject(o); });
+  const sz = box.getSize(new THREE.Vector3());
+  spec = CAR_MODELS[name].spec || null;
+  stats = `${name} · ${tris | 0} Dreiecke · Maße L ${sz.x.toFixed(3)} × B ${sz.z.toFixed(3)} × H ${sz.y.toFixed(3)} m · x ${box.min.x.toFixed(2)}…${box.max.x.toFixed(2)} · y min ${box.min.y.toFixed(3)}` +
+    (spec ? `\nSoll: L ${spec.L} × B ${spec.W} × H ${spec.H}${spec.wheelbase ? ` · Radstand ${spec.wheelbase}` : ''}` : '') + `\n${per.join(' · ')}`;
+  // Sollmaße als feiner Rahmen
+  if (spec) {
+    const e = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(spec.L, spec.H, spec.W)), new THREE.LineBasicMaterial({ color: 0x44d0ff }));
+    e.position.set(spec.L / 2, spec.H / 2, 0); scene.add(e);
+  }
+} catch (err) { stats = 'FEHLER: ' + err.message; console.error(err); }
+const c = box.isEmpty() ? new THREE.Vector3(2.3, 0.7, 0) : box.getCenter(new THREE.Vector3()), L = box.isEmpty() ? 4.6 : box.getSize(new THREE.Vector3()).x;
+const persp = (dir, dist = L * 1.35, fov = 30) => { const cam = new THREE.PerspectiveCamera(fov, 1, 0.05, 100); cam.position.copy(c).addScaledVector(new THREE.Vector3(...dir).normalize(), dist); cam.lookAt(c); return cam; };
+const ortho = (dir, span = L * 0.62, up = [0, 1, 0]) => { const cam = new THREE.OrthographicCamera(-span, span, span, -span, 0.05, 100); cam.up.set(...up); cam.position.copy(c).addScaledVector(new THREE.Vector3(...dir).normalize(), 20); cam.lookAt(c); return cam; };
+const VIEWS = {
+  fl: () => persp([-1.1, 0.42, -1.0]), fr: () => persp([-1.1, 0.42, 1.0]), rl: () => persp([1.1, 0.42, -1.0]), rr: () => persp([1.1, 0.42, 1.0]),
+  side: () => ortho([0, 0, 1]), front: () => ortho([-1, 0, 0], L * 0.3), rear: () => ortho([1, 0, 0], L * 0.3), top: () => ortho([0, 1, 0], L * 0.62, [-1, 0, 0]),
+  wheel: () => { const cam = new THREE.PerspectiveCamera(30, 1, 0.05, 50); const x = +(q.get('wx') || L * 0.22); cam.position.set(x + 0.9, 0.55, 2.2); cam.lookAt(x, 0.34, 0.8); return cam; },
+  detail: () => { const cam = new THREE.PerspectiveCamera(+(q.get('fov') || 30), 1, 0.02, 50); const t = new THREE.Vector3(+(q.get('x') || c.x), +(q.get('y') || c.y), +(q.get('z') || 0)); cam.position.set(+(q.get('cx') || t.x - 2), +(q.get('cy') || t.y + 0.6), +(q.get('cz') || t.z - 2)); cam.lookAt(t); return cam; },
+};
+function draw(cam, x, y, w, h) {
+  cam.aspect = w / h; if (cam.isOrthographicCamera) { cam.left = cam.bottom * w / h; cam.right = cam.top * w / h; }
+  cam.updateProjectionMatrix(); renderer.setViewport(x, y, w, h); renderer.setScissor(x, y, w, h); renderer.setScissorTest(true); renderer.render(scene, cam);
+}
+window.render = (view = q.get('view') || 'all') => {
+  if (view === 'all') {
+    const order = ['fl', 'rr', 'side', 'front', 'rear', 'top'], cw = W / 3, ch = H / 2;
+    order.forEach((v, i) => draw(VIEWS[v](), (i % 3) * cw, (1 - Math.floor(i / 3)) * ch, cw, ch));
+  } else draw((VIEWS[view] || VIEWS.fl)(), 0, 0, W, H);
+  info.textContent = stats;
+  return stats;
+};
+window.render();
+window.studioReady = true;
+</script>
+</body>
+</html>

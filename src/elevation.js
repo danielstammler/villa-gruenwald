@@ -28,12 +28,13 @@ const Elev = (() => {
     let s = r(o.u0, o.z0, o.u1, o.z1, 'e-reveal');
     if (o.kind === 'eingang') {
       // Haustür mit hohen Glasfeldern und Stoßgriffen, verglaste Seitenteile, darüber ein Oberlicht
-      const zt = o.z1 - 0.32, sd = o.side || 0, a0 = o.u0 + g + sd, lw = (w - 2 * g - 2 * sd) / 2;
+      const zt = o.z1 - 0.32, sd = o.side || 0, a0 = o.u0 + g + sd, n = o.single ? 1 : 2, lw = (w - 2 * g - 2 * sd) / n;
       s += r(o.u0 + g, o.z0, o.u1 - g, o.z1 - g, 'e-frame') + r(o.u0 + 0.05, zt + 0.06, o.u1 - 0.05, o.z1 - 0.05, 'e-glass');
       if (sd) for (const b0 of [o.u0 + g, o.u1 - g - sd]) s += r(b0 + 0.05, o.z0 + 0.55, b0 + sd - 0.05, zt, 'e-glass');
-      for (let i = 0; i < 2; i++) {
-        const a = a0 + i * lw, gx = i ? a + 0.08 : a + lw - 0.08;
-        s += r(a + 0.18, o.z0 + 0.7, a + lw - 0.18, zt - 0.18, 'e-glass') + r(gx - 0.015, o.z0 + 0.75, gx + 0.015, o.z0 + 1.65, 'e-handle');
+      for (let i = 0; i < n; i++) {
+        // einflügelig: Glasfeld mittig, langer Stoßgriff auf der Schlossseite
+        const a = a0 + i * lw, gx = n === 1 ? a + 0.12 : i ? a + 0.08 : a + lw - 0.08;
+        s += r(a + 0.18 + (n === 1 ? 0.12 : 0), o.z0 + 0.7, a + lw - 0.18, zt - 0.18, 'e-glass') + r(gx - 0.015, o.z0 + 0.6, gx + 0.015, o.z0 + 1.85, 'e-handle');
       }
       return s;
     }
@@ -265,12 +266,15 @@ const Elev = (() => {
     // Fahrbahnplatte, Unterzug unter der Nordwand des Poolhauses, Decke der Tiefgarage, Tor
     s += poly([...prof, ...back.map(([a, b]) => [a, b - 0.3])], 'e-cut') + r(uH - 0.3, G.decke, uH, R0.decke, 'e-cut') + r(uH, G.decke, uE, G.decke + G.platte, 'e-cut');
     s += r(uT - 0.04, R0.zTG, uT + 0.04, G.decke, 'e-bar') + tx(uT + 0.25, -1.25, 'Tor', 'e-mark');
-    // Poolhaus: Boden zugleich Decke der Durchfahrt, Wände geschnitten, dahinter die drei Glastüren zum Pool; flaches Walmdach im Schnitt
+    // Poolhaus: Boden zugleich Decke der Durchfahrt, Wände geschnitten (Nordwand mit Fenster, wenn es in der Schnittachse liegt), dahinter die Glas-Schiebewand zum Pool; flaches Walmdach im Schnitt
     const PH = HOUSE.poolhaus, tn = Math.tan(PH.neigung * Math.PI / 180), ov = 0.25, ex = Math.min(xc - (PH.x0 - PH.veranda - ov), PH.x1 + ov - xc);
     const rY0 = u(PH.y0 - ov), rY1 = u(PH.y1 + ov), rz = PH.traufe + tn * ex, uDoor = v => u(PH.y1 - v);
     s += r(uP, R0.decke, uH, zPH, 'e-cut') + r(uP + PH.wand, zPH, uH - PH.wand, PH.gesims, 'e-room');
-    for (const [a, b] of PH.tueren) s += r(uDoor(b), zPH, uDoor(a), 2.45, 'e-beyond') + ln((uDoor(a) + uDoor(b)) / 2, zPH, (uDoor(a) + uDoor(b)) / 2, 2.45, 'e-glassline');
-    s += r(uP, zPH, uP + PH.wand, PH.gesims, 'e-cut') + r(uH - PH.wand, zPH, uH, PH.gesims, 'e-cut') + r(uP - 0.1, PH.gesims, uH + 0.1, PH.traufe, 'e-cut');
+    { const [a, b] = PH.front; s += r(uDoor(b), zPH, uDoor(a), 2.45, 'e-beyond'); for (let q = 0; q <= 3; q++) { const uu = uDoor(a + (b - a) * q / 3); s += ln(uu, zPH, uu, 2.45, 'e-glassline'); } }
+    const fenster = PH.fenster[0] < xc && xc < PH.fenster[1];
+    s += r(uP, zPH, uP + PH.wand, PH.gesims, 'e-cut') + r(uP - 0.1, PH.gesims, uH + 0.1, PH.traufe, 'e-cut');
+    s += fenster ? r(uH - PH.wand, zPH, uH, 0.9, 'e-cut') + r(uH - PH.wand, 2.45, uH, PH.gesims, 'e-cut') + ln(uH - PH.wand / 2, 0.9, uH - PH.wand / 2, 2.45, 'e-glassline')
+      : r(uH - PH.wand, zPH, uH, PH.gesims, 'e-cut');
     s += poly([[rY0, PH.traufe], [rY0 + ex, rz], [rY1 - ex, rz], [rY1, PH.traufe], [rY1, PH.traufe - 0.18], [rY1 - ex, rz - 0.2], [rY0 + ex, rz - 0.2], [rY0, PH.traufe - 0.18]], 'e-cutroof');
     s += ln(x0 + 0.3, 0, u0, 0, 'e-ground') + ln(uH, 0, x1 - 0.3, 0, 'e-ground');
     s += ln(uG, -0.7, uG, 1.7, 'e-dim e-dash') + tx(uG, 1.9, 'Grenze', 'e-label');

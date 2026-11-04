@@ -1,4 +1,5 @@
 """Baut die Seite aus src/: docs/index.html (GitHub Pages, vollständiges Dokument) und dist/artifact.html (ohne Rahmen)."""
+import os
 from pathlib import Path
 
 root = Path(__file__).resolve().parent
@@ -15,6 +16,10 @@ view3d = "\n".join([
     "import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';",
     "import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';",
     "import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';",
+    # Autos: Baukasten und je Modell eine Datei (fehlende Modelle ersetzt view3d.js durch eine einfache Form)
+    # OHNE_AUTOS=1 python3 build.py baut mit den einfachen Formen, z. B. während Agenten noch an den Modellen arbeiten
+    read("cars.js"),
+    *[read(n) for n in ["car-ferrari.js", "car-cayenne.js", "car-vklasse.js"] if (src / n).exists() and not os.environ.get("OHNE_AUTOS")],
     read("view3d.js"),
     "window.View3D = View3D;",
 ])

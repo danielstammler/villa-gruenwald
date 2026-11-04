@@ -1,7 +1,7 @@
 // Bedienung: Tabs, 3D-Steuerung, Ansichten, Grundrisse, Lageplan-Ebenen, Kennzahlen.
 (() => {
   const noop = () => {};
-  const View3D = window.View3D || { ready: false, init() { throw new Error("three.js konnte nicht geladen werden"); }, show: noop, goTo: noop, rotate: noop, setDate: noop, setTime: noop, play: noop, setLayer: noop, setCut: noop, setLevel: noop, tour: noop, snapshot: () => "" };
+  const View3D = window.View3D || { ready: false, init() { throw new Error("three.js konnte nicht geladen werden"); }, show: noop, goTo: noop, rotate: noop, setDate: noop, setTime: noop, play: noop, setLayer: noop, setCut: noop, setLevel: noop, tour: noop, zoom: noop, snapshot: () => "" };
   const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const VIEWS = ['modell', 'ansichten', 'grundrisse', 'lageplan', 'daten'];
   const ELEV = { sued: 'S', nord: 'N', ost: 'E', west: 'W', schnitt: 'A', rampe: 'B' };
@@ -98,6 +98,8 @@
     $('#stage3d .hud-view').textContent = b.dataset.label || b.textContent;
   });
   $('#optRotate').addEventListener('change', e => View3D.rotate(e.target.checked));
+  $('#zoom3dIn').addEventListener('click', () => { tourOff(); View3D.zoom(0.7); });
+  $('#zoom3dOut').addEventListener('click', () => { tourOff(); View3D.zoom(1.45); });
   $('#levelChips').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.level !== 'alle' && $('#optCut').checked) { $('#optCut').checked = false; View3D.setCut(false); }

@@ -14,11 +14,13 @@ const Plans = (() => {
   const pts = P => P.map(p => `${f(p[0])},${f(-p[1])}`).join(' ');
   const area = r => (r[1] - r[0]) * (r[3] - r[2]);
   const area2 = P => Math.abs(P.reduce((t, p, i) => { const q = P[(i + 1) % P.length]; return t + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
-  // Treppenhalle: zweiläufige Treppe mit 1,29 m breiten Läufen und massiver Mittelwand, Aufzug als Turm in der Halle.
-  // Über Eingang und Halle ein zweigeschossiger Luftraum (im OG eine Galerie mit Geländer).
+  // Treppenhalle: zweiläufige Treppe mit 1,29 m breiten Läufen und massiver Mittelwand. Der Aufzug liegt unauffällig in einem
+  // Wandblock neben der Halle (wandbündige Türen). Über dem Eingang ein zweigeschossiger Luftraum, im OG mit Galerie und Geländer.
   const STAIR = [8.9, 11.68, -3.9, -0.36], LIFT = [4.72, 6.72, -3.98, -1.98];
-  const VOID = [[6.72, 8.9, -3.98, -0.36], [4.72, 6.72, -1.98, -0.36]];
-  const CORE = area(STAIR) + area(LIFT), VOIDA = VOID.reduce((t, r) => t + area(r), 0);
+  const VOID = [[6.72, 8.9, -3.98, -0.36]];
+  // Fläche eines Raums ohne Treppe, Aufzug und (im OG) Luftraum, soweit sie darin liegen
+  const cutA = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[2], b[2]));
+  const coreIn = (fl, r) => cutA(r, STAIR) + cutA(r, LIFT) + (fl === 'OG' ? VOID.reduce((t, v) => t + cutA(r, v), 0) : 0);
   const STAIR_SP = { spine: 0.2, land: 1.2, n: 10, flare: 0.4 };
 
   // ---------- Möbel und Ausstattung ----------
@@ -97,7 +99,8 @@ const Plans = (() => {
       rooms: [
         { n: 'Fitness', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Sauna', r: [6.72, 9.4, -11.29, -8.0] },
         { n: 'Dusche / WC', r: [9.52, 11.28, -11.29, -8.0] }, { n: 'Flur', r: [6.72, 11.28, -7.88, -5.12] },
-        { n: 'Schleuse', r: [11.52, 13.4, -11.29, -5.12] }, { n: 'Lager', r: [13.52, 15.64, -11.29, -5.12] },
+        // Foyer hinter der Eingangsschleuse der Tiefgarage: großzügig, mit Garderobe, Bank und Spiegel
+        { n: 'Foyer', r: [11.52, 15.64, -11.29, -5.12], at: [13.7, -8.4] },
         { n: 'Technik', r: [11.92, 15.64, -4.88, -0.36] }, { n: 'Waschen', r: [0.36, 4.48, -4.88, -0.36] },
         { n: 'Vorraum', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.8, -1.2] },
       ],
@@ -106,7 +109,7 @@ const Plans = (() => {
         { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 11.8, y: -4.78, w: 0.85, o: 'v', s: 1, h: 0 },
         { x: 6.6, y: -7.6, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 7.3, y: -7.94, w: 0.7, o: 'h', s: -1, h: 0 },
         { x: 9.9, y: -7.94, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.4, y: -6.02, w: 0.9, o: 'v', s: 1, h: 0 },
-        { x: 13.46, y: -8.6, w: 0.8, o: 'v', s: 1, h: 0 }, { x: 12.1, y: -11.47, w: 0.9, o: 'h', s: -1, h: 0, t: 0.5 },
+        { x: 12.9, y: -11.47, w: 0.7, o: 'h', s: 1, h: 0, t: 0.5 }, { x: 13.6, y: -11.47, w: 0.7, o: 'h', s: 1, h: 1, t: 0.5 },
       ],
       furn: () => [
         fu.box(0.9, 1.7, -10.9, -9.0, 'Laufband'), fu.box(2.3, 3.1, -10.9, -9.3, 'Rad'), fu.box(3.9, 6.1, -10.9, -9.8, 'Matte'),
@@ -114,7 +117,7 @@ const Plans = (() => {
         fu.box(6.72, 9.4, -11.29, -10.69, '', 'saunabank'), fu.box(6.72, 7.32, -10.69, -8.7, '', 'saunabank'), fu.box(8.5, 9.0, -9.0, -8.5, 'Ofen'),
         fu.shower(9.52, 10.72, -11.29, -10.09), fu.wc(11.28, -9.1, 'E'), fu.basin(10.5, -8.0, 0.6, 'N'),
         fu.box(9.5, 11.0, -7.55, -7.0, 'Liege'), fu.box(9.5, 11.0, -6.6, -6.05, 'Liege'),
-        fu.shelf(13.52, 14.02, -11.0, -5.4), fu.shelf(15.14, 15.64, -11.0, -5.4),
+        fu.shelf(15.04, 15.64, -10.7, -6.3), fu.box(11.52, 11.97, -10.5, -8.5, 'Bank'), fu.box(12.8, 14.6, -5.52, -5.12, '', 'konsole'),
         fu.box(12.2, 13.8, -1.5, -0.6, 'Wärmepumpe'), Ci(14.8, -1.25, 0.5, 'g-furn'), T(14.8, -1.33, 'Speicher', 'g-ftxt'), fu.box(12.2, 13.4, -3.6, -2.8, 'Anschluss'),
         fu.box(0.6, 1.2, -1.0, -0.4, 'WM'), fu.box(1.3, 1.9, -1.0, -0.4, 'TR'), fu.box(2.1, 3.3, -0.96, -0.4, 'Spüle', 'spuelzeile'), fu.shelf(0.36, 0.86, -4.6, -2.2),
       ],
@@ -134,7 +137,7 @@ const Plans = (() => {
         { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 3.2, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 },
         { x: 0.95, y: -3.01, w: 0.8, o: 'h', s: -1, h: 0 }, { x: 11.8, y: -4.78, w: 0.85, o: 'v', s: 1, h: 0 },
         { x: 12.3, y: -5.0, w: 0.9, o: 'h', s: 1, h: 0 },
-        { x: 7.1, y: -0.18, w: 0.9, o: 'h', s: -1, h: 0, t: 0.5 }, { x: 8.0, y: -0.18, w: 0.9, o: 'h', s: -1, h: 1, t: 0.5 },
+        { x: 7.35, y: -0.18, w: 1.3, o: 'h', s: -1, h: 0, t: 0.5 },
       ],
       furn: () => [
         fu.box(0.36, 0.86, -8.2, -6.95, 'Kamin'), fu.sofa(2.9, 3.85, -8.9, -6.3, 'E'), fu.box(1.45, 2.35, -8.15, -7.05, '', 'couchtisch'),
@@ -150,10 +153,10 @@ const Plans = (() => {
         fu.shelf(11.92, 12.5, -3.85, -1.4), fu.box(13.2, 14.6, -3.4, -2.6, 'Arbeitsfläche'),
         // Halle: Konsole mit Spiegel an der Nordwand neben dem Eingang
         fu.box(5.0, 6.4, -0.76, -0.36, '', 'konsole'),
-        // draußen auf der Terrasse: Lounge unter dem Balkon (die Mittelachse zum Pool bleibt frei), Liegen im Osten, Esstisch auf dem Freisitz
-        fu.sofa(3.6, 6.0, -13.95, -13.1, 'N'), fu.box(4.2, 5.4, -14.85, -14.35, '', 'couchtisch'),
-        fu.box(2.6, 3.4, -14.8, -14.0, '', 'sessel-W'), fu.box(6.15, 6.95, -14.8, -14.0, '', 'sessel-E'),
-        fu.box(12.0, 14.0, -14.05, -13.35, '', 'liege'), fu.box(12.0, 14.0, -15.15, -14.45, '', 'liege'),
+        // draußen: Lounge mittig unter dem Balkon (Blick in den Garten, vor der Fassade bleibt ein Gang), Esstisch auf dem Freisitz;
+        // Liegen stehen am Pool, nicht am Haus
+        fu.sofa(6.8, 9.2, -13.95, -13.1, 'N'), fu.box(7.4, 8.6, -14.85, -14.35, '', 'couchtisch'),
+        fu.box(5.75, 6.55, -14.85, -14.05, '', 'sessel-W'), fu.box(9.45, 10.25, -14.85, -14.05, '', 'sessel-E'),
         fu.table(17.05, 17.95, -9.3, -7.3, 3),
       ],
     },
@@ -163,20 +166,24 @@ const Plans = (() => {
         { n: 'Kind 1', r: [0.36, 4.48, -11.29, -7.5], at: [2.4, -10.2] }, { n: 'Kinderbad West', r: [0.36, 4.48, -7.26, -5.2], at: [2.2, -6.5] },
         { n: 'Kind 2', r: [0.36, 4.48, -4.96, -0.36], at: [2.4, -2.2] },
         { n: 'Familienraum', r: [4.72, 11.28, -11.29, -6.24], at: [8.0, -10.5] }, { n: 'Flur', r: [4.72, 11.28, -6.0, -4.96], at: [6.0, -5.55] },
-        { n: 'Galerie', r: [4.72, 11.68, -4.96, -0.36], core: true, at: [7.8, -4.4] },
+        // Galerie = Umgang am Geländer; Luftraum, Treppe und Aufzug sind frei (open), damit dort keine Wände entstehen
+        { n: 'Galerie', r: [4.72, 11.68, -4.96, -3.9], core: true, at: [7.8, -4.4] },
+        // nördlich neben dem Aufzug ein Schrankraum für Kind 2, mit Wand zum Luftraum (x 6,52–6,72)
+        { n: 'Schrank Kind 2', r: [4.72, 6.52, -1.98, -0.36], at: [5.62, -1.17] },
         { n: 'Kind 3', r: [11.52, 15.64, -11.29, -7.5], at: [13.6, -9.9] }, { n: 'Kinderbad Ost', r: [11.52, 15.64, -7.26, -5.2], at: [13.8, -6.5] },
         { n: 'Kind 4', r: [11.92, 15.64, -4.96, -0.36], at: [13.8, -2.4] },
       ],
-      open: [[7.0, 9.0, -6.24, -6.0]],
+      open: [[7.0, 9.0, -6.24, -6.0], [6.72, 11.68, -3.9, -0.36], [4.72, 6.72, -3.98, -1.98]],
       doors: [
         { x: 4.6, y: -9.6, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 4.6, y: -5.95, w: 0.75, o: 'v', s: -1, h: 0 },
         { x: 4.6, y: -4.92, w: 0.85, o: 'v', s: -1, h: 0 }, { x: 11.4, y: -9.6, w: 0.9, o: 'v', s: 1, h: 0 },
         { x: 11.4, y: -5.95, w: 0.75, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.92, w: 0.85, o: 'v', s: 1, h: 0 },
+        { x: 4.6, y: -1.6, w: 0.75, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
         fu.bed(1.0, 2.0, -9.5, -7.5, 'N'), fu.desk(2.7, 4.1, -11.29, -10.6, 'N'), fu.shelf(2.3, 4.4, -8.1, -7.5),
         fu.shower(3.28, 4.48, -7.26, -6.06), fu.wc(0.36, -6.75, 'W'), fu.basin(2.0, -5.2, 1.4, 'N'),
-        fu.bed(1.0, 2.0, -4.96, -2.96, 'S'), fu.desk(2.7, 4.1, -1.06, -0.36, 'S'), fu.shelf(3.88, 4.48, -2.9, -1.3),
+        fu.bed(1.0, 2.0, -4.96, -2.96, 'S'), fu.desk(2.7, 4.1, -1.06, -0.36, 'S'), fu.shelf(3.88, 4.48, -3.9, -2.3),
         fu.sofa(6.8, 9.2, -8.1, -7.2, 'N'), fu.box(7.4, 8.6, -9.2, -8.5, '', 'couchtisch'), fu.shelf(10.68, 11.28, -8.4, -6.5),
         fu.bed(11.52, 13.52, -8.7, -7.7, 'W'), fu.desk(13.9, 15.3, -11.29, -10.6, 'N'), fu.shelf(11.52, 12.12, -11.2, -9.7),
         fu.shower(11.52, 12.72, -7.26, -6.06), fu.wc(15.64, -6.75, 'E'), fu.basin(14.0, -5.2, 1.4, 'N'),
@@ -228,11 +235,11 @@ const Plans = (() => {
   const tall = (r, inner) => clip(r, inner) + ZWERCH.reduce((t, z) => t + clip(r, z) - clip(r, inter(inner, z)), 0);
   function roomArea(fl, rm) {
     let a = area(rm.r);
-    if (rm.core) a -= CORE + (fl === 'OG' ? VOIDA : 0);
+    if (rm.core) a -= coreIn(fl, rm.r);
     if (fl !== 'DG') return { a, wf: fl === 'UG' ? 0 : (rm.wf ?? 1) * a };
     // Wohnfläche nach WoFlV: unter 1 m lichter Höhe 0 %, 1–2 m 50 %, ab 2 m 100 %; Zwerchhäuser zählen voll, Gauben nicht (eher zu niedrig)
     const full = tall(rm.r, inset(sAt(2))), half = tall(rm.r, inset(sAt(1))) - full;
-    const coreFull = rm.core ? CORE : 0;
+    const coreFull = rm.core ? coreIn(fl, rm.r) : 0;
     return { a, wf: (rm.wf ?? 1) * (full - coreFull + 0.5 * half) };
   }
 
@@ -313,21 +320,21 @@ const Plans = (() => {
   }
   // Luftraum über der Halle (im OG): schraffiert, Geländer an der Galerie
   function voidArea() {
-    const [a, b] = VOID, P = [[a[0], a[2]], [a[1], a[2]], [a[1], a[3]], [b[0], b[3]], [b[0], b[2]], [b[1], b[2]]];
-    let s = `<polygon points="${pts(P)}" class="g-void" data-tip="Luftraum über der Halle · Halle zweigeschossig, 6,10 m hoch"/>`;
+    const [a] = VOID;
+    let s = R(a[0], a[1], a[2], a[3], 'g-void', 'Luftraum über dem Eingang · Halle zweigeschossig, 6,10 m hoch');
     s += L(a[0], a[3], a[1], a[2], 'g-thin') + L(a[0], a[2], a[1], a[3], 'g-thin');
     return s + L(a[0], a[2] - 0.06, a[1], a[2] - 0.06, 'g-railing') + T((a[0] + a[1]) / 2, -1.25, 'Luftraum', 'g-ftxt');
   }
   function lift() {
     const [x0, x1, y0, y1] = LIFT, t = 0.2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-    return R(x0, x1, y0, y1, 'g-wall') + R(x0 + t, x1 - t, y0 + t, y1 - t, 'g-shaft', 'Glasaufzug in der Halle · Stahlrahmen, Glas nach drei Seiten · Kabine 1,40 × 1,60 m · UG bis DG') +
+    return R(x0, x1, y0, y1, 'g-wall') + R(x0 + t, x1 - t, y0 + t, y1 - t, 'g-shaft', 'Personenaufzug · Kabine 1,10 × 1,40 m · UG bis DG · unauffällig im Wandblock, wandbündige Türen') +
       L(x0 + t, y0 + t, x1 - t, y1 - t, 'g-thin') + L(x0 + t, y1 - t, x1 - t, y0 + t, 'g-thin') +
       R(cx - 0.55, cx + 0.55, cy - 0.7, cy + 0.7, 'g-cabin') + R(cx - 0.45, cx + 0.45, y0 - 0.02, y0 + t + 0.02, 'g-gap') + T(cx, cy - 0.08, 'Aufzug', 'g-ftxt g-lifttxt');
   }
   function tiefgarage() {
     const tg = C.tg, ph = C.poolhaus, rp = HOUSE.rampe, PL = SITE.plot, wx0 = rp.x0 - rp.wand, wx1 = rp.x1 + rp.wand, rc = (rp.x0 + rp.x1) / 2;
     const kote = v => (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + num(Math.abs(v), 2);
-    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · vier Stellplätze, unter der Terrasse Fahrräder und Lager"/>`;
+    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · drei Stellplätze, Eingangsschleuse, unter der Terrasse Fahrräder und Lager"/>`;
     // Rampe: offen in der Zufahrt, dann unter dem Poolhaus bis in den Anschluss der Tiefgarage
     s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · offen in der Zufahrt, dann unter dem Poolhaus · 2,80 m breit · ${num(rp.y1 - rp.y0)} m lang · oben und unten ${num(rp.s0 * 100, 0)} %, dazwischen ${num(rp.s * 100, 0)} %`);
     for (let y = rp.y0 + 1; y < rp.y1 - 0.2; y += 1) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
@@ -342,17 +349,24 @@ const Plans = (() => {
     s += `<text x="${f(rc)}" y="41.3" class="g-ftxt" transform="rotate(-90 ${f(rc)} 41.3)">offene Rampe · ${num(rp.s * 100, 0)} %</text>`;
     for (const y of [rp.y0, rp.yPortal, rp.y1]) s += T(wx0 - 0.75, y - 0.08, kote(rp.z(y)), 'g-ftxt');
     for (const y of [-36.9, -21.4]) s += `<polygon points="${pts([[rc - 0.35, y], [rc + 0.35, y], [rc, y + 0.9]])}" class="g-walkhead"/>`;
-    // Vier Stellplätze 2,70 × 5,20 m an der 6 m breiten Fahrgasse, die Autos mit der Front zur Holzwand; nördlich davon der Gang zur Schleuse
+    // Drei Stellplätze 2,85 × 5,20 m an der 6 m breiten Fahrgasse, die Autos mit der Front zur Holzwand; davor die gläserne Eingangsschleuse
     const G = HOUSE.tg;
-    for (let i = 0; i <= 4; i++) s += L(G.x0, G.y0 + G.bucht * i, G.x1, G.y0 + G.bucht * i, 'g-park');
+    for (let i = 0; i <= G.autos.length; i++) s += L(G.x0, G.y0 + G.bucht * i, G.x1, G.y0 + G.bucht * i, 'g-park');
+    const E = G.schleuse;
+    s += R(E.x0, E.x1, E.y0, E.y1, 'g-room', `Eingangsschleuse · ${num(E.x1 - E.x0, 2)} × ${num(E.y1 - E.y0, 2)} m · Glaswände, Steinboden, Bank und Garderobe, Glastüren zur Fahrgasse und zum Fahrradraum`);
+    s += L(E.x0, E.y0, E.x1, E.y0, 'g-glassline') + L(E.x1, E.y0, E.x1, -11.95, 'g-glassline') + L(E.x0, -14.652, E.x0, E.y1, 'g-glassline');
+    // die Glastüren schlagen wie im 3D in die Schleuse auf
+    s += door({ x: E.x1, y: E.tuer[0], w: (E.tuer[1] - E.tuer[0]) / 2, o: 'v', s: -1, h: 0, t: 0.1 }) + door({ x: E.x1, y: (E.tuer[0] + E.tuer[1]) / 2, w: (E.tuer[1] - E.tuer[0]) / 2, o: 'v', s: -1, h: 1, t: 0.1 });
+    s += door({ x: E.x0, y: E.radTuer[0], w: E.radTuer[1] - E.radTuer[0], o: 'v', s: 1, h: 0, t: 0.1 });
+    s += fu.box(14.8, 16.9, -14.85, -14.4, 'Bank') + T((E.x0 + E.x1) / 2, -13.15, 'Eingangsschleuse', 'g-roomtxt') + T((E.x0 + E.x1) / 2, -13.6, `${num((E.x1 - E.x0) * (E.y1 - E.y0))} m²`, 'g-areatxt');
     G.autos.forEach((c, i) => {
       const cy = G.mitte(i), x0 = G.x0 + 0.05;
       s += `<rect x="${f(x0)}" y="${f(-cy - c.W / 2)}" width="${f(c.L)}" height="${f(c.W)}" rx="0.35" class="g-car" data-tip="${c.name} · ${num(c.L, 2)} × ${num(c.W, 2)} m"/>` +
         L(x0 + c.L * 0.3, cy - c.W / 2 + 0.12, x0 + c.L * 0.3, cy + c.W / 2 - 0.12, 'g-furn-l') + L(x0 + c.L * 0.72, cy - c.W / 2 + 0.12, x0 + c.L * 0.72, cy + c.W / 2 - 0.12, 'g-furn-l') +
-        T(x0 + c.L / 2, cy - 0.1, c.name.replace(/^(Ferrari|Porsche|VW|Mercedes) /, ''), 'g-ftxt') + T(G.x1 + 0.55, cy - 0.1, `P${i + 1}`, 'g-ftxt');
+        T(x0 + c.L / 2, cy - 0.1, c.name.replace(/^(Ferrari|Porsche|Mercedes) /, ''), 'g-ftxt') + T(G.x1 + 0.55, cy - 0.1, `P${i + 1}`, 'g-ftxt');
     });
     for (let x = 5.2; x < 11.0; x += 0.65) s += L(x, -12.0, x, -13.7, 'g-furn-l');
-    s += T(8.0, -14.2, 'Fahrräder · Lager', 'g-ftxt') + T(14.7, -12.45, 'Gang zur Schleuse', 'g-ftxt') + T(20.2, -18.2, 'Fahrgasse 6,00 m', 'g-ftxt');
+    s += T(8.0, -14.2, 'Fahrräder · Lager', 'g-ftxt') + T(20.2, -18.2, 'Fahrgasse 6,00 m', 'g-ftxt');
     s += T(20.2, -15.0, 'Tiefgarage', 'g-roomtxt') + T(20.2, -15.7, `${num(area2(tg))} m² · lichte Höhe ${num(G.lichte, 2)} m`, 'g-areatxt');
     return s;
   }
@@ -361,7 +375,7 @@ const Plans = (() => {
     const sq = (x, y, w, tip) => R(x - w / 2, x + w / 2, y - w / 2, y + w / 2, 'g-col', tip);
     const pk = HOUSE.fas.N.portikus, bd = HOUSE.balkonDG;
     const rails = B => L(B.x0 + 0.06, B.y0 + 0.06, B.x1 - 0.06, B.y0 + 0.06, 'g-railing') + L(B.x0 + 0.06, B.y0 + 0.06, B.x0 + 0.06, B.y1, 'g-railing') + L(B.x1 - 0.06, B.y0 + 0.06, B.x1 - 0.06, B.y1, 'g-railing');
-    if (fl === 'EG') return `<polygon points="${pts(t.poly)}" class="g-outside" data-tip="Terrasse · durchgehend 19,00 × 4,00 m bis an den Freisitz · Naturstein · Lounge unter dem Balkon, Liegen"/>` +
+    if (fl === 'EG') return `<polygon points="${pts(t.poly)}" class="g-outside" data-tip="Terrasse · durchgehend 19,00 × 4,00 m bis an den Freisitz · Naturstein · Lounge mittig unter dem Balkon"/>` +
       R(t.stufe[0], t.stufe[1], t.y0 - 0.35, t.y0, 'g-outside', 'Stufe zum Weg an den Pool') + L(t.stufe[0], t.y0, t.stufe[1], t.y0, 'g-tread') +
       b.cols.map(x => sq(x, b.colY, b.colW, 'Pfeiler · 40 × 40 cm')).join('') +
       R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', 'Freisitz · 3,00 × 5,00 m · überdacht, Esstisch') + sq(fz.x1 - 0.175, fz.y0 + 0.175, 0.35) + sq(fz.x1 - 0.175, fz.y1 - 0.175, 0.35) +

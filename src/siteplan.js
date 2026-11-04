@@ -87,7 +87,7 @@ const Site = (() => {
     s.push(poly([[rc - 0.5, -38.2], [rc + 0.5, -38.2], [rc, -36.9]], 's-ramparrow') + text([rc + 0.25, -43.4], `Rampe ${num(rp.s * 100, 0)} %`, 's-lbl s-tiny', -90));
     const PL = SITE.plot, hk = [[25.059, -44.0], PL[4], PL[5], PL[6], PL[0]];
     s.push(`<polyline points="${pts(hk.map(([x, y], i) => [x + (i === 0 || i === 1 ? -0.45 : 0), y]))}" class="s-hedge" data-tip="Hecke · ca. 1,30 m hoch · West-, Nord- und Ostgrenze"/>`);
-    s.push(poly(T.poly, 's-stone', `Terrasse · durchgehend 19,00 × 4,00 m bis an den Freisitz · ${num(area(T.poly), 1)} m² · Lounge unter dem Balkon, Liegen`));
+    s.push(poly(T.poly, 's-stone', `Terrasse · durchgehend 19,00 × 4,00 m bis an den Freisitz · ${num(area(T.poly), 1)} m² · Lounge mittig unter dem Balkon`));
     s.push(poly(C.podest, 's-stone', 'Podest am Eingang · 5,00 × 1,00 m'));
     s.push(poly(C.freisitz, 's-stone', 'Freisitz · 3,00 × 5,00 m · Esstisch für sechs, überdacht, darüber Dachterrasse'));
     s.push(poly(rect(PW.x0, PW.y0, PW.x1, PW.y1), 's-stone', 'Weg von der Terrasse zum Pool · 1,20 m breit'));
@@ -96,7 +96,7 @@ const Site = (() => {
     s.push(poly(C.poolWasser, 's-water', 'Pool · Wasserfläche ca. 3,50 × 11,50 m'));
     const PH = HOUSE.poolhaus;
     s.push(poly(rect(PH.x0 - PH.veranda, PH.y0, PH.x0, PH.y1), 's-balkon', 'Veranda des Poolhauses · 1,80 × 6,00 m · überdacht, zwei Pfeiler'));
-    s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m · Walmdach, drei Glastüren zum Pool · darunter führt die Rampe in die Tiefgarage'));
+    s.push(poly(C.poolhaus, 's-annex', 'Poolhaus · 3,50 × 6,00 m · zum Pool offen mit Glas-Schiebewand, Fenster nach Norden, Walmdach · darunter führt die Rampe in die Tiefgarage'));
     // Zaun an der Straße mit Einfahrtstor und Gartentür, an der Ostgrenze bis zur Hecke
     const Z0 = HOUSE.zaun, P0 = SITE.plot, onB = x => [x, P0[2][1] + (x - P0[2][0]) * (P0[3][1] - P0[2][1]) / (P0[3][0] - P0[2][0])];
     s.push(`<polyline points="${pts([P0[0], P0[1], P0[2], onB(Z0.tor[0])])}" class="s-fence" data-tip="Zaun · weißer Sockel mit schwarzen Stäben zwischen Pfeilern · 1,65 m hoch"/>`);

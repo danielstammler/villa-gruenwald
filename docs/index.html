@@ -2042,6 +2042,8 @@ const CarKit = (() => {
 })();
 globalThis.CarKit = CarKit;
 
+// Teil 1 des 3D-Modells: build.py setzt alle Dateien in src/view3d/ nach Namen sortiert zu einem Block zusammen (ein gemeinsamer
+// Gültigkeitsbereich). Hier Zustand, Hilfsfunktionen (addGeo, boxPlan, extrude, wallWithHoles …) und alle Materialien M für die anderen Teile.
 // 3D-Modell (three.js): Haus aus HOUSE, Grundstück und Umgebung aus SITE, Sonnenstand mit Schatten.
 // Weltkoordinaten: X = Plan-Ost, Y = Höhe, Z = -Plan-Nord. Das Haus liegt in X 0..16, Z 0..11,65.
 const View3D = (() => {
@@ -2479,6 +2481,7 @@ const View3D = (() => {
     const m = new THREE.Mesh(g, mats); m.castShadow = m.receiveShadow = true; return m;
   }
 
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Geländer, Türflügel, Fenster, Fassaden, Dach und Rohbau des Hauses
   // ---------- Bauteile ----------
   function railing(mat, mx, u0, u1, z0, z1, out) {
     const n = Math.max(2, Math.round((u1 - u0) / 0.11));
@@ -2747,6 +2750,7 @@ const View3D = (() => {
     boxPlan(M.stone, p.x0, p.x1, p.y0, p.y1, 0, p.z);
     return g;
   }
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Innenwände, Böden, Aufzug, Treppe und Möbel aus dem Grundriss; Liegen und Sonnenschirme
   // Innenräume nach dem Grundriss-Vorschlag: Böden, Wände, Treppe und Aufzugsschacht
   function buildInterior() {
     const lv = { UG: [Zh.ffbUG, -0.15], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
@@ -3091,6 +3095,7 @@ const View3D = (() => {
     const g = new THREE.ConeGeometry(r, 0.42, 10, 1, true); g.translate(x, z + 2.42, -y); addGeo(M.canopy, g, null);
     addCyl(M.fOutMetal, x, y, z + 2.6, z + 2.68, 0.03, 0.03, 8);
   }
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Laub aus Blattkarten und Hecken
   // ---------- Laub aus Blattkarten ----------
   // Viele kleine, gedrehte Quadrate mit Blatt-Textur. Die Normalen zeigen von der Mitte des Busches oder der Krone nach außen,
   // so wird das Laub wie ein Volumen beleuchtet. Jede Karte hat Vorder- und Rückseite mit derselben Normalen.
@@ -3163,6 +3168,7 @@ const View3D = (() => {
     grp.add(im, cardMesh(cards, M.leafHedge));
     return grp;
   }
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Rampe, Tiefgarage mit Eingangsschleuse, Autos (Modelle aus src/car-*.js, sonst Ersatzform)
   // Offene Rampe zur Tiefgarage: Fahrbahn nach dem Längsprofil, Betonwände mit Geländer, Durchfahrt unter dem Poolhaus bis zum Tor
   function buildRamp(g) {
     const R0 = HOUSE.rampe, wx0 = R0.x0 - R0.wand, wx1 = R0.x1 + R0.wand, n = 90, pos = [], idx = [];
@@ -3427,6 +3433,7 @@ const View3D = (() => {
     for (let i = 0; i < 40; i++) { const m = (a + b) / 2; if (R0.z(m) > zc) a = m; else b = m; }
     return b;
   }
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Bäume der Nachbarn, Ziegelmauer, Poolhaus, Gartenmöbel und Zaun
   // Bäume in den Nachbargärten nach den Luftbildern: dichter Bestand aus Laub- und Nadelbäumen, einzelne Blutbuchen.
   // Nicht auf Häusern, Straßen und dem eigenen Grundstück und nicht in den Sichtachsen der Kamerablicke.
   function neighborGreen() {
@@ -3642,6 +3649,7 @@ const View3D = (() => {
     gateLeaf(sB + pw2 + 0.02, sC - pw2 - 0.02, sC - pw2 - 0.02, -1, () => hb - 0.08, tc);
     run(P0[3], [25.059, -44.0], true);
   }
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Gelände mit Wegen, Pool, Bäumen und Beeten, Nachbarhäuser
   function buildSite() {
     const g = new THREE.Group(), C = SITE.concept, R0 = HOUSE.rampe;
     groundAO();
@@ -3954,6 +3962,7 @@ const View3D = (() => {
     const m = new THREE.Mesh(g, mats); m.castShadow = m.receiveShadow = true; return m;
   }
 
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Licht, Himmel und Sonnenstand
   // ---------- Licht, Himmel, Sonne ----------
   function setupLights(big) {
     hemi = new THREE.HemisphereLight(0xdde8f4, 0x6d6551, 0.4); scene.add(hemi);
@@ -4035,6 +4044,7 @@ const View3D = (() => {
     scene.environment = envRT.texture; if (old) old.dispose();
   }
 
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Kamera, Rundgänge, Zoom, Tasten, Ebenen und Schnitt
   // ---------- Kamera ----------
   const PRESETS = {
     garten: { pos: [8.6, 1.7, 38.5], tgt: [9.2, 5.0, 5.8] },
@@ -4331,6 +4341,7 @@ const View3D = (() => {
     invalidate();
   }
 
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Bildaufbau, Bildschleife, Türen, Start (init) und Schnittstelle nach außen
   // ---------- Bildaufbau ----------
   // Szene in ein Mehrfach-Abtastungs-Ziel mit Tiefe, daraus Umgebungsverdeckung (GTAO) in Ecken, unter Vorsprüngen und im Laub,
   // zuletzt Tonwertumsetzung auf den Bildschirm. Ohne passende Grafikfähigkeiten wird direkt gezeichnet.

@@ -20,7 +20,8 @@ view3d = "\n".join([
     # OHNE_AUTOS=1 python3 build.py baut mit den einfachen Formen, z. B. während Agenten noch an den Modellen arbeiten
     read("cars.js"),
     *[read(n) for n in ["car-ferrari.js", "car-cayenne.js", "car-vklasse.js"] if (src / n).exists() and not os.environ.get("OHNE_AUTOS")],
-    read("view3d.js"),
+    # 3D-Modell: Bereichsdateien in src/view3d/, nach Namen sortiert zu einem Block zusammengesetzt (ein gemeinsamer Gültigkeitsbereich)
+    "".join(p.read_text(encoding="utf-8") for p in sorted((src / "view3d").glob("*.js"))),
     "window.View3D = View3D;",
 ])
 main = read("main.js")

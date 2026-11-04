@@ -117,15 +117,19 @@
       for (let i = 0; i < n - 1; i++) steps.push([xs(i), zt(i)], [xs(i + 1), zt(i)]);
       steps.push([x1, zb]);
       prism(M.putzHell, [...steps, ...(fl === 'UG' ? [[x1, za]] : [[x1, zb - 0.32], [x0 - 0.5, za]])], ly0, ly1);
-      const yt = fl === 'UG' ? ly1 : ly1 - t;
-      for (let i = 0; i < n - 1; i++) boxPlan(M.stairMat, xs(i + 1), xs(i) + 0.03, ly0, yt, zt(i) - 0.035, zt(i) + 0.005);
+      for (let i = 0; i < n - 1; i++) boxPlan(M.stairMat, xs(i + 1), xs(i) + 0.03, ly0, ly1, zt(i) - 0.035, zt(i) + 0.005);
       if (fl === 'UG') continue;
-      // Brüstung an der Nordseite mit Steinabdeckung: im EG bis zum Boden geschlossen, im OG unter dem Lauf offen zum Luftraum
-      const top = [[x0, za + rise + h], [x1, zb + h]];
-      prism(M.putzHell, [...top, ...(fl === 'EG' ? [[x1, za], [x0, za]] : [[x1, zb - 0.32], [x0 - 0.5, za], [x0, za]])], yt, ly1);
-      prism(M.stairMat, [...top, [x1, zb + h + 0.06], [x0, za + rise + h + 0.06]], yt - 0.025, ly1 + 0.025);
-      boxPlan(M.putzHell, x0 - 0.26, x0, yt - 0.065, ly1 + 0.065, za, za + rise + 1.02);
-      boxPlan(M.stairMat, x0 - 0.285, x0 + 0.025, yt - 0.09, ly1 + 0.09, za + rise + 1.02, za + rise + 1.09);
+      // Zur Halle bzw. zum Luftraum offen, damit man beim Hereinkommen auf die Treppe schaut: Stufen im Profil, schwarzes Stabgeländer
+      // (zwei Stäbe je Stufe, Lücken unter 12 cm) mit Handlauf; im EG schließt unter dem Lauf eine Wand die Kellertreppe darunter ab
+      const hr = x => za + rise + h + (x0 - x) * (zb - za - rise) / (x0 - x1), yr = ly1 - 0.05;
+      if (fl === 'EG') prism(M.putzHell, [[x0 - 0.5, za], [x1, zb - 0.32], [x1, za]], ly1 - t, ly1);
+      for (let i = 0; i < n - 1; i++) for (const f of [0.25, 0.75]) {
+        const x = xs(i + 1) + f * g; boxPlan(M.metal, x - 0.009, x + 0.009, yr - 0.009, yr + 0.009, zt(i) + 0.005, hr(x));
+      }
+      prism(M.metal, [[x0 - 0.26, hr(x0 - 0.26)], [x1, hr(x1)], [x1, hr(x1) + 0.045], [x0 - 0.26, hr(x0 - 0.26) + 0.045]], yr - 0.025, yr + 0.025);
+      // Antrittspfosten mit Steinabdeckung
+      boxPlan(M.putzHell, x0 - 0.26, x0, ly1 - 0.195, ly1 + 0.065, za, za + rise + 1.02);
+      boxPlan(M.stairMat, x0 - 0.285, x0 + 0.025, ly1 - 0.22, ly1 + 0.09, za + rise + 1.02, za + rise + 1.09);
       if (fl === 'EG') {
         // breite Antrittsstufe, zur Halle hin 40 cm vorgezogen und gerundet
         boxPlan(M.stairMat, x0 - g, x0 - 0.2, ly1, ly1 + 0.4, za, zt(0) + 0.005); boxPlan(M.stairMat, x0 - 0.2, x0, ly1, ly1 + 0.2, za, zt(0) + 0.005);

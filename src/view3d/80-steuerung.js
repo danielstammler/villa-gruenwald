@@ -3,9 +3,10 @@
   const PRESETS = {
     garten: { pos: [8.6, 1.7, 38.5], tgt: [9.2, 5.0, 5.8] },
     eingang: { pos: [14.5, 2.2, -21], tgt: [8, 4.8, 5.8] },
-    // Ost und West aus den Nachbargärten, so gewählt, dass kein Nachbarhaus und keine Baumkrone die Fassade verdeckt
-    ost: { pos: [38, 3.2, 17], tgt: [13.5, 4.6, 6.2] },
-    west: { pos: [-21.8, 2.5, -4.3], tgt: [2.5, 4.8, 6.0] },
+    // Ost und West aus den Nachbargärten, so gewählt, dass kein Nachbarhaus und keine Baumkrone die Fassade verdeckt; erhöht, damit man über
+    // die 2,60–2,85 m hohen Grenzhecken sieht (im Westen steht die Hecke nur 3 m vor dem Haus, daher höher wie aus einem Obergeschoss)
+    ost: { pos: [38, 5.2, 17], tgt: [13.5, 4.3, 6.2] },
+    west: { pos: [-17, 7.2, -1], tgt: [1.0, 3.2, 6.0] },
     ueberblick: { pos: [-31, 37, 60], tgt: [10, 0, 18] },
     innen: { pos: [10.9, 1.75, 9.9], tgt: [2.2, 1.35, 7.4] },
     zufahrt: { pos: [24.2, 4.4, 58.5], tgt: [20.6, -0.6, 35.5] },
@@ -66,7 +67,7 @@
       [17.5, -10.45, 0.18, { wait: 1.4, look: [17.5, -7.0, 1.0] }], [16.0, -12.6, 0.18], [10.75, -12.7, 0.18], [10.75, -15.0, 0.18], [9.1, -15.4, 0.18],
       [8.4, -16.1, 0.09], [8.2, -17.0, 0.03, { label: 'Garten' }], [8.0, -22.6, 0.03], [10.6, -23.6, 0.04, { label: 'Poolterrasse' }], [13.3, -24.5, 0.04], [13.9, -28.6, 0.04],
       [16.0, -29.0, 0.04], [18.0, -29.3, 0.04, { label: 'Poolhaus', wait: 1.6, look: [21.5, -30.6, 1.3] }], [19.0, -30.65, 0.04],
-      [20.5, -30.65, 0.05, { label: 'Im Poolhaus', wait: 1.6, look: [22.4, -30.6, 1.2] }], [19.0, -30.65, 0.04], [16.0, -31.3, 0.04], [13.3, -34.2, 0.04],
+      [20.5, -30.65, HOUSE.poolhaus.z, { label: 'Im Poolhaus', wait: 1.6, look: [22.4, -30.6, 1.2] }], [19.0, -30.65, 0.04], [16.0, -31.3, 0.04], [13.3, -34.2, 0.04],
       [13.3, -37.2, 0.04], [10.5, -37.6, 0.04], [8.0, -37.6, 0.04, { label: 'Blick aufs Haus', wait: 3.0, look: [8.0, 2.0, 5.0] }],
     ],
   };

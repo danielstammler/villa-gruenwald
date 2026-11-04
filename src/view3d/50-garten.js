@@ -73,8 +73,7 @@
     const poly = P => { s.beginPath(); P.forEach(([x, y], i) => (i ? s.lineTo(X(x), Y(y)) : s.moveTo(X(x), Y(y)))); s.closePath(); s.fill(); };
     for (const b of [...SITE.neighbors, ...SITE.secondary]) poly(b.pts);
     for (const P0 of [C.haus, C.freisitz, C.poolhaus]) poly(P0);
-    const P0 = SITE.plot, chain = [[25.059, -44.0], P0[4], P0[5], P0[6], P0[0]];
-    s.lineWidth = 0.9 * k; s.beginPath(); chain.forEach(([x, y], i) => (i ? s.lineTo(X(x), Y(y)) : s.moveTo(X(x), Y(y)))); s.stroke();
+    for (const H of HOUSE.garten.hecken) { s.lineWidth = (H.b + 0.3) * k; s.beginPath(); H.linie.forEach(([x, y], i) => (i ? s.lineTo(X(x), Y(y)) : s.moveTo(X(x), Y(y)))); s.stroke(); }
     for (const t of SITE.trees) { s.beginPath(); s.arc(X(t.c[0]), Y(t.c[1]), (0.5 + 0.05 * t.r) * k, 0, 6.2832); s.fill(); }
     const c = document.createElement('canvas'); c.width = c.height = N;
     const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, N, N); g.imageSmoothingEnabled = true;
@@ -160,11 +159,11 @@
     loungerAt(xv + 0.62, xv + 1.37, -33.15, -31.15, z);
     addCyl(M.fOutTop, xv + 0.37, -31.75, z + 0.45, z + 0.48, 0.24, 0.24, 18); addCyl(M.fOutMetal, xv + 0.37, -31.75, z, z + 0.45, 0.02, 0.02, 8);
   }
-  // Zaun an der Straße: weißer Sockel mit Steinabdeckung, schwarze Stäbe mit Spitzen, Pfeiler mit Abdeckplatten (an Bäumen ausgespart);
-  // zweiflügeliges Einfahrtstor mit Bogen und Gartentür, beide öffnen sich nach innen, wenn man herankommt; Laternen auf den Torpfeilern.
+  // Zaun an der Straße, durchgehend über die ganze Straßenseite: weißer Sockel mit Steinabdeckung, schwarze Stäbe mit Spitzen, Pfeiler mit
+  // Abdeckplatten; an Stämmen auf der Grenze endet das Feld mit einem schmalen Pfosten und geht hinter dem Stamm weiter.
+  // Zweiflügeliges Einfahrtstor mit Bogen und Gartentür, beide öffnen sich nach innen, wenn man herankommt; Laternen auf den Torpfeilern.
   function buildFence(g) {
-    const Zn = HOUSE.zaun, P0 = SITE.plot, pw2 = Zn.pfeiler / 2, hb = Zn.hoehe, trunks = SITE.trees.map(t => t.c);
-    const segDist = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy); };
+    const Zn = HOUSE.zaun, P0 = SITE.plot, pw2 = Zn.pfeiler / 2, hb = Zn.hoehe;
     const spike = (mx, s, zz) => { const c = new THREE.ConeGeometry(0.022, 0.07, 4); c.rotateY(Math.PI / 4); c.translate(s, zz + 0.035, 0); addGeo(M.fOutMetal, c, mx); };
     const bars = (mx, s0, s1, zb0, top) => {
       const n = Math.max(1, Math.round((s1 - s0) / 0.12));
@@ -182,16 +181,31 @@
     // Lauf von a nach b, um 15 cm nach innen versetzt; links der Laufrichtung liegt das Grundstück
     const frameOf = (a, b) => {
       const l = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / l, uy = (b[1] - a[1]) / l, o = [a[0] - uy * 0.15, a[1] + ux * 0.15];
-      return { l, ux, uy, o, mx: frameMx({ o, r: [ux, uy], n: [uy, -ux] }), at: s => [o[0] + ux * s, o[1] + uy * s], on: s => [a[0] + ux * s, a[1] + uy * s] };
+      return { l, ux, uy, o, mx: frameMx({ o, r: [ux, uy], n: [uy, -ux] }), on: s => [a[0] + ux * s, a[1] + uy * s] };
     };
+    // Stämme an der Zaunlinie (Stammradius wie im Modell und 8 cm Luft, über die ganze Zauntiefe): Abschnitte [s0, s1] ohne Zaun
+    const cuts = F => SITE.trees.map(t => {
+      const r = 0.24 + 0.035 * t.r, dx = t.c[0] - F.o[0], dy = t.c[1] - F.o[1], s = dx * F.ux + dy * F.uy, d = Math.max(0, Math.abs(dx * F.uy - dy * F.ux) - 0.17);
+      return d < r ? [s - Math.sqrt(r * r - d * d), s + Math.sqrt(r * r - d * d)] : null;
+    }).filter(Boolean);
     const run = (a, b, noStart, noEnd) => {
-      const F = frameOf(a, b), k = Math.max(1, Math.round(F.l / 2.6)), step = F.l / k;
-      for (let i = 0; i <= k; i++) if (!(i === 0 && noStart) && !(i === k && noEnd)) pillar(F.mx, i * step, hb + 0.1);
+      const F = frameOf(a, b), k = Math.max(1, Math.round(F.l / 2.6)), step = F.l / k, cut = cuts(F);
+      for (let i = 0; i <= k; i++) {
+        if ((i === 0 && noStart) || (i === k && noEnd) || cut.some(([c0, c1]) => i * step + pw2 > c0 && i * step - pw2 < c1)) continue;
+        pillar(F.mx, i * step, hb + 0.1);
+      }
       for (let i = 0; i < k; i++) {
         const s0 = i * step + pw2, s1 = (i + 1) * step - pw2;
-        if (trunks.some(c => segDist(c, F.at(s0), F.at(s1)) < 0.55)) continue;
-        addBox(M.siteHell, F.mx, s0, s1, 0, Zn.sockel, -0.14, 0.14); addBox(M.brickCap, F.mx, s0 - 0.01, s1 + 0.01, Zn.sockel, Zn.sockel + 0.04, -0.17, 0.17);
-        bars(F.mx, s0, s1, Zn.sockel + 0.04, () => hb - 0.02);
+        let u = s0;
+        for (const [c0, c1] of [...cut.filter(([c0, c1]) => c1 > s0 && c0 < s1), [s1, s1]].sort((p, q) => p[0] - q[0])) {
+          const v = Math.min(c0, s1);
+          if (v - u > 0.06) {
+            addBox(M.siteHell, F.mx, u, v, 0, Zn.sockel, -0.14, 0.14); addBox(M.brickCap, F.mx, u - 0.01, v + 0.01, Zn.sockel, Zn.sockel + 0.04, -0.17, 0.17);
+            bars(F.mx, u, v, Zn.sockel + 0.04, () => hb - 0.02);
+            for (const s of [u > s0 ? u : null, v < s1 ? v : null]) if (s !== null) addBox(M.fOutMetal, F.mx, s - 0.025, s + 0.025, Zn.sockel, hb, -0.025, 0.025);
+          }
+          u = Math.max(u, c1);
+        }
       }
       return F;
     };

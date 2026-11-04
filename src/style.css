@@ -324,4 +324,11 @@ body.noscroll { overflow: hidden; }
 .s-hedge { fill: none; stroke: var(--lawn-2); stroke-width: 0.6; stroke-linejoin: round; opacity: 0.9; }
 .s-fence { fill: none; stroke: var(--ink); stroke-width: 0.22; stroke-dasharray: 0.9 0.25; }
 .s-gate { fill: none; stroke: var(--accent); stroke-width: 0.32; stroke-linecap: round; }
+.s-trog { fill: none; stroke: var(--ink-2); stroke-width: 0.8px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.s-spiel { fill: color-mix(in srgb, #b08655 36%, var(--lawn)); stroke: var(--ink-2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+.s-spielgeraet { fill: var(--surface); stroke: var(--ink); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+.s-spielnetz { fill: color-mix(in srgb, var(--surface) 55%, transparent); stroke: var(--ink); stroke-width: 0.7px; stroke-dasharray: 2 1.5; vector-effect: non-scaling-stroke; }
+.s-spiellinie { stroke: var(--ink); stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
+.s-spielbalken { stroke: var(--ink); stroke-width: 0.1; }
+.s-hit { fill: transparent; }
 .hint-text { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); margin: 8px 0 0; }

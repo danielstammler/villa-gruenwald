@@ -239,7 +239,6 @@ table.fl tr.sum th, table.fl tr.sum td { font-weight: 600; }
 .g-wall { fill: var(--ink); }
 .g-room, .g-gap, .g-shaft { fill: var(--surface); }
 .g-glass { fill: var(--water); }
-.g-glassline { stroke: var(--water); stroke-width: 2.4px; vector-effect: non-scaling-stroke; }
 .g-sill { fill: var(--ink-2); }
 .g-leaf { stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 .g-arc { fill: none; stroke: var(--ink-2); stroke-width: 0.6px; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }

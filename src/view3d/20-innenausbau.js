@@ -24,7 +24,7 @@
       const segs = gap ? [[a, gap[0]], [gap[1], b]] : [[a, b]];
       for (const [p, q] of segs) { boxPlan(M.inWall, p, q, c, e, Zh.ffbUG - 0.3, -0.15); wallRects.push({ fl: 'UG', r: [p, q, c, e], top: -0.15 }); }
     }
-    // Sturz über der Tür von der Schleuse ins Foyer (die Flügel enden bei 2,28 m)
+    // Sturz über der Tür von der Tiefgarage ins Foyer (die Flügel enden bei 2,28 m)
     { const [ta, tb] = HOUSE.tg.schleuse.hausTuer; boxPlan(M.inWall, ta, tb, -D, -D + t0, Zh.ffbUG + 2.3, -0.15); }
     // Bodenplatte des Untergeschosses, damit auch unter Türöffnungen Boden ist; im DG Boden bis an die Zwerchhausfronten
     boxPlan(M.slab, 0, W, -D, 0, Zh.ffbUG - 0.3, Zh.ffbUG - 0.025);

@@ -99,7 +99,7 @@ const Plans = (() => {
       rooms: [
         { n: 'Fitness', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Sauna', r: [6.72, 9.4, -11.29, -8.0] },
         { n: 'Dusche / WC', r: [9.52, 11.28, -11.29, -8.0] }, { n: 'Flur', r: [6.72, 11.28, -7.88, -5.12] },
-        // Foyer hinter der Eingangsschleuse der Tiefgarage: großzügig, mit Garderobe, Bank und Spiegel
+        // Foyer hinter dem Eingangsbereich der Tiefgarage: großzügig, mit Garderobe, Bank und Spiegel
         { n: 'Foyer', r: [11.52, 15.64, -11.29, -5.12], at: [13.7, -8.4] },
         { n: 'Technik', r: [11.92, 15.64, -4.88, -0.36] }, { n: 'Waschen', r: [0.36, 4.48, -4.88, -0.36] },
         { n: 'Vorraum', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.8, -1.2] },
@@ -336,7 +336,7 @@ const Plans = (() => {
   function tiefgarage() {
     const tg = C.tg, ph = C.poolhaus, rp = HOUSE.rampe, PL = SITE.plot, wx0 = rp.x0 - rp.wand, wx1 = rp.x1 + rp.wand, rc = (rp.x0 + rp.x1) / 2;
     const kote = v => (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + num(Math.abs(v), 2);
-    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · drei Stellplätze, Eingangsschleuse, unter der Terrasse Fahrräder und Lager"/>`;
+    let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · drei Stellplätze, Eingangsbereich vor dem Foyer, unter der Terrasse Fahrräder und Lager"/>`;
     // Rampe: offen in der Zufahrt, dann unter dem Poolhaus bis in den Anschluss der Tiefgarage
     s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · offen in der Zufahrt, dann unter dem Poolhaus · 2,80 m breit · ${num(rp.y1 - rp.y0)} m lang · oben und unten ${num(rp.s0 * 100, 0)} %, dazwischen ${num(rp.s * 100, 0)} %`);
     for (let y = rp.y0 + 1; y < rp.y1 - 0.2; y += 1) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
@@ -351,16 +351,12 @@ const Plans = (() => {
     s += `<text x="${f(rc)}" y="41.3" class="g-ftxt" transform="rotate(-90 ${f(rc)} 41.3)">offene Rampe · ${num(rp.s * 100, 0)} %</text>`;
     for (const y of [rp.y0, rp.yPortal, rp.y1]) s += T(wx0 - 0.75, y - 0.08, kote(rp.z(y)), 'g-ftxt');
     for (const y of [-36.9, -21.4]) s += `<polygon points="${pts([[rc - 0.35, y], [rc + 0.35, y], [rc, y + 0.9]])}" class="g-walkhead"/>`;
-    // Drei Stellplätze 2,85 × 5,20 m an der 6 m breiten Fahrgasse, die Autos mit der Front zur Holzwand; davor die gläserne Eingangsschleuse
+    // Drei Stellplätze 2,85 × 5,20 m an der 6 m breiten Fahrgasse, die Autos mit der Front zur Holzwand; davor der offene Eingangsbereich (ohne Glas)
     const G = HOUSE.tg;
     for (let i = 0; i <= G.autos.length; i++) s += L(G.x0, G.y0 + G.bucht * i, G.x1, G.y0 + G.bucht * i, 'g-park');
     const E = G.schleuse;
-    s += R(E.x0, E.x1, E.y0, E.y1, 'g-room', `Eingangsschleuse · ${num(E.x1 - E.x0, 2)} × ${num(E.y1 - E.y0, 2)} m · Glaswände, Steinboden, Bank und Garderobe, Glastüren zur Fahrgasse und zum Fahrradraum`);
-    s += L(E.x0, E.y0, E.x1, E.y0, 'g-glassline') + L(E.x1, E.y0, E.x1, -11.95, 'g-glassline') + L(E.x0, -14.652, E.x0, E.y1, 'g-glassline');
-    // die Glastüren schlagen wie im 3D in die Schleuse auf
-    s += door({ x: E.x1, y: E.tuer[0], w: (E.tuer[1] - E.tuer[0]) / 2, o: 'v', s: -1, h: 0, t: 0.1 }) + door({ x: E.x1, y: (E.tuer[0] + E.tuer[1]) / 2, w: (E.tuer[1] - E.tuer[0]) / 2, o: 'v', s: -1, h: 1, t: 0.1 });
-    s += door({ x: E.x0, y: E.radTuer[0], w: E.radTuer[1] - E.radTuer[0], o: 'v', s: 1, h: 0, t: 0.1 });
-    s += fu.box(14.8, 16.9, -14.85, -14.4, 'Bank') + T((E.x0 + E.x1) / 2, -13.15, 'Eingangsschleuse', 'g-roomtxt') + T((E.x0 + E.x1) / 2, -13.6, `${num((E.x1 - E.x0) * (E.y1 - E.y0))} m²`, 'g-areatxt');
+    s += R(E.x0, E.x1, E.y0, E.y1, 'g-room', `Eingangsbereich · ${num(E.x1 - E.x0, 2)} × ${num(E.y1 - E.y0, 2)} m · offen zur Tiefgarage, Steinboden, Garderobe mit Schuhbank, Spiegel, Tür ins Foyer`);
+    s += T((E.x0 + E.x1) / 2, -13.15, 'Eingangsbereich', 'g-roomtxt');
     G.autos.forEach((c, i) => {
       const cy = G.mitte(i), x0 = G.x0 + 0.05;
       s += `<rect x="${f(x0)}" y="${f(-cy - c.W / 2)}" width="${f(c.L)}" height="${f(c.W)}" rx="0.35" class="g-car" data-tip="${c.name} · ${num(c.L, 2)} × ${num(c.W, 2)} m"/>` +

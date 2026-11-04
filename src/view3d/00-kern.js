@@ -354,10 +354,7 @@ const View3D = (() => {
     if (typeof CarKit !== 'undefined') carMats = CarKit.materials(THREE);
     for (const m of [M.inWall, M.floorOak, M.floorTile, M.floorHall, M.stairMat, M.curtain, ...Object.values(furn)]) if (m !== M.fMirror) m.envMapIntensity = 0.55;
     // Stein und Außenmöbel: nur der Geschossschnitt erfasst sie (Balkone und Dachterrasse über der Schnitthöhe)
-    for (const k of ['stone', 'fOut', 'fOutMetal', 'fCushionOut', 'fOutTop']) { levelMats.add(M[k]); M[k].clipShadows = true; }
-    // Glas und Rahmen der Eingangsschleuse eigens: der Geschossschnitt erfasst alles in der Tiefgarage, Poolhaus und Zaun sollen ganz bleiben
-    M.tgGlass = M.siteGlass.clone(); M.tgFrame = M.siteFrame.clone();
-  }
+    for (const k of ['stone', 'fOut', 'fOutMetal', 'fCushionOut', 'fOutTop']) { levelMats.add(M[k]); M[k].clipShadows = true; }  }
 
   // Geometrien sammeln und je Material zusammenführen (wenige Draw-Calls).
   function addGeo(mat, geo, matrix) {

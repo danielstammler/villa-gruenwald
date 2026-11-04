@@ -1,4 +1,4 @@
-  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Rampe, Tiefgarage mit Eingangsschleuse, Autos (Modelle aus src/car-*.js, sonst Ersatzform)
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Rampe, Tiefgarage mit Eingangsbereich vor dem Foyer, Autos (Modelle aus src/car-*.js, sonst Ersatzform)
   // Offene Rampe zur Tiefgarage: Fahrbahn nach dem Längsprofil, Betonwände mit Geländer, Durchfahrt unter dem Poolhaus bis zum Tor
   function buildRamp(g) {
     const R0 = HOUSE.rampe, wx0 = R0.x0 - R0.wand, wx1 = R0.x1 + R0.wand, n = 90, pos = [], idx = [];
@@ -181,58 +181,31 @@
     // Schrankwand an der Nordwand neben der Fahrgasse
     for (let x = 17.4; x < 23.1; x += 0.95) { boxPlan(M.tgBox, x, x + 0.93, -12.55, -11.95, zf + 0.1, zf + 2.25); boxPlan(M.trim, x + 0.86, x + 0.88, -12.565, -12.55, zf + 0.9, zf + 1.4); }
     boxPlan(M.tgSockel, 17.4, 23.05, -12.5, -11.95, zf, zf + 0.1);
-    // Lichtlinien an der Decke: über den Autos, über der Fahrgasse, quer über Schleuse und Fahrgasse, unter der Terrasse
+    // Lichtlinien an der Decke: über den Autos, über der Fahrgasse, quer über Eingangsbereich und Fahrgasse, unter der Terrasse
     for (const [x0, x1, y0, y1] of [[13.5, 13.56, G.y0 + 0.3, yEnd - 0.3], [15.9, 15.96, G.y0 + 0.3, yEnd - 0.3], [20.2, 20.26, -23.4, -12.9],
       [17.4, 22.8, -12.86, -12.8], [5.2, 11.2, -13.05, -12.99]]) boxPlan(M.led, x0, x1, y0, y1, zc - 0.025, zc);
-    // Eingangsschleuse vor dem Haus: Steinboden, Glaswände im schwarzen Stahlrahmen zur Fahrgasse und zum Fahrradraum, Glastüren,
-    // Eichenpaneele an der Hauswand, Garderobe mit Bank, großer Spiegel, Lichtdecke; dahinter die zweiflügelige Glastür ins Foyer
-    const E = G.schleuse, zg0 = zf + 0.012, zg1 = zc - 0.06;
+    // Eingangsbereich vor dem Haus, offen zur Tiefgarage (ohne Glaswände, Daniel 4.11.2026): Steinboden, Eichenpaneele an der Hauswand,
+    // Garderobe mit Haken und Schuhbank, großer Spiegel, Lichtlinien; dahinter die zweiflügelige Tür ins Foyer
+    const E = G.schleuse, zg0 = zf + 0.012;
     boxPlan(M.tgStone, E.x0, E.x1, E.y0, E.y1, zf, zg0);
-    const post = (x, y) => boxPlan(M.tgFrame, x - 0.03, x + 0.03, y - 0.03, y + 0.03, zf, zc);
-    // Glasfeld mit Deckenschiene und Bodenprofil; das Profil ist quer zur Scheibe breiter, damit es das Glas sauber fasst
-    const pane = (x0, x1, y0, y1, za = zg0) => {
-      const qx = Math.abs(x1 - x0) < Math.abs(y1 - y0) ? 0.015 : 0, qy = 0.015 - qx;
-      boxPlan(M.tgGlass, x0, x1, y0, y1, za, zg1); boxPlan(M.tgFrame, Math.min(x0, x1) - 0.01, Math.max(x0, x1) + 0.01, Math.min(y0, y1) - 0.012, Math.max(y0, y1) + 0.012, zg1, zc);
-      boxPlan(M.tgFrame, Math.min(x0, x1) - qx, Math.max(x0, x1) + qx, Math.min(y0, y1) - qy, Math.max(y0, y1) + qy, za === zg0 ? zf : za - 0.06, za + 0.04);
-    };
-    for (let k = 0; k <= 4; k++) post(E.x0 + (E.x1 - E.x0) * k / 4, E.y0);
-    pane(E.x0 + 0.03, E.x1 - 0.03, E.y0 - 0.006, E.y0 + 0.006);
-    pane(E.x1 - 0.006, E.x1 + 0.006, E.y0 + 0.03, E.tuer[0] - 0.03); pane(E.x1 - 0.006, E.x1 + 0.006, E.tuer[1] + 0.03, -11.98);
-    for (const y of [E.tuer[0], E.tuer[1], -11.98]) post(E.x1, y);
-    pane(E.x0 - 0.006, E.x0 + 0.006, -14.62, E.radTuer[0] - 0.03); pane(E.x0 - 0.006, E.x0 + 0.006, E.radTuer[1] + 0.03, E.y1 - 0.03);
-    for (const y of [E.radTuer[0], E.radTuer[1]]) post(E.x0, y);
-    // Glastüren: zwei Flügel zur Fahrgasse, einer zum Fahrradraum, zwei ins Foyer (dunkel lackiert mit Glasfeld); öffnen sich beim Herankommen
-    const glassLeaf = (alongY, hinge, len, sign, c, dark) => {
-      const hv = alongY ? new THREE.Vector3(c.x, 0, -hinge) : new THREE.Vector3(hinge, 0, -c.y);
-      leaf(g, hv, sign, new THREE.Vector3(c.x, zf + 1.1, -c.y), () => {
-        const a = hinge, b = hinge + len, lo = Math.min(a, b), hi = Math.max(a, b);
-        const bx = (u0, u1, v0, v1, mat, z0, z1) => alongY ? boxPlan(mat, c.x + v0, c.x + v1, u0, u1, z0, z1) : boxPlan(mat, u0, u1, c.y + v0, c.y + v1, z0, z1);
-        // die Foyertür gehört zum Haus (der Hausschnitt erfasst sie ganz), die Glastüren zur Schleuse
-        const fr = dark ? M.frame : M.tgFrame, gl = dark ? M.glass : M.tgGlass;
-        bx(lo + 0.05, hi - 0.05, -0.006, 0.006, dark ? M.door : gl, zf + 0.06, zf + 2.24);
-        if (dark) bx(lo + 0.16, hi - 0.16, 0.006, 0.012, gl, zf + 0.5, zf + 2.0);
-        for (const [u0, u1, z0, z1] of [[lo, lo + 0.05, zf + 0.02, zf + 2.28], [hi - 0.05, hi, zf + 0.02, zf + 2.28], [lo, hi, zf + 0.02, zf + 0.08], [lo, hi, zf + 2.22, zf + 2.28]]) bx(u0, u1, -0.022, 0.022, fr, z0, z1);
-        const gu = len > 0 ? hi - 0.11 : lo + 0.11; bx(gu - 0.012, gu + 0.012, -0.06, 0.06, dark ? M.metal : M.fOutMetal, zf + 0.85, zf + 1.4);
-      });
-    };
-    const tm = (E.tuer[0] + E.tuer[1]) / 2, tc = { x: E.x1, y: tm }, hw2 = (E.tuer[1] - E.tuer[0]) / 2 - 0.01;
-    glassLeaf(true, E.tuer[0], hw2, 1, tc); glassLeaf(true, E.tuer[1], -hw2, -1, tc);
-    glassLeaf(true, E.radTuer[0], E.radTuer[1] - E.radTuer[0], -1, { x: E.x0, y: (E.radTuer[0] + E.radTuer[1]) / 2 });
-    // Oberlichter über den Glastüren bis zur Decke, damit die Schleuse auch oben geschlossen ist
-    pane(E.x1 - 0.006, E.x1 + 0.006, E.tuer[0] + 0.03, E.tuer[1] - 0.03, zf + 2.36);
-    pane(E.x0 - 0.006, E.x0 + 0.006, E.radTuer[0] + 0.03, E.radTuer[1] - 0.03, zf + 2.36);
+    // Tür ins Foyer: zwei dunkel lackierte Flügel mit Glasfeld; gehört zum Haus (der Hausschnitt erfasst sie ganz), öffnet sich beim Herankommen
     const [ha, hb] = E.hausTuer, hc = { x: (ha + hb) / 2, y: -11.47 }, hl = (hb - ha) / 2 - 0.01;
-    glassLeaf(false, ha, hl, 1, hc, true); glassLeaf(false, hb, -hl, -1, hc, true);
+    const foyerLeaf = (hinge, len, sign) => leaf(g, new THREE.Vector3(hinge, 0, -hc.y), sign, new THREE.Vector3(hc.x, zf + 1.1, -hc.y), () => {
+      const lo = Math.min(hinge, hinge + len), hi = Math.max(hinge, hinge + len), bx = (u0, u1, v0, v1, mat, z0, z1) => boxPlan(mat, u0, u1, hc.y + v0, hc.y + v1, z0, z1);
+      bx(lo + 0.05, hi - 0.05, -0.006, 0.006, M.door, zf + 0.06, zf + 2.24);
+      bx(lo + 0.16, hi - 0.16, 0.006, 0.012, M.glass, zf + 0.5, zf + 2.0);
+      for (const [u0, u1, z0, z1] of [[lo, lo + 0.05, zf + 0.02, zf + 2.28], [hi - 0.05, hi, zf + 0.02, zf + 2.28], [lo, hi, zf + 0.02, zf + 0.08], [lo, hi, zf + 2.22, zf + 2.28]]) bx(u0, u1, -0.022, 0.022, M.frame, z0, z1);
+      const gu = len > 0 ? hi - 0.11 : lo + 0.11; bx(gu - 0.012, gu + 0.012, -0.06, 0.06, M.metal, zf + 0.85, zf + 1.4);
+    });
+    foyerLeaf(ha, hl, 1); foyerLeaf(hb, -hl, -1);
     boxPlan(M.tgStone, ha, hb, -11.65, -11.29, zf, zg0);
-    // Hauswand: Eichenpaneele, Garderobe mit Haken und Schuhbank links der Tür, großer Spiegel rechts davon; Bank an der Glaswand
+    // Hauswand: Eichenpaneele, Garderobe mit Haken und Schuhbank links der Tür, großer Spiegel rechts davon
     for (const [x0, x1] of [[E.x0, ha - 0.06], [hb + 0.06, 16]]) boxPlan(M.tgHolz, x0, x1, -11.68, -11.65, zf, zc - 0.05);
     boxPlan(M.tgHolz, ha - 0.06, hb + 0.06, -11.68, -11.65, zf + 2.34, zc - 0.05);
     boxPlan(M.tgHolz, 16, E.x1 - 0.04, -11.98, -11.95, zf, zc - 0.05);
     boxPlan(M.tgHolz, E.x0 + 0.1, ha - 0.2, -12.1, -11.68, zf + 0.0, zf + 0.45); boxPlan(M.fOutMetal, E.x0 + 0.1, ha - 0.2, -11.74, -11.68, zf + 1.72, zf + 1.76);
     for (let x = E.x0 + 0.2; x < ha - 0.25; x += 0.16) boxPlan(M.fOutMetal, x - 0.008, x + 0.008, -11.8, -11.68, zf + 1.66, zf + 1.74);
     boxPlan(M.chrome, hb + 0.3, hb + 1.4, -11.7, -11.69, zf + 0.5, zf + 2.2); boxPlan(M.tgSockel, hb + 0.27, hb + 1.43, -11.69, -11.68, zf + 0.47, zf + 2.23);
-    boxPlan(M.tgHolz, 14.8, 16.9, -14.88, -14.42, zf + 0.4, zf + 0.46);
-    for (const x of [14.9, 16.8]) boxPlan(M.fOutMetal, x - 0.02, x + 0.02, -14.85, -14.45, zf, zf + 0.4);
     boxPlan(M.trim, ha - 0.1, hb + 0.1, -12.6, -11.72, zg0, zg0 + 0.008);
     boxPlan(M.led, 12.4, 16.6, -14.4, -14.3, zc - 0.03, zc - 0.01); boxPlan(M.led, 12.4, 16.6, -12.35, -12.25, zc - 0.03, zc - 0.01);
     // Autos auf P1 bis P3 mit der Front zur Holzwand

@@ -35,7 +35,7 @@
       [21.13, -49.4, 0.016, { label: 'Rampe zur Tiefgarage' }],
       ...[-48.8, -45.8, -39.0, -33.65, -30.6, -27.55, -24.55].map(y => [21.13, y, HOUSE.rampe.z(y), { v: 1.8, ...(y === -33.65 ? { label: 'Unter dem Poolhaus' } : {}) }]),
       [21.0, -23.3, UG, { label: 'Tiefgarage', wait: 1.8, look: [14.0, -19.5, UG + 0.8] }], [19.2, -19.0, UG, { label: 'Ferrari F8 · Cayenne Coupé · V-Klasse' }],
-      [18.4, -14.4, UG], [17.9, -13.65, UG, { label: 'Eingangsschleuse' }], [16.2, -13.65, UG], [13.6, -12.4, UG, { wait: 1.4, look: [13.6, -11.0, UG + 1.3] }],
+      [18.4, -14.4, UG], [17.9, -13.65, UG, { label: 'Eingang zum Haus' }], [16.2, -13.65, UG], [13.6, -12.4, UG, { wait: 1.4, look: [13.6, -11.0, UG + 1.3] }],
       [13.6, -10.6, UG, { label: 'Foyer' }], [13.2, -6.6, UG], [12.45, -5.57, UG], [11.0, -5.57, UG, { label: 'Untergeschoss' }],
       [8.6, -5.45, UG], [8.6, -4.6, UG], [9.545, -4.4, UG, { label: 'Treppe' }], ...stairUp(UG, -1.6, EG),
       [11.035, -4.45, EG, { label: 'Halle', wait: 1.4, look: [7.5, -1.0, 2.5] }], [9.545, -4.6, EG], ...stairUp(EG, 1.875, OG, -4.3),

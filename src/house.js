@@ -118,10 +118,10 @@ const HOUSE = (() => {
   rampe.lichte = rampe.decke - rampe.z(rampe.yPortal);
 
   // Tiefgarage: Boden auf Höhe des Untergeschosses, Decke 30 cm, darüber 40 cm Aufbau für Terrasse und Rasen; 2,70 m lichte Höhe.
-  // Drei Stellplätze 2,85 m breit an der Fahrgasse, die Autos mit der Front zur Holzwand. Vor dem Haus eine verglaste Eingangsschleuse
-  // (5,40 × 3,35 m) mit Glastür zur Fahrgasse und zum Fahrradraum, von dort eine zweiflügelige Tür ins Foyer des Untergeschosses.
+  // Drei Stellplätze 2,85 m breit an der Fahrgasse, die Autos mit der Front zur Holzwand. Vor dem Haus ein offener Eingangsbereich
+  // (schleuse, 5,40 × 3,35 m, seit 4.11.2026 ohne Glaswände) mit Steinboden, von dort eine zweiflügelige Tür ins Foyer des Untergeschosses.
   const tg = { decke: -0.7, platte: 0.3, bucht: 2.85, y0: -23.85, x0: 12.0, x1: 17.2,
-    schleuse: { x0: 11.8, x1: 17.2, y0: -15.0, y1: -11.65, tuer: [-14.35, -12.95], hausTuer: [12.9, 14.3], radTuer: [-13.95, -13.0] },
+    schleuse: { x0: 11.8, x1: 17.2, y0: -15.0, y1: -11.65, hausTuer: [12.9, 14.3] },
     autos: [
       { k: 'ferrari', name: 'Ferrari F8 Tributo', L: 4.61, W: 1.98 }, { k: 'cayenne', name: 'Porsche Cayenne Coupé', L: 4.93, W: 1.98 },
       { k: 'vklasse', name: 'Mercedes V-Klasse', L: 5.14, W: 1.93 },

@@ -27,14 +27,14 @@ Die Pläne selbst liegen nicht im Repo, nur die daraus gemessenen Koordinaten (`
 
 ## Aufbau
 
-- `src/` – Quelltext: `data.js` (Geometrie in Metern), `haus/` (parametrisches Haus und Rampe), `view3d/` (three.js), `ansicht/` (Ansichten und Schnitte), `plan/` (Grundrisse), `seite/` (Seitentext), `siteplan.js` (Lageplan), `sun.js` (Sonnenstand nach NOAA), `main.js`, `style.css`, `page.html`.
-- `src/view3d/` – das 3D-Modell in Bereichsdateien, damit mehrere daran gleichzeitig arbeiten können: `00-kern.js` (Zustand, Hilfsfunktionen, Materialien), `10-huelle.js`, `20-innenausbau.js`, `30-laub.js`, `35-lichthof.js`, `40-tiefgarage.js`, `50-garten.js`, `55-spielplatz.js`, `60-gelaende.js`, `70-licht.js`, `80-steuerung.js` (Kamera, Rundgänge, Tasten), `90-bild.js`. Die Dateien sind Ausschnitte eines gemeinsamen Blocks; `build.py` setzt sie nach Namen sortiert zusammen. Änderungen am Kern besser nacheinander.
-- `tools/bauen.js` (`./vg bauen`) – baut daraus `docs/index.html` (eine Datei, alles eingebettet).
-- `tools/check.js` – rendert alle Ansichten, Grundrisse und den Lageplan ohne Browser und meldet fehlerhafte Werte (`node tools/check.js`).
-- `src/cars.js` – Baukasten für die Autos (Karosserie aus Querschnitten, Räder, Leuchten), je Modell eine Datei `src/car-*.js`; `tools/carcheck.js` prüft ein Modell ohne Browser, `tools/carstudio.html` zeigt es aus sechs Richtungen.
-- Bilder ohne Browser-Fenster (Chrome headless, auch mehrere gleichzeitig; braucht den lokalen Server auf Port 8766 im Repo, den die Skripte notfalls selbst starten): `tools/carshot.sh <auto> [ansicht]` für ein Auto, `tools/houseshot.sh <name> "pos=x,y,z&tgt=x,y,z[&level=UG]"` für das fertige Modell und `tools/houseshot.sh probe <rundgang>` für die Kollisionsprüfung eines Rundgangs. Die Bilder landen in `tools/shots/` (nicht im Git).
+- `src/` – Quelltext. Ordner sind Teildateien einer Datei, nach Namen sortiert zusammengesetzt: `haus/` (parametrisches Haus, Rampe, Tiefgarage, Garten), `plan/` (Grundrisse), `ansicht/` (Ansichten und Schnitte), `seite/` (Seitentext je Reiter; Maße darin als `{{ … }}` aus den Daten, Hilfen in `werte.js`), `view3d/` (3D-Modell in Bereichsdateien; Wege der Rundgänge aus dem Grundriss in `75-wege.js` und `78-rundgaenge.js`). Dazu `data.js` (Geometrie in Metern), `lod2.js` (Nachbarhäuser), `siteplan.js` (Lageplan), `sun.js` (Sonnenstand nach NOAA), `cars.js` und `car-*.js` (Autos aus einem Baukasten, ohne Marken), `main.js`, `style.css`.
+- `tools/bauen.js` – baut daraus `docs/index.html` (eine Datei, alles eingebettet) und `dist/artifact.html`.
+- Prüfungen ohne Browser-Fenster: `tools/check.js` (alle Zeichnungen), `tools/regeln.js` (Maßregeln nach GaStellV, BayBO, DIN 18065, Ortsgestaltungssatzung Grünwald, dazu Grundriss und Möbel), `tools/raumbuch.js` (Räume als Text), `tools/wege.js` (Rundgänge); im 3D über `tools/browser.js` (Chrome headless): Rundgänge wie beim Gehen, Prüfsumme der Szene und 25 Ansichten im Bildvergleich mit einer lokalen Referenz.
+- `./vg` ist der Einstieg für alles, aus Git Bash wie aus WSL; Befehle und Arbeitsweise stehen in `CLAUDE.md`.
 
 ```bash
 ./vg bauen
-OHNE_AUTOS=1 ./vg bauen         # mit den einfachen Ersatzformen statt der Modelle aus src/car-*.js
+OHNE_AUTOS=1 ./vg bauen   # mit einfachen Ersatzformen statt der Modelle aus src/car-*.js
+./vg pruefen schnell      # Bau, Zeichnungen, Regeln, Wege – etwa 1 s
+./vg pruefen              # dazu 3D mit Bildvergleich – gut 1 min
 ```

@@ -34,6 +34,10 @@ if [ -f tools/regeln.js ]; then
   else zeile Regeln FEHLER; echo "$out"; fehler=1; fi
 fi
 
+# Wege der Rundgänge im Haus aus dem Grundriss (ohne Browser, unter 1 s): fehlende Räume, versperrte Wege, Halte in Möbeln
+if out=$(node tools/wege.js 2>&1); then zeile Wege "ok    $(echo "$out" | tail -1)"
+else zeile Wege FEHLER; echo "$out" | grep -v ' · ok$'; fehler=1; fi
+
 if [ $voll = 0 ]; then
   # Anker der 3D-Ansichten (Räume, Treppe, Haustür …) noch da? Kostet nichts und fällt nach Umbauten im Grundriss sofort auf
   out=$(node tools/lib/anker.js 2>&1); erste=$(echo "$out" | head -1)

@@ -137,9 +137,7 @@
     cutOut.textContent = `${num(+cutX.value)} m`;
     if ($('#optCut').checked) View3D.setCut(true, +cutX.value);
   });
-  const snap = $('#snap3d');
-  if (BUILD.downloads) snap.addEventListener('click', () => download(View3D.snapshot(), 'forever-home-3d.png'));
-  else snap.hidden = true;
+  speicherKnopf($('#snap3d'), () => ({ name: 'forever-home-3d.png', png: View3D.snapshot() }));
 
   // ---- Ansichten ----
   const elevSvg = $('#elevSvg'), elevPZ = PanZoom(elevSvg, () => elevHome);
@@ -157,9 +155,8 @@
   $('#elevZoomIn').addEventListener('click', () => elevPZ.zoom(0.7));
   $('#elevZoomOut').addEventListener('click', () => elevPZ.zoom(1.4));
   $('#elevHome').addEventListener('click', () => elevPZ.home());
-  const svgDl = (svg, name) => download(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgFile(svg))}`, name);
-  if (BUILD.downloads) $('#elevDl').addEventListener('click', () => svgDl(elevSvg, `ansicht-${elevView}.svg`));
-  else $('#elevDl').hidden = true;
+  const svgDatei = (svg, name) => ({ name, svg: svgFile(svg) });
+  speicherKnopf($('#elevDl'), () => svgDatei(elevSvg, `ansicht-${elevView}.svg`));
 
   // ---- Grundrisse ----
   const planSvg = $('#planSvg'), planPZ = PanZoom(planSvg, () => planHome);
@@ -184,16 +181,14 @@
   $('#planZoomIn').addEventListener('click', () => planPZ.zoom(0.7));
   $('#planZoomOut').addEventListener('click', () => planPZ.zoom(1.4));
   $('#planHome').addEventListener('click', () => planPZ.home());
-  if (BUILD.downloads) $('#planDl').addEventListener('click', () => svgDl(planSvg, `grundriss-${planFloor}.svg`));
-  else $('#planDl').hidden = true;
+  speicherKnopf($('#planDl'), () => svgDatei(planSvg, `grundriss-${planFloor}.svg`));
 
   // ---- Lageplan ----
   for (const cb of $$('[data-site-layer]')) cb.addEventListener('change', () => { if (siteReady) Site.setLayer(cb.dataset.siteLayer, cb.checked); });
   $('#siteZoomIn').addEventListener('click', () => Site.zoom(0.7));
   $('#siteZoomOut').addEventListener('click', () => Site.zoom(1.4));
   $('#siteHome').addEventListener('click', () => Site.home());
-  if (BUILD.downloads) $('#siteDl').addEventListener('click', () => svgDl($('#siteSvg'), 'lageplan.svg'));
-  else $('#siteDl').hidden = true;
+  speicherKnopf($('#siteDl'), () => svgDatei($('#siteSvg'), 'lageplan.svg'));
 
   // ---- Kennzahlen ----
   const S = Site.STATS, pct = v => `${num(100 * v / 1661, 1)} %`;
@@ -214,6 +209,38 @@
     return c.outerHTML;
   }
   function download(href, name) { const a = document.createElement('a'); a.href = href; a.download = name; document.body.append(a); a.click(); a.remove(); }
+  // Speichern: auf der Pages-Seite (BUILD.downloads) als Download-Link. Die Claude-Ansicht lädt nichts direkt herunter, dort geht es über die
+  // Fähigkeit downloads der Laufzeit (beim Veröffentlichen capabilities {downloads: true}); ihre Knöpfe bleiben verborgen, bis claude.use
+  // sie bereitstellt, und der Betrachter bestätigt jede Datei
+  function speicherKnopf(btn, datei) {
+    btn.dataset.speichern = '';
+    if (BUILD.downloads) {
+      btn.addEventListener('click', () => { const d = datei(); download(d.png ?? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(d.svg)}`, d.name); });
+      return;
+    }
+    btn.hidden = true;
+    if (window.claude?.use) window.claude.use('downloads').then(dl => {
+      if (!dl) return;
+      btn.hidden = false;
+      btn.addEventListener('click', () => sichern(dl, btn, datei()));
+    }, noop);
+  }
+  // PNG als Bytes (ein String ginge als Text hinaus), SVG als Text. Abgelehnt: nichts; geht Speichern in dieser Ansicht nicht, verschwinden
+  // die Knöpfe; sonst steht kurz am Knopf, warum nicht (ein SVG, das die Ansicht gar nicht annimmt, bleibt dabei)
+  async function sichern(dl, btn, d) {
+    try { await dl.save({ filename: d.name, data: d.svg ?? Uint8Array.from(atob(d.png.slice(d.png.indexOf(',') + 1)), c => c.charCodeAt(0)) }); }
+    catch (e) {
+      const code = e?.code;
+      if (code === 'declined') return;
+      console.warn('Speichern nicht möglich:', code, e?.message);
+      const kurz = { rate_limited: 'Gleich noch einmal', too_large: 'Datei zu groß', extension_not_enabled: 'SVG hier nicht möglich',
+        bad_request: 'Speichern fehlgeschlagen', transform_error: 'Speichern fehlgeschlagen', rejected_extension: 'Speichern fehlgeschlagen' }[code];
+      if (!kurz) { for (const b of $$('[data-speichern]')) b.hidden = true; return; }
+      const text = btn.textContent;
+      btn.textContent = kurz; btn.disabled = true;
+      if (code !== 'extension_not_enabled') setTimeout(() => { btn.textContent = text; btn.disabled = false; }, 2500);
+    }
+  }
 
   function fromHash(push) {
     const k = (location.hash || '').slice(1);

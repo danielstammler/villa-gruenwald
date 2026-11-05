@@ -1,8 +1,8 @@
   // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Wege der Rundgänge durch das Haus, aus dem Grundriss berechnet (weg, siehe unten)
   // Je Geschoss ein Raster aus 10-cm-Feldern: frei sind Räume, Durchgänge und Türöffnungen, gesperrt Wände, Treppenläufe, Deckenlöcher,
   // Aufzug, Möbel und offene Türflügel. Türen quert der Weg mittig und senkrecht zwischen zwei Anlaufpunkten, dazwischen sucht A* den Weg mit
-  // Abstand zu Wänden und Möbeln und strafft ihn zu geraden Strecken. So folgen die Rundgänge (TOURS in 80-steuerung.js nennen nur Räume,
-  // Außentüren und Treppenläufe) jeder Änderung an Räumen, Türen, Möbeln, Treppe und Eingang.
+  // Abstand zu Wänden und Möbeln und strafft ihn zu geraden Strecken. So folgen die Rundgänge (TOURS in 78-rundgaenge.js nennen nur Räume,
+  // Außentüren und Treppenläufe) jeder Änderung an Räumen, Türen, Möbeln, Treppe und Eingang. Ohne three.js: tools/wege.js rechnet hiermit.
   // Boden je Geschoss für die Wegpunkte (die Augenhöhe gibt tourPath dazu)
   const ZF = { UG: Zh.ffbUG, EG: Zh.ffbEG + 0.005, OG: Zh.ffbOG + 0.005, DG: Zh.ffbDG + 0.005 }, GESCHOSSE = ['UG', 'EG', 'OG', 'DG'];
   // Gerade Treppenläufe (Plans.CORE): Antritt im Osten, Austritt am Westpodest neben dem Aufzug, Gehlinie in der Mitte der Treppenbahn
@@ -149,7 +149,7 @@
     }
     if (!zu[z]) return null;
     const out = []; for (let k = z; k >= 0; k = von[k]) out.push(k);
-    return out.reverse();
+    return Object.assign(out.reverse(), { kosten: g[z] });
   }
   // Sicht von a nach b: alle 5 cm ein freies Feld mit mindestens soll(f) Abstand zu allem Gesperrten (f: Anteil der Strecke ab a; Türfelder
   // zählen nicht als frei)
@@ -204,17 +204,17 @@
   }
   // Weg von p nach q im Geschoss: A* über die Türfelder bestimmt, durch welche Türen es geht; jede wird zwischen ihren Anlaufpunkten gerade
   // gequert, die Strecken dazwischen ohne Türen gesucht und gestrafft. Ergebnis: Punkte nach p bis q ({ p, tuer, gerade }), sonst null;
-  // luecke: eine Teilstrecke ging nur gerade
+  // luecke: eine Teilstrecke ging nur gerade, quer: die Türen als [Nummer, Seite, von der aus es hindurchgeht]
   function route(N, p, q) {
     const ks = suche(N, p, q, true);
     if (!ks) return null;
-    const halte = [{ p }];
+    const halte = [{ p }], quer = [];
     for (let i = 0; i < ks.length; i++) {
       const d = N.tu[ks[i]]; if (d < 0) continue;
       let j = i; while (j + 1 < ks.length && N.tu[ks[j + 1]] === d) j++;
       const T = N.tueren[d], k0 = ks[Math.max(0, i - 1)], s = Math.sign((N.X(k0) - T.c[0]) * T.n[0] + (N.Y(k0) - T.c[1]) * T.n[1]) || 1;
       halte.push({ p: anlauf(N, T, s), tuer: d }, { p: anlauf(N, T, -s), tuer: d, gerade: true });
-      i = j;
+      quer.push([d, s]); i = j;
     }
     halte.push({ p: q });
     // wohin die Flügel aufgehen, genügen 0,6 m, wo der Weg geradeaus oder von der Angel weg weitergeht (bzw. so herkommt); nur zur Angel hin
@@ -241,9 +241,7 @@
       st.slice(1).forEach((pt, k) => out.push(k === st.length - 2 ? { ...b, p: pt } : { p: pt }));
     }
     // fast gleiche Punkte (Tür gleich hinter Tür) zusammenlegen
-    const r = out.filter((h, i) => i === out.length - 1 || strecke(h.p, out[i + 1].p) > 0.15);
-    r.luecke = out.luecke;
-    return r;
+    return Object.assign(out.filter((h, i) => i === out.length - 1 || strecke(h.p, out[i + 1].p) > 0.15), { luecke: out.luecke, quer });
   }
   // Platz für einen Halt: der Punkt selbst, wenn er frei und mit Abstand liegt, sonst das nächste Feld mit gutem Abstand, möglichst im Raum ri
   function platz(N, p, ri = -1) {
@@ -275,10 +273,15 @@
   // Anker: { tuer: 'EG N', a } a Meter vor der Außentür (negativ: im Haus), { lauf: 'EG', f } auf der Gehlinie (Anteil f ab Antritt, sonst
   // Mitte), { raum, fl } am Raum (at, sonst Mitte), { moebel: 'Kamin', fl } am Möbel dieser Beschriftung; als Blickziel h Meter über dem Boden.
   // Fehlt ein Raum oder eine Tür oder gibt es keinen Weg, warnt die Konsole mit Rundgang und Station, und der Weg geht dort gerade weiter.
+  // Am Ergebnis hängen für tools/wege.js die Warnungen und die benutzten Türen und Treppen (warnungen, tueren, treppen).
   function weg(name, ziele) {
-    const out = [], innen = [];
+    const out = [], innen = [], warnungen = [], tueren = [], treppen = [];
     let cur = null, z = 0, fl = null, offen = [];
-    const warn = (i, s) => console.warn(`Rundgang ${name}, Station ${i + 1}: ${s}`);
+    const warn = (i, s) => {
+      const g = ziele[i] || {}, l = Array.isArray(g) ? g[3] && g[3].label : g.label, m = `Station ${i + 1}${l ? ` (${l})` : ''}: ${s}`;
+      warnungen.push(m); console.warn(`Rundgang ${name}, ${m}`);
+    };
+    const raumN = (N, ri) => (ri >= 0 ? N.rooms[ri].n : 'außen'), quert = (N, [d, s]) => { const T = N.tueren[d]; return `${N.fl} ${raumN(N, s > 0 ? T.rb : T.ra)}→${raumN(N, s > 0 ? T.ra : T.rb)}`; };
     const geschoss = h => GESCHOSSE.find(f => Math.abs(h - Zh['ffb' + f]) < 0.6) || null;
     const tuerAussen = (f, s) => netz(f).tueren.filter(d => d.aus && d.seite === s).sort((a, b) => (cur ? strecke(a.c, cur) - strecke(b.c, cur) : 0))[0];
     const anker = (A, i) => {
@@ -310,12 +313,13 @@
     const gehe = (T, o, i) => {
       if (!cur) { const e = offen.find(e => e.label !== undefined); setze(T, ZF[fl], e && o.label === undefined ? { ...o, label: e.label } : o, fl); offen = []; return; }
       const N = netz(fl), zw = [];
-      let pts, S, lagen;
+      let pts, S, lagen, quer, luecken;
       for (let versuch = 0; ; versuch++) {
-        pts = [{ p: cur, o: out[out.length - 1][3] }];
+        pts = [{ p: cur, o: out[out.length - 1][3] }]; quer = []; luecken = [];
         for (const t of [...zw.filter(Boolean), T]) {
           const r = route(N, pts[pts.length - 1].p, t);
-          if (!r || r.luecke) warn(i, `kein Weg im ${fl} bis ${t.map(v => v.toFixed(2)).join(', ')}, dort gerade`);
+          if (!r || r.luecke) luecken.push(t);
+          if (r) quer.push(...r.quer);
           pts.push(...(r || [{ p: t }]));
         }
         S = [0]; for (let k = 1; k < pts.length; k++) S.push(S[k - 1] + strecke(pts[k - 1].p, pts[k].p));
@@ -326,6 +330,8 @@
         if (versuch >= offen.length) { warn(i, `Weg führt nicht durch ${N.rooms[offen[fehlt].ri].n}`); offen = offen.slice(0, fehlt); break; }
         zw[fehlt] = raumAnker(N, offen[fehlt].ri);
       }
+      for (const t of luecken) warn(i, `kein Weg im ${fl} bis ${t.map(v => v.toFixed(2)).join(', ')}, dort gerade`);
+      tueren.push(...quer.map(q => quert(N, q)));
       pts[pts.length - 1].o = { ...o };
       // Beschriftung bei Weglänge s: auf einen nahen Eckpunkt (für einen Raum einen darin), sonst ein neuer Punkt auf der Strecke, wo die Bögen
       // der Nachbarecken (bis 0,7 m) nicht leiden
@@ -358,28 +364,32 @@
         // Auf der Gehlinie beginnt der Lauf dort, wo der Weg sie am natürlichsten erreicht: 0,4, 0,55 oder 0,7 m vor dem Laufende, was mit dem
         // Rest bis zum Lauf der kürzeste Weg ist (nicht zu nah an einer Wand); oben endet er mit einem Schritt von 0,6 m aufs Podest
         const dir = Math.sign(F.x1 - F.x0), [xa, sa, xe, se, fe] = hoch ? [F.x0, -dir, F.x1, dir, ob] : [F.x1, dir, F.x0, -dir, u], N = netz(fl);
-        const lang = p => { const r = cur && route(N, cur, p); return r ? r.reduce((s, h, k) => s + strecke(k ? r[k - 1].p : cur, h.p), 0) + Math.abs(p[0] - xa) : Infinity; };
+        const lang = p => { const ks = cur && suche(N, cur, p, true); return ks ? ks.kosten + Math.abs(p[0] - xa) : Infinity; };
         const kand = [0.4, 0.55, 0.7].map(a => [xa + sa * a, TY]).filter((p, k) => !k || N.abst(...p) >= 0.3);
         const A = kand.map(p => [p, lang(p)]).sort((a, b) => a[1] - b[1])[0][0];
         const neben = (f, x, s, a) => { const M = netz(f); while (a > 0.3 && M.abst(x + s * a, TY) < 0.35) a -= 0.05; return [x + s * a, TY]; };
         gehe(A, o, i); innen[innen.length - 1] = null;   // der Bogen dort führt auf den Lauf
         const L = lauf(u, ZF[u], ZF[ob]);
         for (const p of hoch ? L : L.reverse()) { out.push([...p, {}]); innen.push(null); }
+        treppen.push(hoch ? `${u}→${ob}` : `${ob}→${u}`);
         fl = fe; setze(neben(fe, xe, se, 0.6), ZF[fl], {}, fl);
       } else if (g.rein || g.raus) {
         if (g.rein) fl = geschoss(z) || fl;
         const d = tuerAussen(fl, g.rein || g.raus), v = g.vor ?? 0.8, P = d && [d.c[0] + d.n[0] * d.aus * v, d.c[1] + d.n[1] * d.aus * v];
         if (!d) return warn(i, `keine Außentür nach ${g.rein || g.raus} im ${fl}`);
-        if (g.rein) { setze(P, g.z ?? z, opt(g.aussen || {}, i)); setze(anlauf(netz(fl), d, -d.aus), ZF[fl], o, fl); }
-        else { gehe(anlauf(netz(fl), d, -d.aus), o, i); setze(P, g.z ?? ZF[fl], opt(g.aussen || {}, i)); fl = geschoss(z) || fl; }
+        const drinnen = raumN(netz(fl), d.aus < 0 ? d.rb : d.ra);
+        if (g.rein) { tueren.push(`${fl} außen→${drinnen}`); setze(P, g.z ?? z, opt(g.aussen || {}, i)); setze(anlauf(netz(fl), d, -d.aus), ZF[fl], o, fl); }
+        else { gehe(anlauf(netz(fl), d, -d.aus), o, i); tueren.push(`${fl} ${drinnen}→außen`); setze(P, g.z ?? ZF[fl], opt(g.aussen || {}, i)); fl = geschoss(z) || fl; }
       } else if (g.raum) {
         const N = netz(fl), ri = N.rooms.findIndex(r => r.n === g.raum), drin = !!cur && N.raumAt(...cur) === ri;
         if (ri < 0) return warn(i, `Raum „${g.raum}“ fehlt im ${fl}`);
         if (!(g.wait || g.look || g.bei)) return void offen.push({ ri, label: g.label });
         if (o.label !== undefined && cur && !drin) { offen.push({ ri, label: o.label }); delete o.label; }
+        // ein Halt an bei, der auf ein Möbel, an eine Wand oder ein Loch fiele, wird verschoben – und gemeldet, denn das Ziel gehört nachgezogen
+        const halt = P => { const T = platz(N, P, ri), d = strecke(P, T); if (d > 0.1) warn(i, `Halt im ${g.raum} um ${d.toFixed(2)} m verschoben (Möbel, Wand oder Loch zu nah)`); return T; };
         let T;
-        if (Array.isArray(g.bei)) { const r = N.rooms[ri].r; T = platz(N, [r[0] + (r[1] - r[0]) * g.bei[0], r[2] + (r[3] - r[2]) * g.bei[1]], ri); }
-        else if (g.bei) T = platz(N, anker(g.bei, i) || raumAnker(N, ri), ri);
+        if (Array.isArray(g.bei)) { const r = N.rooms[ri].r; T = halt([r[0] + (r[1] - r[0]) * g.bei[0], r[2] + (r[3] - r[2]) * g.bei[1]]); }
+        else if (g.bei) { const P = anker(g.bei, i); T = P ? halt(P) : raumAnker(N, ri); }
         else if (!cur || drin) T = raumAnker(N, ri);
         else { const r = route(N, cur, raumAnker(N, ri)), e = r && r.find(h => h.gerade && N.raumAt(...h.p) === ri); T = e ? e.p : raumAnker(N, ri); }
         gehe(T, o, i);
@@ -400,7 +410,7 @@
       let r = r0; while (r > 0.12 && !frei(r)) r -= 0.1;
       if (r < r0 - 1e-6) o.r = +Math.max(0.1, r).toFixed(2);
     }
-    return out;
+    return Object.assign(out, { warnungen, tueren, treppen });
   }
   // Rundgänge erst beim ersten Gebrauch ausrechnen (je Rundgang bis etwa 0,2 s, nicht beim Laden der Seite): je Name eine Funktion mit den Zielen
   const rundgaenge = def => Object.defineProperties({}, Object.fromEntries(Object.keys(def).map(n => { let w = null; return [n, { enumerable: true, get: () => (w = w || weg(n, def[n]())) }]; })));

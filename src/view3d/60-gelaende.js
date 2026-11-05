@@ -33,8 +33,6 @@
     buildSpielplatz(g);
     buildFence(g);
     g.add(hedges());
-    // Zufallsfolge ab hier fest (Stand vor den neuen Hecken): Bäume, Beete und Nachbargrün bleiben gleich, wenn sich Zaun, Hecken oder Spielplatz ändern
-    seed = 334129586;
     // Grenze
     const pts = [...SITE.plot, SITE.plot[0]].map(q => P(q[0], q[1], 0.05));
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0x24292e, dashSize: 0.9, gapSize: 0.45 }));
@@ -44,7 +42,7 @@
     const seg = []; for (const [a, b, c, e] of SITE.parcelLines) seg.push(P(a, b, 0.03), P(c, e, 0.03));
     grenze.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), new THREE.LineBasicMaterial({ color: 0x5b6168 })));
     grenze.visible = false; g.add(grenze); L.grenze = grenze;
-    // Bäume: Stamm mit Hauptästen, Krone aus mehreren Teilkronen, die dicht mit Blattbüscheln besetzt sind
+    // Bäume: Stamm mit Hauptästen, Krone aus mehreren Teilkronen, die dicht mit Blattbüscheln besetzt sind; Zufall je Baum nach seiner Lage
     const baeume = new THREE.Group(), barkParts = [], leafCards = [], Yax = new THREE.Vector3(0, 1, 0);
     const limb = (a, b, r0, r1) => {
       const d = new THREE.Vector3().subVectors(b, a), len = d.length(), cg = new THREE.CylinderGeometry(r1, r0, len, 9, 1, true);
@@ -53,7 +51,7 @@
     };
     const tints = [[1, 1, 0.92], [0.92, 0.98, 0.9], [1.04, 1.02, 0.84]];
     SITE.trees.forEach((t, i) => {
-      const r = t.r, H = Math.min(24, 4 + 2.0 * r), zc = H - r * 0.95, ry = r * 0.82, cx = t.c[0], cz = -t.c[1];
+      const rnd = zufall('baum ' + t.c), r = t.r, H = Math.min(24, 4 + 2.0 * r), zc = H - r * 0.95, ry = r * 0.82, cx = t.c[0], cz = -t.c[1];
       const hs = k => { const v = Math.sin((k + 1) * 127.1 + i * 311.7) * 43758.5453; return v - Math.floor(v); };
       const r0 = 0.16 + 0.035 * r, top = new THREE.Vector3(cx + (hs(1) - 0.5) * 0.5, zc - ry * 0.2, cz + (hs(2) - 0.5) * 0.5);
       limb(new THREE.Vector3(cx, -0.1, cz), top, r0, r0 * 0.5);
@@ -81,7 +79,7 @@
           for (let j = 0; j < 10; j++) {
             const cs = cs0 * (0.8 + 0.4 * rnd()), off = new THREE.Vector3(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).multiplyScalar(cs0 * 1.5);
             const n = nOut.clone().multiplyScalar(0.85).addScaledVector(off.clone().normalize(), 0.3).normalize();
-            leafCards.push({ p: [p.x + off.x, p.y + off.y, p.z + off.z], n: [n.x, n.y, n.z], q: randQ(), w: cs, h: cs, c: [tint[0] * k, tint[1] * k, tint[2] * k], flip: rnd() < 0.5 });
+            leafCards.push({ p: [p.x + off.x, p.y + off.y, p.z + off.z], n: [n.x, n.y, n.z], q: randQ(rnd), w: cs, h: cs, c: [tint[0] * k, tint[1] * k, tint[2] * k], flip: rnd() < 0.5 });
           }
         }
       }
@@ -169,50 +167,54 @@
     flushBatches(g);
     return g;
   }
-  // Beete wie im Rendering: Lavendel, weiße Hortensien und Buchskugeln vor der Fassade
+  // Beete wie im Rendering: Lavendel, weiße Hortensien und Buchskugeln vor der Fassade.
+  // Zufall je Beet (Lage der Pflanzen, dazu je Art eine Folge fürs Laub) und je Gruppe Buchskugeln; Pflanze = [x, y, r, Laub-Folge, Fußhöhe]
   function plantBeds() {
     const grp = new THREE.Group();
     const items = { lavendel: [], hortensie: [], buchs: [], gruen: [] };
-    const bed = (x0, x1, y0, y1, kinds, dens) => {
-      const n = Math.round((x1 - x0) * (y1 - y0) * dens);
+    const bed = (name, x0, x1, y0, y1, kinds, dens) => {
+      const rnd = zufall('beet ' + name), laub = {}, n = Math.round((x1 - x0) * (y1 - y0) * dens);
+      for (const k of new Set(kinds)) laub[k] = zufall(`beet ${name} ${k}`);
       for (let i = 0; i < n; i++) {
         const k = kinds[Math.floor(rnd() * kinds.length)];
         const r = k === 'lavendel' ? 0.16 + rnd() * 0.07 : k === 'hortensie' ? 0.3 + rnd() * 0.12 : 0.28 + rnd() * 0.1;
         const px = x0 + rnd() * (x1 - x0), py = y0 + rnd() * (y1 - y0);
-        items[k].push([px, py, r]);
-        if (k === 'hortensie' || k === 'gruen') for (let q = 0; q < 3; q++) items[k].push([px + (rnd() - 0.5) * r * 1.2, py + (rnd() - 0.5) * r * 1.2, r * (0.55 + rnd() * 0.25)]);
+        items[k].push([px, py, r, laub[k]]);
+        if (k === 'hortensie' || k === 'gruen') for (let q = 0; q < 3; q++) items[k].push([px + (rnd() - 0.5) * r * 1.2, py + (rnd() - 0.5) * r * 1.2, r * (0.55 + rnd() * 0.25), laub[k]]);
       }
     };
     // Lavendel und Hortensien am Rand der durchgehenden Terrasse, die Mitte bleibt frei für die Stufe zum Pool
-    bed(0.1, 6.2, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
-    bed(9.8, 18.9, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
+    bed('terrasse west', 0.1, 6.2, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
+    bed('terrasse ost', 9.8, 18.9, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
     // Westseite nur südlich des Lichthofs (house.js lichthof), davor ist der Schacht mit Geländer
-    bed(-0.95, -0.15, -HOUSE.lichthof.u0 + 0.4, -0.6, ['hortensie', 'gruen', 'lavendel'], 4);
-    bed(19.1, 19.8, -10.8, -5.9, ['hortensie', 'lavendel'], 5);
-    bed(0.3, 5.3, 0.15, 0.85, ['gruen', 'hortensie'], 4);
-    bed(10.7, 15.7, 0.15, 0.85, ['gruen', 'hortensie'], 4);
-    for (const [x, y] of [[6.35, -16.1], [9.65, -16.1], [-0.55, -16.0], [19.5, -15.95], [19.35, -11.15], [5.2, 0.55], [10.8, 0.55], [-0.6, -12.2]]) items.buchs.push([x, y, 0.42]);
+    bed('westseite', -0.95, -0.15, -HOUSE.lichthof.u0 + 0.4, -0.6, ['hortensie', 'gruen', 'lavendel'], 4);
+    bed('ostseite', 19.1, 19.8, -10.8, -5.9, ['hortensie', 'lavendel'], 5);
+    bed('eingang west', 0.3, 5.3, 0.15, 0.85, ['gruen', 'hortensie'], 4);
+    bed('eingang ost', 10.7, 15.7, 0.15, 0.85, ['gruen', 'hortensie'], 4);
+    const fassade = zufall('buchs fassade');
+    for (const [x, y] of [[6.35, -16.1], [9.65, -16.1], [-0.55, -16.0], [19.5, -15.95], [19.35, -11.15], [5.2, 0.55], [10.8, 0.55], [-0.6, -12.2]]) items.buchs.push([x, y, 0.42, fassade]);
     // kleine Buchskugeln als Allee am Weg zum Pool
-    for (let y = -17.2; y > -22.6; y -= 1.35) for (const x of [7.12, 8.88]) items.buchs.push([x, y, 0.26]);
+    const allee = zufall('buchs allee');
+    for (let y = -17.2; y > -22.6; y -= 1.35) for (const x of [7.12, 8.88]) items.buchs.push([x, y, 0.26, allee]);
     // Zwei Pflanzkübel mit Buchskugeln unter dem Vordach links und rechts der Haustür
-    const zk = HOUSE.podest.z + 0.55;
-    for (const x of [6.15, 9.85]) { boxPlan(M.kuebel, x - 0.2, x + 0.2, 0.12, 0.52, HOUSE.podest.z, zk); items.buchs.push([x, 0.32, 0.23, zk]); }
+    const zk = HOUSE.podest.z + 0.55, kuebel = zufall('buchs kübel');
+    for (const x of [6.15, 9.85]) { boxPlan(M.kuebel, x - 0.2, x + 0.2, 0.12, 0.52, HOUSE.podest.z, zk); items.buchs.push([x, 0.32, 0.23, kuebel, zk]); }
     // Jede Pflanze: dunkler Kern und darauf Blatt- bzw. Blütenkarten; Lavendel als gekreuzte, senkrechte Karten
     const core = [], cards = { blatt: [], hortensie: [], buchs: [], lavendel: [] };
-    const shell = (list, x, y, cy, r, ry, n, sz, k0) => {
+    const shell = (list, x, y, cy, r, ry, n, sz, k0, rnd) => {
       for (let j = 0; j < n; j++) {
         const u1 = rnd() * 1.6 - 0.6, phi = rnd() * 6.2832, s = Math.sqrt(1 - u1 * u1), nrm = new THREE.Vector3(s * Math.cos(phi), u1, s * Math.sin(phi));
         const k = k0 * (0.8 + 0.3 * rnd()) * (0.75 + 0.25 * (u1 + 0.6) / 1.6);
-        list.push({ p: [x + nrm.x * r, cy + nrm.y * ry, -y + nrm.z * r], n: [nrm.x, nrm.y, nrm.z], q: faceQ(nrm, 1.4), w: sz * (0.8 + 0.4 * rnd()), h: sz * (0.8 + 0.4 * rnd()), c: [k, k, k], flip: rnd() < 0.5 });
+        list.push({ p: [x + nrm.x * r, cy + nrm.y * ry, -y + nrm.z * r], n: [nrm.x, nrm.y, nrm.z], q: faceQ(nrm, 1.4, rnd), w: sz * (0.8 + 0.4 * rnd()), h: sz * (0.8 + 0.4 * rnd()), c: [k, k, k], flip: rnd() < 0.5 });
       }
     };
-    for (const [x, y, r, z0 = 0] of items.buchs) { core.push([x, z0 + r * 0.92, -y, r * 0.88, r * 0.82]); shell(cards.buchs, x, y, z0 + r * 0.92, r * 0.95, r * 0.9, r < 0.3 ? 46 : 70, 0.2, 1); }
-    for (const [x, y, r] of items.gruen) { core.push([x, r * 0.7, -y, r * 0.8, r * 0.62]); shell(cards.blatt, x, y, r * 0.7, r, r * 0.8, 16, r * 0.9, 0.95); }
-    for (const [x, y, r] of items.hortensie) {
+    for (const [x, y, r, rnd, z0 = 0] of items.buchs) { core.push([x, z0 + r * 0.92, -y, r * 0.88, r * 0.82]); shell(cards.buchs, x, y, z0 + r * 0.92, r * 0.95, r * 0.9, r < 0.3 ? 46 : 70, 0.2, 1, rnd); }
+    for (const [x, y, r, rnd] of items.gruen) { core.push([x, r * 0.7, -y, r * 0.8, r * 0.62]); shell(cards.blatt, x, y, r * 0.7, r, r * 0.8, 16, r * 0.9, 0.95, rnd); }
+    for (const [x, y, r, rnd] of items.hortensie) {
       core.push([x, r * 0.7, -y, r * 0.8, r * 0.62]);
-      shell(cards.blatt, x, y, r * 0.7, r, r * 0.78, 9, r * 0.85, 0.9); shell(cards.hortensie, x, y, r * 0.78, r * 0.98, r * 0.8, 9, r * 0.95, 1);
+      shell(cards.blatt, x, y, r * 0.7, r, r * 0.78, 9, r * 0.85, 0.9, rnd); shell(cards.hortensie, x, y, r * 0.78, r * 0.98, r * 0.8, 9, r * 0.95, 1, rnd);
     }
-    for (const [x, y, r] of items.lavendel) for (let j = 0; j < 3; j++) {
+    for (const [x, y, r, rnd] of items.lavendel) for (let j = 0; j < 3; j++) {
       const a = j * Math.PI / 3 + rnd(), w = r * 2.4, h = r * 2.8, n = new THREE.Vector3(Math.cos(a), 0.25, Math.sin(a)).normalize(), k = 0.85 + 0.25 * rnd();
       cards.lavendel.push({ p: [x, h / 2, -y], n: [n.x, n.y, n.z], q: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), a), w, h, c: [k, k, k], flip: rnd() < 0.5 });
     }

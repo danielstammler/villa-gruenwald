@@ -16,7 +16,7 @@
     pmrem = new THREE.PMREMGenerator(renderer);
     // Wolkenschicht: kachelbares Rauschen als Alpha, hoch über dem Grundstück
     const N = 512, c = document.createElement('canvas'); c.width = c.height = N;
-    const g = c.getContext('2d'), img = g.createImageData(N, N);
+    const g = c.getContext('2d'), img = g.createImageData(N, N), rnd = zufall('textur wolken');
     const oct = [[4, 0.5], [8, 0.25], [16, 0.13], [32, 0.07], [64, 0.04]].map(([f, a]) => ({ f, a, L: Float32Array.from({ length: f * f }, rnd) }));
     const sm = t => t * t * (3 - 2 * t);
     const noise = (o, x, y) => {

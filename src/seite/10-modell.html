@@ -1,4 +1,4 @@
-    <section id="view-modell" class="view-wrap" role="tabpanel" aria-labelledby="tab-modell">
+    <section id="view-modell" class="view-wrap" role="tabpanel" aria-labelledby="tab-modell">{{ W.datei('10-modell.html') }}
       <div class="stage" id="stage3d">
         <canvas aria-label="3D-Modell des Hauses mit Grundstück"></canvas>
         <div class="fallback" hidden>Das 3D-Modell braucht WebGL. Die Ansichten und der Lageplan funktionieren auch ohne.</div>
@@ -20,7 +20,7 @@
             <button data-cam="west">West</button>
             <button data-cam="ueberblick" data-label="Überblick von Südwesten">Überblick</button>
             <button data-cam="zufahrt" data-label="Zufahrt mit Rampe zur Tiefgarage">Zufahrt</button>
-            <button data-cam="innen" data-label="Innen · Essen und Wohnen">Innen</button>
+            <button data-cam="innen" data-label="Innen · Essen und Wohnen">Innen</button>{{ W.da('EG', 'Essen', 'Wohnen') }}
             <button data-cam="oben" data-label="Draufsicht">Draufsicht</button>
             <button data-cam="front" data-label="Frontansicht Süd, orthogonal">Frontal maßstäblich</button>
           </div>

@@ -1545,15 +1545,21 @@ const Plans = (() => {
   // Wandblock westlich davon, Türen nach Osten.
   // Breiter oder schmaler: nur LINE[2] (nach Süden) oder LINE[3] (nach Norden) ändern. Daraus folgen RUECKWAND und VORDERWAND (unten),
   // mit ihnen alle Räume, Durchgänge, Türen und Möbel an diesen Wänden in 10-ug … 40-dg, dazu LIFT, VOID, HOLES, 3D, Regeln und
-  // Seitentext. Die x-Enden liegen an den Seitenwänden der Halle: LIFT, VOID und die Durchgänge in der Rückwand folgen ihnen, die Räume
-  // dort tragen 4,72 und 11,68 als eigene Wandkanten.
+  // Seitentext. Am Westende LINE[0] liegt die Aufzugtür, am Ostende LINE[1] die STIRNWAND: LIFT, VOID, die Durchgänge in der Rückwand
+  // und die Räume an der Stirnwand folgen ihnen. Die Wände in der Flucht der Aufzugtür (x 4,48–4,72) sind Achsen der Geschosse.
   const LINE = [4.72, 11.68, -4.88, -3.58];
   const WAND = 0.24;                               // Innenwand, wie zwischen den Räumen der Geschosse
   const mm = v => Math.round(v * 1000) / 1000;     // auf Millimeter: −4,88 − 0,24 ergibt so genau −5,12, ohne Gleitkommarest
+  // Innenwand als Achse a (Mittellinie), Kanten a ∓ WAND/2: wandX(a) steht bei x = a (Nord-Süd-Wand) mit West-, Mittel- und Ostlinie
+  // .w|.m|.o, wandY(a) bei y = a (Ost-West-Wand) mit .s|.m|.n. Räume nehmen die Kanten, Türen die Mitte, Möbel an der Wand Kante ± Tiefe;
+  // eine Wand verschieben heißt so nur ihre Achse ändern (die Achsen der Geschosse stehen oben in 10-ug … 40-dg)
+  const wandX = a => ({ w: mm(a - WAND / 2), m: mm(a), o: mm(a + WAND / 2) });
+  const wandY = a => ({ s: mm(a - WAND / 2), m: mm(a), n: mm(a + WAND / 2) });
   // Wände an der Treppenbahn mit Südseite s, Mitte m (für Türen) und Nordseite n: die Rückwand südlich der Bahn läuft durchs ganze
   // Haus, die Vorderwand nördlich gibt es im UG (Abstellraum), im OG am Podest (Kind 2) und im DG (Bad, Abstellraum); im EG ist dort die Halle
-  const RUECKWAND = { s: mm(LINE[2] - WAND), m: mm(LINE[2] - WAND / 2), n: LINE[2] };
-  const VORDERWAND = { s: LINE[3], m: mm(LINE[3] + WAND / 2), n: mm(LINE[3] + WAND) };
+  const RUECKWAND = wandY(mm(LINE[2] - WAND / 2)), VORDERWAND = wandY(mm(LINE[3] + WAND / 2));
+  // Stirnwand am Ostende der Treppenbahn in allen Geschossen (UG Technik, EG Küche und Backkitchen, OG Kind 4, DG Abstellraum)
+  const STIRNWAND = wandX(mm(LINE[1] + WAND / 2));
   const FLIGHTS = {
     UG: { x0: 10.69, x1: 6.01, n: 19, za: HOUSE.Z.ffbUG, zb: HOUSE.Z.ffbEG },   // 19 Steigungen à 18,9 cm, Auftritt 26 cm
     EG: { x0: 10.6, x1: 6.01, n: 18, za: HOUSE.Z.ffbEG, zb: HOUSE.Z.ffbOG },    // 18 à 18,6 cm, Auftritt 27 cm
@@ -1563,8 +1569,12 @@ const Plans = (() => {
   const holeOver = (fl, under) => { const F = FLIGHTS[fl]; return [F.x1, F.x0 - (under - 2 - F.za) / (F.zb - F.za) * (F.x0 - F.x1), LINE[2], LINE[3]]; };
   const HOLES = { EG: holeOver('UG', HOUSE.Z.ffbEG - 0.35), OG: holeOver('EG', HOUSE.Z.gurtU), DG: holeOver('OG', HOUSE.Z.deckeDG) };
   const LIFT = [2.92, LINE[0], LINE[2], -3.08];
-  // Luftraum über dem vorderen Teil der Halle bis an die Treppenbahn, im OG mit Geländer an der Treppe
-  const VOID = [[6.25, LINE[1], LINE[3], -0.36]];
+  // Schachtwände des Aufzugs in allen Geschossen: im Westen und im Norden (im EG bis zur Außenwand, zwischen Gäste-WC und Garderobe);
+  // im Süden ist es die Rückwand, im Osten die Tür zur Treppenbahn
+  const SCHACHT_W = wandX(mm(LIFT[0] - WAND / 2)), SCHACHT_N = wandY(mm(LIFT[3] + WAND / 2));
+  // Luftraum über dem vorderen Teil der Halle bis an die Treppenbahn, im OG mit Geländer an der Treppe; im Westen die OG-Wand zu Kind 2
+  const LUFTWAND = wandX(6.13);
+  const VOID = [[LUFTWAND.o, LINE[1], LINE[3], -0.36]];
   // Fläche eines Raums ohne Treppe, Aufzug und (im OG) Luftraum, soweit sie darin liegen
   const cutA = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[2], b[2]));
   const STAIRUSE = { UG: [FLIGHTS.UG.x1, FLIGHTS.UG.x0, LINE[2], LINE[3]], EG: [FLIGHTS.EG.x1, FLIGHTS.EG.x0, LINE[2], LINE[3]],
@@ -1648,61 +1658,75 @@ const Plans = (() => {
 
   // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Untergeschoss mit Gym, Foyer und Technik
   // ---------- Grundrisse ----------
-  // In allen Geschossen: Kanten an der Rückwand und an der Wand vor der Treppe als RUECKWAND.s|m|n und VORDERWAND.s|m|n, Enden der
-  // Treppenbahn als LINE[0]/LINE[1], die Haustür als HAUSTUER (00-kern.js); so nimmt eine breitere Treppe Räume, Türen und Möbel mit
-  const FL = {
-    UG: {
+  // Jedes Geschoss nennt oben seine Innenwände als Achsen (wandX/wandY), benannt nach den Räumen beiderseits (West vor Ost, Süd vor
+  // Nord): eine Wand verschieben heißt ihre Zahl ändern, Raumkanten, Türen und Möbel an der Wand folgen. Die Wände am Kern gelten in allen
+  // Geschossen und kommen aus 00-kern.js (RUECKWAND, VORDERWAND, STIRNWAND, SCHACHT_W|N, LUFTWAND, dazu LINE und HAUSTUER)
+  const FL = {};
+  // UG-Achsen; Flur ist der Gang des Foyers an der Rückwand
+  FL.UG = (() => {
+    const GYM_FOYER = wandX(6.6), FOYER_SAUNA = wandX(9.4), SAUNA_DUSCHE = wandX(12.32);  // FOYER_SAUNA auch Foyer | Ruheraum
+    const GYM_FLURENDE = wandX(4.6), FLURENDE_RUHERAUM = wandX(11.8);  // an den Enden des Flurs, zum Nordteil von Gym bzw. Ruheraum
+    const WASCHEN_ABSTELL = wandX(4.6);
+    const GYM_FLUR = wandY(-6.44), SAUNA_RUHERAUM = wandY(-8.38);  // GYM_FLUR auch Ruheraum | Flur, SAUNA_RUHERAUM auch Dusche / WC
+    return {
       titel: 'Untergeschoss mit Tiefgarage', ffb: HOUSE.Z.ffbUG,
       rooms: [
         // Gym im Westen mit Sportboden und Lichthof davor (Daniel, 4.11.2026)
-        { n: 'Gym', r: [0.36, 6.48, -11.29, -6.56], ext: [[0.36, 4.48, -6.56, RUECKWAND.s]], at: [3.0, -8.9] },
+        { n: 'Gym', r: [0.36, GYM_FOYER.w, -11.29, GYM_FLUR.s], ext: [[0.36, GYM_FLURENDE.w, GYM_FLUR.s, RUECKWAND.s]], at: [3.0, -8.9] },
         // Zugang von der Tiefgarage mittig, wo früher die Fahrräder standen: Foyer, Flur und Treppenbahn
-        { n: 'Foyer', r: [6.72, 9.28, -11.29, -6.32], ext: [[4.72, 11.68, -6.32, RUECKWAND.s], LINE], core: true, at: [8.0, -8.9] },
-        { n: 'Ruheraum', r: [9.52, 15.64, -8.26, -6.56], ext: [[11.92, 15.64, -6.56, RUECKWAND.s]], at: [12.6, -7.0] },
-        { n: 'Sauna', r: [9.52, 12.2, -11.29, -8.5], at: [10.86, -9.9] }, { n: 'Dusche / WC', r: [12.44, 15.64, -11.29, -8.5], at: [13.9, -9.9] },
-        { n: 'Technik', r: [11.92, 15.64, RUECKWAND.n, -0.36], at: [13.8, -2.6] },
+        { n: 'Foyer', r: [GYM_FOYER.o, FOYER_SAUNA.w, -11.29, GYM_FLUR.n], ext: [[GYM_FLURENDE.o, FLURENDE_RUHERAUM.w, GYM_FLUR.n, RUECKWAND.s], LINE], core: true, at: [8.0, -8.9] },
+        { n: 'Ruheraum', r: [FOYER_SAUNA.o, 15.64, SAUNA_RUHERAUM.n, GYM_FLUR.s], ext: [[FLURENDE_RUHERAUM.o, 15.64, GYM_FLUR.s, RUECKWAND.s]], at: [12.6, -7.0] },
+        { n: 'Sauna', r: [FOYER_SAUNA.o, SAUNA_DUSCHE.w, -11.29, SAUNA_RUHERAUM.s], at: [10.86, -9.9] }, { n: 'Dusche / WC', r: [SAUNA_DUSCHE.o, 15.64, -11.29, SAUNA_RUHERAUM.s], at: [13.9, -9.9] },
+        { n: 'Technik', r: [STIRNWAND.o, 15.64, RUECKWAND.n, -0.36], at: [13.8, -2.6] },
         // Waschen und ein richtiger Abstellraum nebeneinander (Hauswirtschaft); der Aufzug sitzt im Wandblock daneben
-        { n: 'Waschen', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, RUECKWAND.n, -2.84]], at: [2.3, -1.6] },
-        { n: 'Abstellraum', r: [4.72, 11.68, VORDERWAND.n, -0.36], at: [8.2, -1.85] },
+        { n: 'Waschen', r: [0.36, WASCHEN_ABSTELL.w, SCHACHT_N.n, -0.36], ext: [[0.36, SCHACHT_W.w, RUECKWAND.n, SCHACHT_N.n]], at: [2.3, -1.6] },
+        { n: 'Abstellraum', r: [WASCHEN_ABSTELL.o, STIRNWAND.w, VORDERWAND.n, -0.36], at: [8.2, -1.85] },
       ],
-      // Durchgänge vom Flur zur Treppenbahn: im Westen zum Aufzug und Abstellraum, im Osten zum Antritt der Kellertreppe
-      open: [[LINE[0], FLIGHTS.UG.x1, RUECKWAND.s, RUECKWAND.n], [FLIGHTS.UG.x0, LINE[1], RUECKWAND.s, RUECKWAND.n]],
+      // Durchgänge vom Flur zur Treppenbahn: im Westen zum Aufzug und Abstellraum, im Osten zum Antritt der Kellertreppe; so breit, wie
+      // Flur und Bahn sich gegenüberliegen (sonst bliebe nach dem Verschieben eines Flurendes eine Nische in der Rückwand)
+      open: [[Math.max(LINE[0], GYM_FLURENDE.o), FLIGHTS.UG.x1, RUECKWAND.s, RUECKWAND.n], [FLIGHTS.UG.x0, Math.min(LINE[1], FLURENDE_RUHERAUM.w), RUECKWAND.s, RUECKWAND.n]],
       doors: [
         { x: 7.3, y: -11.47, w: 0.7, o: 'h', s: 1, h: 0, t: 0.5 }, { x: 8.0, y: -11.47, w: 0.7, o: 'h', s: 1, h: 1, t: 0.5 },
-        { x: 6.6, y: -8.0, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 11.8, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 },
-        { x: 10.4, y: -8.38, w: 0.7, o: 'h', s: -1, h: 0 }, { x: 13.4, y: -8.38, w: 0.8, o: 'h', s: -1, h: 0 },
-        { x: 11.8, y: -4.8, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 4.85, y: VORDERWAND.m, w: 0.8, o: 'h', s: 1, h: 0 },
-        { x: 4.6, y: -2.6, w: 0.85, o: 'v', s: -1, h: 0 },
+        { x: GYM_FOYER.m, y: -8.0, w: 0.9, o: 'v', s: -1, h: 0 }, { x: FLURENDE_RUHERAUM.m, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 },
+        { x: 10.4, y: SAUNA_RUHERAUM.m, w: 0.7, o: 'h', s: -1, h: 0 }, { x: 13.4, y: SAUNA_RUHERAUM.m, w: 0.8, o: 'h', s: -1, h: 0 },
+        { x: STIRNWAND.m, y: -4.8, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 4.85, y: VORDERWAND.m, w: 0.8, o: 'h', s: 1, h: 0 },
+        { x: WASCHEN_ABSTELL.m, y: -2.6, w: 0.85, o: 'v', s: -1, h: 0 },
       ],
       furn: () => [
         fu.box(0.9, 1.7, -10.9, -9.0, 'Laufband'), fu.box(2.3, 3.1, -10.9, -9.3, 'Rad'), fu.box(3.9, 6.1, -10.9, -9.8, 'Matte'),
         fu.box(1.0, 2.8, -6.9, -5.6, 'Kraftstation'),
-        fu.box(6.72, 7.17, -10.5, -8.6, 'Bank'), fu.shelf(8.68, 9.28, -10.7, -7.2),
-        fu.box(9.52, 12.2, -11.29, -10.69, '', 'saunabank'), fu.box(9.52, 10.12, -10.69, -8.9, '', 'saunabank'), fu.box(11.4, 11.9, -9.2, -8.7, 'Ofen'),
+        fu.box(GYM_FOYER.o, mm(GYM_FOYER.o + 0.45), -10.5, -8.6, 'Bank'), fu.shelf(mm(FOYER_SAUNA.w - 0.6), FOYER_SAUNA.w, -10.7, -7.2),
+        fu.box(FOYER_SAUNA.o, SAUNA_DUSCHE.w, -11.29, -10.69, '', 'saunabank'), fu.box(FOYER_SAUNA.o, mm(FOYER_SAUNA.o + 0.6), -10.69, -8.9, '', 'saunabank'),
+        fu.box(mm(SAUNA_DUSCHE.w - 0.8), mm(SAUNA_DUSCHE.w - 0.3), mm(SAUNA_RUHERAUM.s - 0.7), mm(SAUNA_RUHERAUM.s - 0.2), 'Ofen'),  // mit Abstand in der Nordostecke
         fu.shower(14.44, 15.64, -11.29, -10.09), fu.wc(15.64, -9.3, 'E'), fu.basin(13.2, -11.29, 0.6, 'S'),
         fu.box(9.9, 11.5, -7.9, -7.2, 'Liege'), fu.box(12.0, 13.6, -7.9, -7.2, 'Liege'), fu.shelf(15.04, 15.64, -8.0, -5.5),
         fu.box(12.2, 13.8, -1.5, -0.6, 'Wärmepumpe'), Ci(14.8, -1.25, 0.5, 'g-furn'), T(14.8, -1.33, 'Speicher', 'g-ftxt'), fu.box(12.2, 13.4, -3.6, -2.8, 'Anschluss'),
         fu.box(0.6, 1.2, -1.0, -0.4, 'WM'), fu.box(1.3, 1.9, -1.0, -0.4, 'TR'), fu.box(2.1, 3.3, -0.96, -0.4, 'Spüle', 'spuelzeile'), fu.shelf(0.36, 0.86, -4.6, -2.2),
-        fu.shelf(5.0, 11.4, -0.96, -0.36), fu.shelf(9.2, 11.68, VORDERWAND.n, mm(VORDERWAND.n + 0.6)),
+        fu.shelf(5.0, 11.4, -0.96, -0.36), fu.shelf(mm(STIRNWAND.w - 2.48), STIRNWAND.w, VORDERWAND.n, mm(VORDERWAND.n + 0.6)),
       ],
-    },
-    // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Erdgeschoss
-    EG: {
+    };
+  })();
+  // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Erdgeschoss
+  // EG-Achsen (siehe 10-ug.js); die Halle reicht von GARDEROBE_HALLE bis an die STIRNWAND und muss am Aufzug (LINE[0]) bleiben
+  FL.EG = (() => {
+    const GARDEROBE_HALLE = wandX(4.6), WOHNEN_ESSEN = wandX(6.6), ESSEN_KUECHE = wandX(11.4);  // die beiden letzten mit Durchgang
+    const KUECHE_BACK = wandY(-4.0);  // Küche | Backkitchen
+    return {
       titel: 'Erdgeschoss', ffb: HOUSE.Z.ffbEG,
       rooms: [
-        { n: 'Wohnen', r: [0.36, 6.48, -11.29, RUECKWAND.s] }, { n: 'Essen', r: [6.72, 11.28, -11.29, RUECKWAND.s], at: [9.0, -10.6] },
+        { n: 'Wohnen', r: [0.36, WOHNEN_ESSEN.w, -11.29, RUECKWAND.s] }, { n: 'Essen', r: [WOHNEN_ESSEN.o, ESSEN_KUECHE.w, -11.29, RUECKWAND.s], at: [9.0, -10.6] },
         // Küche L-förmig: 1 m weiter nach Norden, dafür ist die Backkitchen kleiner (Daniel, 4.11.2026)
-        { n: 'Küche', r: [11.52, 15.64, -11.29, RUECKWAND.s], ext: [[11.92, 15.64, RUECKWAND.s, -4.12]], at: [13.6, -10.4] },
+        { n: 'Küche', r: [ESSEN_KUECHE.o, 15.64, -11.29, RUECKWAND.s], ext: [[STIRNWAND.o, 15.64, RUECKWAND.s, KUECHE_BACK.s]], at: [13.6, -10.4] },
         // Halle mit der Treppenbahn an der Rückwand: beim Hereinkommen steigt die Haupttreppe quer vor einem auf
-        { n: 'Halle', r: [4.72, 11.68, RUECKWAND.n, -0.36], core: true, at: [7.6, -2.2] },
+        { n: 'Halle', r: [GARDEROBE_HALLE.o, STIRNWAND.w, RUECKWAND.n, -0.36], core: true, at: [7.6, -2.2] },
         // Gäste-WC dort, wo früher der kleine Abstellraum war; an der alten WC-Stelle sitzt jetzt der Aufzug
-        { n: 'Garderobe', r: [0.36, 4.48, -2.84, -0.36], at: [2.4, -1.65] }, { n: 'Gäste-WC', r: [0.36, 2.68, RUECKWAND.n, -3.08], at: [1.52, -3.98] },
-        { n: 'Backkitchen', r: [11.92, 15.64, -3.88, -0.36], at: [13.75, -1.65] },
+        { n: 'Garderobe', r: [0.36, GARDEROBE_HALLE.w, SCHACHT_N.n, -0.36], at: [2.4, -1.65] }, { n: 'Gäste-WC', r: [0.36, SCHACHT_W.w, RUECKWAND.n, SCHACHT_N.s], at: [1.52, -3.98] },
+        { n: 'Backkitchen', r: [STIRNWAND.o, 15.64, KUECHE_BACK.n, -0.36], at: [13.75, -1.65] },
       ],
-      open: [[6.48, 6.72, -10.4, -5.9], [11.28, 11.52, -10.4, -6.2]],
+      open: [[WOHNEN_ESSEN.w, WOHNEN_ESSEN.o, -10.4, -5.9], [ESSEN_KUECHE.w, ESSEN_KUECHE.o, -10.4, -6.2]],
       doors: [
-        { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 1.1, y: -2.96, w: 0.8, o: 'h', s: -1, h: 0 },
-        { x: 11.8, y: -4.84, w: 0.7, o: 'v', s: 1, h: 0 }, { x: 12.3, y: -4.0, w: 0.9, o: 'h', s: 1, h: 1 },
+        { x: GARDEROBE_HALLE.m, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 1.1, y: SCHACHT_N.m, w: 0.8, o: 'h', s: -1, h: 0 },
+        { x: STIRNWAND.m, y: -4.84, w: 0.7, o: 'v', s: 1, h: 0 }, { x: 12.3, y: KUECHE_BACK.m, w: 0.9, o: 'h', s: 1, h: 1 },
         // vom Podest unter dem Treppenaustritt ins Wohnzimmer
         { x: 4.95, y: RUECKWAND.m, w: 0.9, o: 'h', s: -1, h: 0 },
         // Haustür: Lage und Breite kommen aus der Nordfassade (HAUSTUER in 00-kern.js)
@@ -1712,89 +1736,108 @@ const Plans = (() => {
         fu.box(0.36, 0.86, -8.2, -6.95, 'Kamin'), fu.sofa(2.9, 3.85, -8.9, -6.3, 'E'), fu.box(1.45, 2.35, -8.15, -7.05, '', 'couchtisch'),
         fu.box(1.25, 2.05, -9.55, -8.75, '', 'sessel-S'), fu.box(1.25, 2.05, -6.45, -5.65, '', 'sessel-N'),
         fu.table(8.47, 9.53, -9.5, -6.9, 3),
-        fu.box(13.3, 15.64, -4.77, -4.12, '', 'zeile'), fu.box(14.99, 15.64, -6.15, -4.77, '', 'zeile'), fu.hob(14.3, -4.45),
+        // Küchenzeile als L an der Wand zur Backkitchen und an der Außenwand, wandert ganz mit KUECHE_BACK
+        fu.box(13.3, 15.64, mm(KUECHE_BACK.s - 0.65), KUECHE_BACK.s, '', 'zeile'), fu.box(14.99, 15.64, mm(KUECHE_BACK.s - 2.03), mm(KUECHE_BACK.s - 0.65), '', 'zeile'), fu.hob(14.3, mm(KUECHE_BACK.s - 0.33)),
         fu.box(12.6, 14.6, -7.2, -6.2, 'Insel'),
         // kleiner Esstisch für vier vor den Gartentüren der Küche
         fu.table(12.75, 13.95, -10.45, -9.65, 2, false),
-        fu.shelf(1.8, 3.1, -2.84, -2.24), fu.box(3.95, 4.48, -2.8, -2.05, 'Bank'),
+        fu.shelf(1.8, 3.1, SCHACHT_N.n, mm(SCHACHT_N.n + 0.6)), fu.box(mm(GARDEROBE_HALLE.w - 0.53), GARDEROBE_HALLE.w, -2.8, -2.05, 'Bank'),
         fu.wc(1.6, RUECKWAND.n, 'S'), fu.basin(0.36, -3.7, 0.45, 'W'),
         fu.box(12.2, 15.64, -1.0, -0.36, '', 'zeile'), fu.box(12.8, 13.6, -0.95, -0.42, 'Spüle'), fu.box(15.0, 15.64, -3.6, -1.0, '', 'hochschrank'),
-        fu.shelf(11.92, 12.5, -3.85, -1.4), fu.box(13.2, 14.6, -2.9, -2.1, 'Arbeitsfläche'),
+        fu.shelf(STIRNWAND.o, mm(STIRNWAND.o + 0.58), mm(KUECHE_BACK.n + 0.03), mm(KUECHE_BACK.n + 2.48)), fu.box(13.2, 14.6, -2.9, -2.1, 'Arbeitsfläche'),
         // Halle: Konsole mit Spiegel an der Nordwand neben dem Eingang (1,40 m, 0,20 m westlich der Öffnung, wandert mit der Haustür),
         // Garderobenschrank für Gäste in der Nordostecke
-        fu.box(mm(EINGANG.x0 - 1.6), mm(EINGANG.x0 - 0.2), -0.76, -0.36, '', 'konsole'), fu.box(11.08, 11.68, -2.9, -0.36, '', 'hochschrank'),
+        fu.box(mm(EINGANG.x0 - 1.6), mm(EINGANG.x0 - 0.2), -0.76, -0.36, '', 'konsole'), fu.box(mm(STIRNWAND.w - 0.6), STIRNWAND.w, -2.9, -0.36, '', 'hochschrank'),
         // draußen: Lounge mittig unter dem Balkon (Blick in den Garten, vor der Fassade bleibt ein Gang), Esstisch auf dem Freisitz;
         // Liegen stehen am Pool, nicht am Haus
         fu.sofa(6.8, 9.2, -13.95, -13.1, 'N'), fu.box(7.4, 8.6, -14.85, -14.35, '', 'couchtisch'),
         fu.box(5.75, 6.55, -14.85, -14.05, '', 'sessel-W'), fu.box(9.45, 10.25, -14.85, -14.05, '', 'sessel-E'),
         fu.table(17.05, 17.95, -9.3, -7.3, 3),
       ],
-    },
-    // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Obergeschoss
-    OG: {
+    };
+  })();
+  // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Obergeschoss
+  // OG-Achsen (siehe 10-ug.js); Kind 2 endet im Osten an der LUFTWAND, Kind 4 im Westen an der STIRNWAND (beide 00-kern.js)
+  FL.OG = (() => {
+    const BADWEST_FLUR = wandX(4.6), FLUR_BADOST = wandX(11.4);  // im Süden zwischen den Teilen von Kind 1 bzw. Kind 3 (gemeldet)
+    const KIND1_FLUR = wandX(6.6), FLUR_KIND3 = wandX(9.4);  // am Mittelgang zur Balkontür
+    const KIND1_BAD = wandY(-7.12), KIND3_BAD = wandY(-7.12), KINDER_FLUR = wandY(-6.44);  // KINDER_FLUR: Kind 1 und Kind 3 | Flur
+    return {
       titel: 'Obergeschoss', ffb: HOUSE.Z.ffbOG,
       rooms: [
         // vier größere Kinderzimmer (Daniel, 4.11.2026: kein Wohnzimmer im OG) und zwei Bäder mit Wanne, die sich je zwei Kinder teilen
-        { n: 'Kind 1', r: [0.36, 4.48, -11.29, -7.24], ext: [[4.72, 6.48, -11.29, -6.56]], at: [2.5, -9.7] },
-        { n: 'Bad West', r: [0.36, 4.48, -7.0, RUECKWAND.s], at: [2.4, -6.06] },
-        { n: 'Kind 2', r: [0.36, 6.01, -2.84, -0.36], ext: [[0.36, 2.68, RUECKWAND.n, -2.84], [4.72, 6.01, VORDERWAND.n, -2.84]], at: [3.4, -1.75] },
-        { n: 'Kind 3', r: [11.52, 15.64, -11.29, -7.24], ext: [[9.52, 11.28, -11.29, -6.56]], at: [13.5, -9.7] },
-        { n: 'Bad Ost', r: [11.52, 15.64, -7.0, RUECKWAND.s], at: [13.6, -6.06] },
-        { n: 'Kind 4', r: [11.92, 15.64, RUECKWAND.n, -0.36], at: [13.8, -2.4] },
+        { n: 'Kind 1', r: [0.36, BADWEST_FLUR.w, -11.29, KIND1_BAD.s], ext: [[BADWEST_FLUR.o, KIND1_FLUR.w, -11.29, KINDER_FLUR.s]], at: [2.5, -9.7] },
+        { n: 'Bad West', r: [0.36, BADWEST_FLUR.w, KIND1_BAD.n, RUECKWAND.s], at: [2.4, -6.06] },
+        { n: 'Kind 2', r: [0.36, LUFTWAND.w, SCHACHT_N.n, -0.36], ext: [[0.36, SCHACHT_W.w, RUECKWAND.n, SCHACHT_N.n], [LINE[0], LUFTWAND.w, VORDERWAND.n, SCHACHT_N.n]], at: [3.4, -1.75] },
+        { n: 'Kind 3', r: [FLUR_BADOST.o, 15.64, -11.29, KIND3_BAD.s], ext: [[FLUR_KIND3.o, FLUR_BADOST.w, -11.29, KINDER_FLUR.s]], at: [13.5, -9.7] },
+        { n: 'Bad Ost', r: [FLUR_BADOST.o, 15.64, KIND3_BAD.n, RUECKWAND.s], at: [13.6, -6.06] },
+        { n: 'Kind 4', r: [STIRNWAND.o, 15.64, RUECKWAND.n, -0.36], at: [13.8, -2.4] },
         // Flur mit Treppenbahn: die Haupttreppe kommt im Westen an, die Dachtreppe beginnt im Osten; Mittelgang bis zur Balkontür
-        { n: 'Flur', r: [4.72, 11.28, -6.32, RUECKWAND.s], ext: [[6.72, 9.28, -11.29, -6.32], LINE], core: true, at: [8.0, -9.2] },
+        { n: 'Flur', r: [BADWEST_FLUR.o, FLUR_BADOST.w, KINDER_FLUR.n, RUECKWAND.s], ext: [[KIND1_FLUR.o, FLUR_KIND3.w, -11.29, KINDER_FLUR.n], LINE], core: true, at: [8.0, -9.2] },
       ],
-      open: [...VOID, [LINE[0], FLIGHTS.EG.x1, RUECKWAND.s, RUECKWAND.n], [FLIGHTS.OG.x0, 11.28, RUECKWAND.s, RUECKWAND.n]],
+      // Durchgänge vom Flur zum Podest und zum Antritt der Dachtreppe, so breit, wie Flur und Treppenbahn sich gegenüberliegen
+      open: [...VOID, [Math.max(LINE[0], BADWEST_FLUR.o), FLIGHTS.EG.x1, RUECKWAND.s, RUECKWAND.n], [FLIGHTS.OG.x0, FLUR_BADOST.w, RUECKWAND.s, RUECKWAND.n]],
       doors: [
-        { x: 5.2, y: -6.44, w: 0.85, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -6.2, w: 0.75, o: 'v', s: -1, h: 0 },
-        { x: 4.9, y: VORDERWAND.m, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 10.0, y: -6.44, w: 0.85, o: 'h', s: -1, h: 1 },
-        { x: 11.4, y: -6.2, w: 0.75, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
+        { x: 5.2, y: KINDER_FLUR.m, w: 0.85, o: 'h', s: -1, h: 0 }, { x: BADWEST_FLUR.m, y: -6.2, w: 0.75, o: 'v', s: -1, h: 0 },
+        { x: 4.9, y: VORDERWAND.m, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 10.0, y: KINDER_FLUR.m, w: 0.85, o: 'h', s: -1, h: 1 },
+        { x: FLUR_BADOST.m, y: -6.2, w: 0.75, o: 'v', s: 1, h: 0 }, { x: STIRNWAND.m, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
-        fu.bed(1.0, 2.4, -9.24, -7.24, 'N'), fu.desk(2.7, 4.1, -11.29, -10.6, 'N'), fu.shelf(3.0, 4.48, -7.84, -7.24), fu.shelf(4.72, 5.32, -11.0, -8.6),
-        fu.tub(0.5, 2.2, -7.0, -6.25), fu.basin(3.0, RUECKWAND.s, 1.2, 'N'), fu.wc(4.48, -6.65, 'E'),
-        fu.bed(0.5, 2.5, -4.78, -3.38, 'W'), fu.desk(2.8, 4.2, -1.06, -0.36, 'S'), fu.shelf(5.41, 6.01, -2.8, -0.6),
-        fu.bed(13.64, 15.04, -9.24, -7.24, 'N'), fu.desk(11.92, 13.32, -11.29, -10.6, 'N'), fu.shelf(11.52, 13.0, -7.84, -7.24), fu.shelf(10.68, 11.28, -11.0, -8.6),
-        fu.tub(13.8, 15.5, -7.0, -6.25), fu.basin(12.8, RUECKWAND.s, 1.2, 'N'), fu.wc(11.52, -6.65, 'W'),
-        fu.bed(13.9, 15.3, RUECKWAND.n, mm(RUECKWAND.n + 2), 'S'), fu.desk(12.2, 13.6, -1.06, -0.36, 'S'), fu.shelf(11.92, 12.52, -4.2, -1.6),
-        fu.box(6.72, 7.17, -10.6, -8.6, 'Bank'),
+        fu.bed(1.0, 2.4, mm(KIND1_BAD.s - 2), KIND1_BAD.s, 'N'), fu.desk(2.7, 4.1, -11.29, -10.6, 'N'),
+        fu.shelf(mm(BADWEST_FLUR.w - 1.48), BADWEST_FLUR.w, mm(KIND1_BAD.s - 0.6), KIND1_BAD.s), fu.shelf(BADWEST_FLUR.o, mm(BADWEST_FLUR.o + 0.6), -11.0, -8.6),
+        // WC je an der Wand zum Flur, 0,35 m vor der Wand zum Kinderzimmer (die Ecke wandert mit beiden Wänden)
+        fu.tub(0.5, 2.2, KIND1_BAD.n, mm(KIND1_BAD.n + 0.75)), fu.basin(3.0, RUECKWAND.s, 1.2, 'N'), fu.wc(BADWEST_FLUR.w, mm(KIND1_BAD.n + 0.35), 'E'),
+        fu.bed(0.5, 2.5, -4.78, -3.38, 'W'), fu.desk(2.8, 4.2, -1.06, -0.36, 'S'), fu.shelf(mm(LUFTWAND.w - 0.6), LUFTWAND.w, -2.8, -0.6),
+        fu.bed(13.64, 15.04, mm(KIND3_BAD.s - 2), KIND3_BAD.s, 'N'), fu.desk(11.92, 13.32, -11.29, -10.6, 'N'),
+        fu.shelf(FLUR_BADOST.o, mm(FLUR_BADOST.o + 1.48), mm(KIND3_BAD.s - 0.6), KIND3_BAD.s), fu.shelf(mm(FLUR_BADOST.w - 0.6), FLUR_BADOST.w, -11.0, -8.6),
+        fu.tub(13.8, 15.5, KIND3_BAD.n, mm(KIND3_BAD.n + 0.75)), fu.basin(12.8, RUECKWAND.s, 1.2, 'N'), fu.wc(FLUR_BADOST.o, mm(KIND3_BAD.n + 0.35), 'W'),
+        fu.bed(13.9, 15.3, RUECKWAND.n, mm(RUECKWAND.n + 2), 'S'), fu.desk(12.2, 13.6, -1.06, -0.36, 'S'), fu.shelf(STIRNWAND.o, mm(STIRNWAND.o + 0.6), -4.2, -1.6),
+        fu.box(KIND1_FLUR.o, mm(KIND1_FLUR.o + 0.45), -10.6, -8.6, 'Bank'),
         // draußen auf dem Balkon über der Terrasse
         fu.table(7.4, 8.6, -13.6, -12.9, 1, false),
       ],
-    },
-    // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Dachgeschoss
-    DG: {
+    };
+  })();
+  // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Dachgeschoss
+  // DG-Achsen (siehe 10-ug.js)
+  FL.DG = (() => {
+    const SCHLAF_BUERO = wandX(4.6), BUERO_GAESTE = wandX(11.4);  // beide auch am Flur, mit Tür
+    const ANKLEIDE_BAD = wandX(4.6), BAD_ABSTELL = wandX(9.4), BUERO_FLUR = wandY(-6.44);
+    return {
       titel: 'Dachgeschoss', ffb: HOUSE.Z.ffbDG,
       rooms: [
         // Büro vorne mittig im Zwerchhaus mit Balkon (Daniel, 4.11.2026); Elternbereich im Westen, en suite: Flur → Schlafzimmer → Ankleide → Bad
-        { n: 'Büro', r: [4.72, 11.28, -11.29, -6.56], at: [8.0, -10.4] },
-        { n: 'Flur', r: [4.72, 11.28, -6.32, RUECKWAND.s], ext: [LINE], core: true, at: [8.0, -5.72] },
-        { n: 'Schlafzimmer', r: [0.36, 4.48, -11.29, RUECKWAND.s], at: [2.4, -9.9] },
-        { n: 'Ankleide', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, RUECKWAND.n, -2.84]], at: [2.6, -1.75] },
-        { n: 'Bad', r: [4.72, 9.28, VORDERWAND.n, -0.36], at: [6.9, -2.1] },
+        { n: 'Büro', r: [SCHLAF_BUERO.o, BUERO_GAESTE.w, -11.29, BUERO_FLUR.s], at: [8.0, -10.4] },
+        { n: 'Flur', r: [SCHLAF_BUERO.o, BUERO_GAESTE.w, BUERO_FLUR.n, RUECKWAND.s], ext: [LINE], core: true, at: [8.0, -5.72] },
+        { n: 'Schlafzimmer', r: [0.36, SCHLAF_BUERO.w, -11.29, RUECKWAND.s], at: [2.4, -9.9] },
+        { n: 'Ankleide', r: [0.36, ANKLEIDE_BAD.w, SCHACHT_N.n, -0.36], ext: [[0.36, SCHACHT_W.w, RUECKWAND.n, SCHACHT_N.n]], at: [2.6, -1.75] },
+        { n: 'Bad', r: [ANKLEIDE_BAD.o, BAD_ABSTELL.w, VORDERWAND.n, -0.36], at: [6.9, -2.1] },
         // die Ostseite ist frei geworden: Gästezimmer und Abstellraum
-        { n: 'Gäste', r: [11.52, 15.64, -11.29, RUECKWAND.s], at: [13.6, -9.9] },
-        { n: 'Abstellraum', r: [11.92, 15.64, RUECKWAND.n, -0.36], ext: [[9.52, 11.92, VORDERWAND.n, -0.36]], wf: 0, at: [13.8, -2.6] },
+        { n: 'Gäste', r: [BUERO_GAESTE.o, 15.64, -11.29, RUECKWAND.s], at: [13.6, -9.9] },
+        { n: 'Abstellraum', r: [STIRNWAND.o, 15.64, RUECKWAND.n, -0.36], ext: [[BAD_ABSTELL.o, STIRNWAND.o, VORDERWAND.n, -0.36]], wf: 0, at: [13.8, -2.6] },
       ],
-      open: [[LINE[0], FLIGHTS.OG.x1, RUECKWAND.s, RUECKWAND.n], [HOLES.DG[1], 11.28, RUECKWAND.s, RUECKWAND.n]],
+      // Durchgänge vom Flur zum Podest und zur Treppe, so breit, wie Flur und Treppenbahn sich gegenüberliegen
+      open: [[Math.max(LINE[0], SCHLAF_BUERO.o), FLIGHTS.OG.x1, RUECKWAND.s, RUECKWAND.n], [HOLES.DG[1], BUERO_GAESTE.w, RUECKWAND.s, RUECKWAND.n]],
       doors: [
-        { x: 7.6, y: -6.44, w: 0.9, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -6.2, w: 0.85, o: 'v', s: -1, h: 0 },
-        { x: 1.0, y: RUECKWAND.m, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 4.6, y: -1.2, w: 0.8, o: 'v', s: 1, h: 0 },
-        { x: 11.4, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
+        { x: 7.6, y: BUERO_FLUR.m, w: 0.9, o: 'h', s: -1, h: 0 }, { x: SCHLAF_BUERO.m, y: -6.2, w: 0.85, o: 'v', s: -1, h: 0 },
+        { x: 1.0, y: RUECKWAND.m, w: 0.8, o: 'h', s: 1, h: 0 }, { x: ANKLEIDE_BAD.m, y: -1.2, w: 0.8, o: 'v', s: 1, h: 0 },
+        { x: BUERO_GAESTE.m, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 }, { x: STIRNWAND.m, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
-        fu.desk(7.2, 8.8, -9.3, -8.5, 'N'), fu.shelf(4.72, 5.22, -10.15, -8.0), fu.box(10.1, 10.9, -10.15, -9.35, '', 'sessel-E'), fu.shelf(9.8, 11.28, -7.06, -6.56),
-        fu.bed(2.38, 4.48, -9.1, -7.3, 'E'), fu.box(4.0, 4.48, -7.3, -6.82, '', 'nacht'), fu.box(4.0, 4.48, -9.58, -9.1, '', 'nacht'),
+        fu.desk(7.2, 8.8, -9.3, -8.5, 'N'), fu.shelf(SCHLAF_BUERO.o, mm(SCHLAF_BUERO.o + 0.5), -10.15, -8.0), fu.box(10.1, 10.9, -10.15, -9.35, '', 'sessel-E'),
+        fu.shelf(mm(BUERO_GAESTE.w - 1.48), BUERO_GAESTE.w, mm(BUERO_FLUR.s - 0.5), BUERO_FLUR.s),
+        fu.bed(mm(SCHLAF_BUERO.w - 2.1), SCHLAF_BUERO.w, -9.1, -7.3, 'E'),
+        fu.box(mm(SCHLAF_BUERO.w - 0.48), SCHLAF_BUERO.w, -7.3, -6.82, '', 'nacht'), fu.box(mm(SCHLAF_BUERO.w - 0.48), SCHLAF_BUERO.w, -9.58, -9.1, '', 'nacht'),
         fu.box(1.6, 3.2, -11.0, -10.5, '', 'kommode'), fu.box(1.2, 2.0, -6.6, -5.8, '', 'sessel-W'),
-        fu.shelf(1.0, 4.4, -1.6, -1.1), fu.shelf(2.0, 4.48, -2.84, -2.34), fu.shelf(0.9, 1.5, -4.8, -2.9),
-        fu.tub(6.6, 8.4, -1.2, -0.45), fu.shower(4.72, 5.92, VORDERWAND.n, mm(VORDERWAND.n + 1.2)), fu.basin(9.28, -2.0, 1.4, 'E'), fu.wc(7.0, VORDERWAND.n, 'S'),
-        fu.bed(12.6, 14.4, -8.7, -6.7, 'N'), fu.desk(13.9, 15.3, -11.29, -10.6, 'N'), fu.shelf(11.52, 12.02, -10.6, -8.8),
-        fu.shelf(12.2, 15.4, -1.6, -1.1), fu.shelf(9.52, 11.6, VORDERWAND.n, mm(VORDERWAND.n + 0.5)),
+        fu.shelf(1.0, 4.4, -1.6, -1.1), fu.shelf(mm(ANKLEIDE_BAD.w - 2.48), ANKLEIDE_BAD.w, SCHACHT_N.n, mm(SCHACHT_N.n + 0.5)), fu.shelf(0.9, 1.5, -4.8, -2.9),
+        fu.tub(6.6, 8.4, -1.2, -0.45), fu.shower(ANKLEIDE_BAD.o, mm(ANKLEIDE_BAD.o + 1.2), VORDERWAND.n, mm(VORDERWAND.n + 1.2)), fu.basin(BAD_ABSTELL.w, -2.0, 1.4, 'E'), fu.wc(7.0, VORDERWAND.n, 'S'),
+        fu.bed(12.6, 14.4, -8.7, -6.7, 'N'), fu.desk(13.9, 15.3, -11.29, -10.6, 'N'), fu.shelf(BUERO_GAESTE.o, mm(BUERO_GAESTE.o + 0.5), -10.6, -8.8),
+        fu.shelf(12.2, 15.4, -1.6, -1.1), fu.shelf(BAD_ABSTELL.o, mm(BAD_ABSTELL.o + 2.08), VORDERWAND.n, mm(VORDERWAND.n + 0.5)),
         // draußen auf dem Balkon vor dem Büro, neben der Tür
         fu.table(9.15, 9.55, -12.45, -11.85, 1, false),
       ],
-    },
-  };
+    };
+  })();
 
   // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Flächen (auch DG nach lichter Höhe), Wände, Fenster, Türen, Treppe, Luftraum und Aufzug zeichnen
   // Dachgeschoss: lichte Höhe hängt vom Abstand s zur Außenwand ab (steile Mansarde, Dachaufbau 30 cm); im Zwerchhaus volle Höhe

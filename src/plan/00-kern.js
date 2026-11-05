@@ -23,15 +23,21 @@ const Plans = (() => {
   // Wandblock westlich davon, Türen nach Osten.
   // Breiter oder schmaler: nur LINE[2] (nach Süden) oder LINE[3] (nach Norden) ändern. Daraus folgen RUECKWAND und VORDERWAND (unten),
   // mit ihnen alle Räume, Durchgänge, Türen und Möbel an diesen Wänden in 10-ug … 40-dg, dazu LIFT, VOID, HOLES, 3D, Regeln und
-  // Seitentext. Die x-Enden liegen an den Seitenwänden der Halle: LIFT, VOID und die Durchgänge in der Rückwand folgen ihnen, die Räume
-  // dort tragen 4,72 und 11,68 als eigene Wandkanten.
+  // Seitentext. Am Westende LINE[0] liegt die Aufzugtür, am Ostende LINE[1] die STIRNWAND: LIFT, VOID, die Durchgänge in der Rückwand
+  // und die Räume an der Stirnwand folgen ihnen. Die Wände in der Flucht der Aufzugtür (x 4,48–4,72) sind Achsen der Geschosse.
   const LINE = [4.72, 11.68, -4.88, -3.58];
   const WAND = 0.24;                               // Innenwand, wie zwischen den Räumen der Geschosse
   const mm = v => Math.round(v * 1000) / 1000;     // auf Millimeter: −4,88 − 0,24 ergibt so genau −5,12, ohne Gleitkommarest
+  // Innenwand als Achse a (Mittellinie), Kanten a ∓ WAND/2: wandX(a) steht bei x = a (Nord-Süd-Wand) mit West-, Mittel- und Ostlinie
+  // .w|.m|.o, wandY(a) bei y = a (Ost-West-Wand) mit .s|.m|.n. Räume nehmen die Kanten, Türen die Mitte, Möbel an der Wand Kante ± Tiefe;
+  // eine Wand verschieben heißt so nur ihre Achse ändern (die Achsen der Geschosse stehen oben in 10-ug … 40-dg)
+  const wandX = a => ({ w: mm(a - WAND / 2), m: mm(a), o: mm(a + WAND / 2) });
+  const wandY = a => ({ s: mm(a - WAND / 2), m: mm(a), n: mm(a + WAND / 2) });
   // Wände an der Treppenbahn mit Südseite s, Mitte m (für Türen) und Nordseite n: die Rückwand südlich der Bahn läuft durchs ganze
   // Haus, die Vorderwand nördlich gibt es im UG (Abstellraum), im OG am Podest (Kind 2) und im DG (Bad, Abstellraum); im EG ist dort die Halle
-  const RUECKWAND = { s: mm(LINE[2] - WAND), m: mm(LINE[2] - WAND / 2), n: LINE[2] };
-  const VORDERWAND = { s: LINE[3], m: mm(LINE[3] + WAND / 2), n: mm(LINE[3] + WAND) };
+  const RUECKWAND = wandY(mm(LINE[2] - WAND / 2)), VORDERWAND = wandY(mm(LINE[3] + WAND / 2));
+  // Stirnwand am Ostende der Treppenbahn in allen Geschossen (UG Technik, EG Küche und Backkitchen, OG Kind 4, DG Abstellraum)
+  const STIRNWAND = wandX(mm(LINE[1] + WAND / 2));
   const FLIGHTS = {
     UG: { x0: 10.69, x1: 6.01, n: 19, za: HOUSE.Z.ffbUG, zb: HOUSE.Z.ffbEG },   // 19 Steigungen à 18,9 cm, Auftritt 26 cm
     EG: { x0: 10.6, x1: 6.01, n: 18, za: HOUSE.Z.ffbEG, zb: HOUSE.Z.ffbOG },    // 18 à 18,6 cm, Auftritt 27 cm
@@ -41,8 +47,12 @@ const Plans = (() => {
   const holeOver = (fl, under) => { const F = FLIGHTS[fl]; return [F.x1, F.x0 - (under - 2 - F.za) / (F.zb - F.za) * (F.x0 - F.x1), LINE[2], LINE[3]]; };
   const HOLES = { EG: holeOver('UG', HOUSE.Z.ffbEG - 0.35), OG: holeOver('EG', HOUSE.Z.gurtU), DG: holeOver('OG', HOUSE.Z.deckeDG) };
   const LIFT = [2.92, LINE[0], LINE[2], -3.08];
-  // Luftraum über dem vorderen Teil der Halle bis an die Treppenbahn, im OG mit Geländer an der Treppe
-  const VOID = [[6.25, LINE[1], LINE[3], -0.36]];
+  // Schachtwände des Aufzugs in allen Geschossen: im Westen und im Norden (im EG bis zur Außenwand, zwischen Gäste-WC und Garderobe);
+  // im Süden ist es die Rückwand, im Osten die Tür zur Treppenbahn
+  const SCHACHT_W = wandX(mm(LIFT[0] - WAND / 2)), SCHACHT_N = wandY(mm(LIFT[3] + WAND / 2));
+  // Luftraum über dem vorderen Teil der Halle bis an die Treppenbahn, im OG mit Geländer an der Treppe; im Westen die OG-Wand zu Kind 2
+  const LUFTWAND = wandX(6.13);
+  const VOID = [[LUFTWAND.o, LINE[1], LINE[3], -0.36]];
   // Fläche eines Raums ohne Treppe, Aufzug und (im OG) Luftraum, soweit sie darin liegen
   const cutA = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[2], b[2]));
   const STAIRUSE = { UG: [FLIGHTS.UG.x1, FLIGHTS.UG.x0, LINE[2], LINE[3]], EG: [FLIGHTS.EG.x1, FLIGHTS.EG.x0, LINE[2], LINE[3]],

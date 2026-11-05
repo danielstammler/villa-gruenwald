@@ -63,8 +63,9 @@ Grundlage für die Prüfungen ohne Browser in eine vm.
 - `src/haus/` – parametrisches Haus `HOUSE`: 00 Grundmaße, Höhen `HOUSE.Z`, Dach, Helfer `op()`/`fluegel()` · 10 Fassaden `fas` mit allen
   Öffnungen · 20 Freisitz, Terrasse, Podest, Balkone, Kamine · 30 Rampe `rampe` (Längsprofil `z(y)`) und Tiefgarage `tg` · 40 Pool,
   Poolhaus, Zaun, Lichthof · 50 Garten `HOUSE.garten` (Hecken, Spielplatz).
-- `src/plan/` – Grundrisse `Plans`: 00 Treppe und Aufzug (`Plans.CORE` = LINE, FLIGHTS, HOLES, LIFT, VOID), Möbel `fu` · 10–40 UG, EG,
-  OG, DG (Räume, Öffnungen, Türen, Möbel) · 50 Flächen und Zeichnen · 60 Tiefgarage · 90 Ausgabe. Das 3D holt Möbel aus `Plans.items(fl)`.
+- `src/plan/` – Grundrisse `Plans`: 00 Treppe, Aufzug, Wände am Kern und `wandX`/`wandY` (`Plans.CORE` = LINE, FLIGHTS, HOLES, LIFT,
+  VOID), Möbel `fu` · 10–40 UG, EG, OG, DG (oben die Wandachsen, dann Räume, Öffnungen, Türen, Möbel) · 50 Flächen und Zeichnen ·
+  60 Tiefgarage · 90 Ausgabe. Das 3D holt Möbel aus `Plans.items(fl)`.
 - `src/ansicht/` – Ansichten und Schnitte `Elev` (A–A durchs Haus, B–B durch die Rampe); `src/siteplan.js` – Lageplan `Site`.
 - `src/view3d/` – 3D `View3D`: 00 Zustand, Zufall · 01 Materialien `M` · 02 Geometrie-Hilfen (`addGeo`, `boxPlan` …) · 10 Hülle ·
   20 Innenausbau · 30 Laub · 35 Lichthof · 40 Rampe, Tiefgarage, Autos · 50 Garten · 55 Spielplatz · 60 Gelände · 70 Licht ·
@@ -82,26 +83,35 @@ Grundlage für die Prüfungen ohne Browser in eine vm.
 ## Grundrisse, Treppe und Eingang ändern (kommt sehr oft vor)
 
 - Wo: Räume, Türen, Öffnungen und Möbel je Geschoss in `src/plan/10-ug.js` … `40-dg.js`. Räume sind lichte Rechtecke `r: [x0, x1, y0, y1]`
-  (plus `ext`-Rechtecke, die sich berühren oder über `open` verbunden sein müssen, sonst ist ein Teil abgemauert), Wände sind der Spalt
-  dazwischen (innen meist 0,24 m), Durchgänge ohne Tür stehen in `open`. Türen `{ x, y, w, o, s, h }`: `o: 'h'` in einer Ost-West-Wand
+  (plus `ext`-Rechtecke, die sich berühren oder über `open` verbunden sein müssen, sonst ist ein Teil abgemauert), Durchgänge ohne Tür
+  stehen in `open`. Innenwände (0,24 m) sind benannte Achsen oben in jeder Geschossdatei: `wandX(a)` ist eine Nord-Süd-Wand bei x = a
+  mit West-, Mittel- und Ostlinie `.w|.m|.o`, `wandY(a)` eine Ost-West-Wand bei y = a mit `.s|.m|.n`; Namen nach den Räumen beiderseits,
+  West vor Ost bzw. Süd vor Nord (OG `KIND1_BAD`: `.s` ist die Kante von Kind 1, `.n` die vom Bad West; wo eine Wand mehr Räume trennt,
+  steht es am Namen). Räume nehmen die Kanten, Türen die Mitte, Möbel an der Wand Kante ± Tiefe, mit `mm()` exakt. Wände am Kern gelten
+  in allen Geschossen und stehen in `src/plan/00-kern.js`: `RUECKWAND` und `VORDERWAND` an der Treppenbahn (aus `LINE[2]`, `LINE[3]`),
+  `STIRNWAND` an ihrem Ostende (aus `LINE[1]`), `SCHACHT_W` und `SCHACHT_N` am Aufzug (aus `LIFT`), `LUFTWAND` zwischen OG Kind 2 und
+  dem Luftraum (`VOID`); dazu `LINE`, `FLIGHTS`, `HOLES`. Türen `{ x, y, w, o, s, h }`: `o: 'h'` in einer Ost-West-Wand
   mit x = Westende der Öffnung und y = Wandmitte, `o: 'v'` in einer Nord-Süd-Wand mit x = Wandmitte und y = Südende; `w` Breite,
   `s: 1` schlägt nach Norden bzw. Osten auf (`-1` nach Süden bzw. Westen), `h: 1` Band am Ost- bzw. Nordende, `t` Wanddicke der Zeichnung.
-  Treppe, Aufzug und Luftraum: `src/plan/00-kern.js` (`LINE`, `FLIGHTS`, `HOLES`, `LIFT`, `VOID`); die Wände an der Treppenbahn heißen
-  `RUECKWAND` und `VORDERWAND` (`.s`, `.m`, `.n` = Süd-, Mittel-, Nordlinie, aus `LINE` und `WAND` = 0,24 m), die Geschossdateien nehmen
-  nur diese Namen. Haustür und alle Fassadenöffnungen: `src/haus/10-fassaden.js` (Nordfassade: Plan-x = 16 − u); daraus `EINGANG` und
+  Haustür und alle Fassadenöffnungen: `src/haus/10-fassaden.js` (Nordfassade: Plan-x = 16 − u); daraus `EINGANG` und
   `HAUSTUER` in 00-kern.js für die Grundrisstür. Podest, Terrasse, Balkone: `src/haus/20-anbauten.js`.
 - Was automatisch folgt: 3D-Innenausbau (Wände, Böden, Türen, Treppe, Möbel über `Plans.items`), Schnitt A–A, Wohnfläche und
   Raumtabelle, die Rundgänge (Wege durch Türen und über die Treppe werden aus dem Grundriss berechnet), die Innenansichten der
-  Prüfung (am Raum verankert) und alle Zahlen im Seitentext (`{{ … }}`). Von Hand bleiben: die Raumkante auf der anderen Seite
-  einer verschobenen Wand, Türen und `open`-Durchgänge in dieser Wand, Möbel (feste Koordinaten; abgeleitet nur an RUECKWAND und
-  VORDERWAND) und Prosa über Räume.
+  Prüfung (am Raum verankert) und alle Zahlen im Seitentext (`{{ … }}`). Mit einer Wandachse wandern beide Raumkanten, Türen und
+  Durchgänge in der Wand und die Möbel an ihr (anliegend oder mit festem Abstand wie WC und Saunaofen). Von Hand bleiben: frei stehende
+  Möbel (feste Zahlen; `moebel-frei` meldet, wenn eine Wand sie trifft), die Lage einer Tür entlang ihrer Wand, `at` (Lage der
+  Beschriftung) und Prosa über Räume.
 - Typische Änderungen:
-  - Wand zwischen zwei Räumen verschieben: `./vg raumbuch <Geschoss>` zeigt je Raum die Nachbarn und die Wandlage. Beide Raumkanten,
-    Türen und `open` in dieser Wand und die Möbel an ihr mitnehmen; `./vg pruefen schnell` zeigt in der Zeile Räume die Flächen
-    vorher → nachher und meldet abgemauerte Teile (`raum-zusammen`), Überschneidungen, Türschwenks und Möbel in Wänden.
+  - Wand zwischen zwei Räumen verschieben: die Achse oben in der Geschossdatei ändern, eine Zahl (`./vg raumbuch <Geschoss>` zeigt je
+    Raum die Nachbarn und die Wandlage, „Wand x 4,48–4,72“ ist die Achse 4,6). Beispiel: OG `KIND1_BAD` −7,12 → −6,92 macht Kind 1
+    0,8 m² größer und das Bad West kleiner, Bett, Regal, Wanne und WC wandern mit. Wände am Kern nur in 00-kern.js (alle Geschosse).
+    Soll nur ein Teil einer Wand wandern (die EG-Halle muss am Aufzug bleiben), bekommt der Raum ein `ext`-Rechteck und die Wand eine
+    zweite Achse. `./vg pruefen schnell` zeigt in der Zeile Räume die Flächen vorher → nachher und meldet abgemauerte Teile
+    (`raum-zusammen`), Überschneidungen, Türschwenks, Möbel in Wänden und Rundgänge, die nicht mehr durchkommen.
   - Treppe breiter oder schmaler: nur `LINE[2]` (nach Süden; der Aufzugschacht wird mit tiefer) oder `LINE[3]` (nach Norden). Räume,
     Türen, Durchgänge und Möbel an beiden Treppenwänden folgen in allen Geschossen; danach die Regeln `treppe-kopf` und `treppe-podest`
     ansehen. Länge und Steigungen: `FLIGHTS` (x0 Antritt im Osten, x1 Austritt im Westen, n Steigungen), die Deckenöffnungen folgen.
+    Die Bahn länger nach Osten: `LINE[1]`, die STIRNWAND und die Räume dahinter folgen in allen Geschossen.
   - Haustür versetzen oder verbreitern: in `op(u0, u1, …, 'eingang', { side })` der Nordfassade beide Werte gleich verschieben (nach
     Osten = kleineres u). Es folgen Grundrisstür, Konsole, Kübel, Laterne, Fußmatte, Lageplan-Pfeil, Beschriftung, Kronleuchter,
     Ansichten und Rundgänge. Portikus mit Pfeilern, Podest, OG-Fenster und Zwerchhaus bleiben auf der Hausachse x = 8 (eigene Werte,

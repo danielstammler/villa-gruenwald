@@ -143,7 +143,9 @@ const Site = (() => {
     s.push(text([8, -4.6], 'Wohnhaus', 's-houselabel') + text([8, -6.0], '16,00 × 11,65', 's-houselabel s-small') + text([8, -7.2], '186,4 m²', 's-houselabel s-small'));
     s.push(text([2.4, -14.1], 'Terrasse', 's-lbl s-small') + text([17.5, -8.6], 'Freisitz', 's-lbl s-small', -90) + text([8, 0.35], 'Podest', 's-lbl s-tiny'));
     s.push(text([11.8, -36.9], 'Poolterrasse', 's-lbl s-tiny'));
-    s.push(poly([[8, 1.1], [7.55, 2.05], [8.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));
+    // Pfeil mittig vor der Haustür (Öffnung „eingang“ der Nordfassade, Plan-x = Hausbreite − u)
+    const tuer = HOUSE.fas.N.open.find(o => o.kind === 'eingang'), tx = HOUSE.W - (tuer.u0 + tuer.u1) / 2;
+    s.push(poly([[tx, 1.1], [tx - 0.45, 2.05], [tx + 0.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));
     s.push(text([8, -30.65], 'Pool 4,00 × 12,00', 's-lbl s-small', -90) + text([21.13, -30.65], 'Poolhaus 3,50 × 6,00', 's-lbl s-tiny', -90));
     s.push(text([23.63, -21], 'Zuwegung 1,50', 's-lbl s-tiny', -90) + text([22.6, -49.75], 'Zufahrt', 's-lbl s-small'));
     s.push('</g>');

@@ -16,11 +16,22 @@ const Plans = (() => {
   const pts = P => P.map(p => `${f(p[0])},${f(-p[1])}`).join(' ');
   const area = r => (r[1] - r[0]) * (r[3] - r[2]);
   const area2 = P => Math.abs(P.reduce((t, p, i) => { const q = P[(i + 1) % P.length]; return t + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
-  // Treppenhalle (Daniel, 4.11.2026: „so, dass man beim Reinkommen auf sie zuschaut, nicht so zick zack“): eine gerade, 1,30 m
-  // breite Treppenbahn an der Rückwand der Halle (LINE). Kellertreppe UG→EG, Haupttreppe EG→OG und Dachtreppe OG→DG sind je ein
-  // gerader Lauf, steigen nach Westen und liegen genau übereinander, je ein Geschoss versetzt (Kopfhöhe überall über 2,9 m).
-  // Antritt im Osten, Austritt im Westen auf das Podest vor dem Aufzug. Der Aufzug sitzt im Wandblock westlich davon, Türen nach Osten.
+  // Treppenhalle (Daniel, 4.11.2026: „so, dass man beim Reinkommen auf sie zuschaut, nicht so zick zack“): eine gerade Treppenbahn
+  // an der Rückwand der Halle (LINE = [Westende am Aufzug, Ostende, Südkante an der Rückwand, Nordkante zur Halle]). Kellertreppe UG→EG,
+  // Haupttreppe EG→OG und Dachtreppe OG→DG sind je ein gerader Lauf, steigen nach Westen und liegen genau übereinander, je ein Geschoss
+  // versetzt (Kopfhöhe überall über 2,9 m). Antritt im Osten, Austritt im Westen auf das Podest vor dem Aufzug. Der Aufzug sitzt im
+  // Wandblock westlich davon, Türen nach Osten.
+  // Breiter oder schmaler: nur LINE[2] (nach Süden) oder LINE[3] (nach Norden) ändern. Daraus folgen RUECKWAND und VORDERWAND (unten),
+  // mit ihnen alle Räume, Durchgänge, Türen und Möbel an diesen Wänden in 10-ug … 40-dg, dazu LIFT, VOID, HOLES, 3D, Regeln und
+  // Seitentext. Die x-Enden liegen an den Seitenwänden der Halle: LIFT, VOID und die Durchgänge in der Rückwand folgen ihnen, die Räume
+  // dort tragen 4,72 und 11,68 als eigene Wandkanten.
   const LINE = [4.72, 11.68, -4.88, -3.58];
+  const WAND = 0.24;                               // Innenwand, wie zwischen den Räumen der Geschosse
+  const mm = v => Math.round(v * 1000) / 1000;     // auf Millimeter: −4,88 − 0,24 ergibt so genau −5,12, ohne Gleitkommarest
+  // Wände an der Treppenbahn mit Südseite s, Mitte m (für Türen) und Nordseite n: die Rückwand südlich der Bahn läuft durchs ganze
+  // Haus, die Vorderwand nördlich gibt es im UG (Abstellraum), im OG am Podest (Kind 2) und im DG (Bad, Abstellraum); im EG ist dort die Halle
+  const RUECKWAND = { s: mm(LINE[2] - WAND), m: mm(LINE[2] - WAND / 2), n: LINE[2] };
+  const VORDERWAND = { s: LINE[3], m: mm(LINE[3] + WAND / 2), n: mm(LINE[3] + WAND) };
   const FLIGHTS = {
     UG: { x0: 10.69, x1: 6.01, n: 19, za: HOUSE.Z.ffbUG, zb: HOUSE.Z.ffbEG },   // 19 Steigungen à 18,9 cm, Auftritt 26 cm
     EG: { x0: 10.6, x1: 6.01, n: 18, za: HOUSE.Z.ffbEG, zb: HOUSE.Z.ffbOG },    // 18 à 18,6 cm, Auftritt 27 cm
@@ -29,14 +40,20 @@ const Plans = (() => {
   // Deckenöffnung über einem Lauf: so weit, wie man unter der Decke sonst keine 2,00 m Kopfhöhe hätte
   const holeOver = (fl, under) => { const F = FLIGHTS[fl]; return [F.x1, F.x0 - (under - 2 - F.za) / (F.zb - F.za) * (F.x0 - F.x1), LINE[2], LINE[3]]; };
   const HOLES = { EG: holeOver('UG', HOUSE.Z.ffbEG - 0.35), OG: holeOver('EG', HOUSE.Z.gurtU), DG: holeOver('OG', HOUSE.Z.deckeDG) };
-  const LIFT = [2.92, 4.72, -4.88, -3.08];
-  // Luftraum über dem vorderen Teil der Halle, im OG mit Geländer an der Treppe
-  const VOID = [[6.25, 11.68, -3.58, -0.36]];
+  const LIFT = [2.92, LINE[0], LINE[2], -3.08];
+  // Luftraum über dem vorderen Teil der Halle bis an die Treppenbahn, im OG mit Geländer an der Treppe
+  const VOID = [[6.25, LINE[1], LINE[3], -0.36]];
   // Fläche eines Raums ohne Treppe, Aufzug und (im OG) Luftraum, soweit sie darin liegen
   const cutA = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[2], b[2]));
   const STAIRUSE = { UG: [FLIGHTS.UG.x1, FLIGHTS.UG.x0, LINE[2], LINE[3]], EG: [FLIGHTS.EG.x1, FLIGHTS.EG.x0, LINE[2], LINE[3]],
     OG: [FLIGHTS.EG.x1, FLIGHTS.OG.x0, LINE[2], LINE[3]], DG: HOLES.DG };
   const coreIn = (fl, r) => cutA(r, STAIRUSE[fl]) + cutA(r, LIFT) + (fl === 'OG' ? VOID.reduce((t, v) => t + cutA(r, v), 0) : 0);
+  // Haustür: Öffnung „eingang“ der Nordfassade (src/haus/10-fassaden.js, nur dort versetzen oder verbreitern; Nordseite x = W − u),
+  // hier im Plan als EINGANG (x0 West-, x1 Ostkante samt Seitenteilen). HAUSTUER ist die Tür des EG-Grundrisses: das Türblatt zwischen
+  // den Seitenteilen, mittig in der Außenwand. Ebenso folgen ihr die Konsole in der Halle (20-eg.js), die Pflanzkübel
+  // (view3d/60-gelaende.js), der Pfeil im Lageplan, Laterne, Fußmatte und Rahmung, Ansicht „eingang“ und die Rundgänge (Tür 'EG N').
+  const EINGANG = (o => ({ x0: mm(W - o.u1), x1: mm(W - o.u0), seite: o.side || 0 }))(HOUSE.fas.N.open.find(o => o.kind === 'eingang'));
+  const HAUSTUER = { x: mm(EINGANG.x0 + EINGANG.seite), y: -HOUSE.wall / 2, w: mm(EINGANG.x1 - EINGANG.x0 - 2 * EINGANG.seite) };
 
   // ---------- Möbel und Ausstattung ----------
   const fu = {

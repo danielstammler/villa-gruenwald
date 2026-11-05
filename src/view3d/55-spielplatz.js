@@ -7,6 +7,7 @@
     const std = (color, r, m = 0, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: r, metalness: m, ...extra });
     // Holzhackschnitzel: helle und dunklere Späne kreuz und quer, am Rand auch gegenüber gezeichnet (kachelbar, 1,5 m, ein Pixel knapp 6 mm)
     const chips = canvasTex(256, 256, (c, w, h) => {
+      const rnd = zufall('textur hackschnitzel');
       c.fillStyle = '#9b7d59'; c.fillRect(0, 0, w, h);
       const pal = ['#c8a97e', '#89694a', '#b49369', '#d8c29c', '#7b5e40', '#a9895f'];
       for (let i = 0; i < 5200; i++) {

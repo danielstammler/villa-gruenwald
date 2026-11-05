@@ -1,10 +1,10 @@
   // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): alle Materialien M mit ihren Texturen
   function makeMaterials() {
     const std = (color, r = 0.9, m = 0, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: r, metalness: m, ...extra });
+    // Jede Textur würfelt mit eigener Folge (zufall in 00-kern.js): eine Änderung an einer Textur lässt die anderen, wie sie sind
     // Eichendielen 20 cm breit, 1,2 bis 2,4 m lang, versetzt gestoßen; Kachel 2,4 × 2,4 m, Holzbild leicht wechselnd
-    let so = 11; const ro = () => (so = (so * 16807) % 2147483647) / 2147483647;
     const tOak = canvasTex(512, 512, (g, w, h) => {
-      const n = 12, ph = h / n;
+      const ro = zufall('textur eiche'), n = 12, ph = h / n;
       for (let i = 0; i < n; i++) {
         // Reihe genau eine Kachelbreite lang, jede Diele zusätzlich um eine Breite versetzt gezeichnet: nahtlos wiederholbar
         const xs = -ro() * w * 0.5; let x = xs;
@@ -27,11 +27,13 @@
     });
     // Weißer Glattputz wie im Referenzbild; feines Korn, damit die Fläche nicht künstlich glatt wirkt (Kachel 2 × 2 m)
     const rust = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur putz');
       g.fillStyle = '#f1efea'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 7000; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.028)' : 'rgba(255,255,255,0.05)'; g.fillRect(rnd() * w, rnd() * h, 1.2, 1.2); }
     }, [0.5, 0.5]);
     // Dachdeckung: anthrazitfarbene Rechteckschindeln
     const shingles = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur schindeln');
       g.fillStyle = '#141618'; g.fillRect(0, 0, w, h);
       const rows = 5, rh = h / rows, cw = w / 2.5;
       for (let r = 0; r < rows; r++) {
@@ -47,6 +49,7 @@
     const wrapped = (w, h, x, y, r, fn) => { for (const dx of [-w, 0, w]) for (const dy of [-h, 0, h]) if (x + dx + r > 0 && x + dx - r < w && y + dy + r > 0 && y + dy - r < h) fn(x + dx, y + dy); };
     // Rasen: gemischtes, leicht gelbliches Grün mit feinen Halmen; Kachel 8 m, damit sich das Muster kaum wiederholt
     const grass = canvasTex(1024, 1024, (g, w, h) => {
+      const rnd = zufall('textur rasen');
       g.fillStyle = '#5a7a3b'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 160; i++) {
         const x = rnd() * w, y = rnd() * h, r = 50 + rnd() * 170, col = rnd() < 0.5 ? '128,140,72' : '48,76,34';
@@ -62,6 +65,7 @@
       }
     }, [0.125, 0.125]);
     const asphalt = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur asphalt');
       g.fillStyle = '#5c5f63'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 9000; i++) { const v = 70 + Math.floor(rnd() * 45); g.fillStyle = `rgba(${v},${v},${v + 3},0.5)`; g.fillRect(rnd() * w, rnd() * h, 1.5, 1.5); }
     }, [0.25, 0.25]);
@@ -72,18 +76,20 @@
       g.fillStyle = fill; g.fill(); g.restore();
     };
     const shade = (c, k) => `rgb(${Math.min(255, c[0] * k) | 0},${Math.min(255, c[1] * k) | 0},${Math.min(255, c[2] * k) | 0})`;
-    const leafTex = (n, len, pal, { spread = 0.9, wid = 0.42 } = {}) => canvasTex(256, 256, (g, w, h) => {
+    const leafTex = (name, n, len, pal, { spread = 0.9, wid = 0.42 } = {}) => canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur ' + name);
       g.fillStyle = `rgba(${pal[0].join(',')},0.04)`; g.fillRect(0, 0, w, h);
       for (let i = 0; i < n; i++) {
         const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * spread * w / 2, l = len * w * (0.75 + rnd() * 0.5);
         leafShape(g, w / 2 + Math.cos(a) * d, h / 2 + Math.sin(a) * d, l, l * wid, a + (rnd() - 0.5) * 1.4, shade(pal[i % pal.length], 0.78 + rnd() * 0.4));
       }
     });
-    const tLeaf = leafTex(240, 0.09, [[70, 98, 42], [56, 84, 34], [86, 112, 50], [48, 72, 30], [96, 118, 56]], { spread: 0.94 });
-    const tHedge = leafTex(330, 0.06, [[60, 86, 38], [48, 72, 32], [72, 96, 44], [42, 64, 30]], { spread: 0.96 });
-    const tBox = leafTex(520, 0.04, [[50, 74, 34], [40, 62, 28], [60, 86, 40]], { spread: 0.96, wid: 0.55 });
+    const tLeaf = leafTex('laub', 240, 0.09, [[70, 98, 42], [56, 84, 34], [86, 112, 50], [48, 72, 30], [96, 118, 56]], { spread: 0.94 });
+    const tHedge = leafTex('hecke', 330, 0.06, [[60, 86, 38], [48, 72, 32], [72, 96, 44], [42, 64, 30]], { spread: 0.96 });
+    const tBox = leafTex('buchs', 520, 0.04, [[50, 74, 34], [40, 62, 28], [60, 86, 40]], { spread: 0.96, wid: 0.55 });
     // Nadelzweige: dunkle, bläulich grüne Nadeln an feinen Zweigen (Fichte, Tanne, Eibe wie auf den Luftbildern)
     const tNeedle = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur nadeln');
       g.fillStyle = 'rgba(36,56,40,0.04)'; g.fillRect(0, 0, w, h); g.lineCap = 'round';
       for (let i = 0; i < 46; i++) {
         const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * w * 0.36, x = w / 2 + Math.cos(a) * d, y = h / 2 + Math.sin(a) * d, ang = a + (rnd() - 0.5), len = 30 + rnd() * 40;
@@ -98,6 +104,7 @@
     });
     // Ziegelmauer (Kachel 1,0 × 0,5 m)
     const tBrick = canvasTex(256, 128, (g, w, h) => {
+      const rnd = zufall('textur ziegel');
       g.fillStyle = '#b9a89a'; g.fillRect(0, 0, w, h);
       const bh = h / 8, bw = w / 4;
       for (let r = 0; r < 8; r++) for (let c = -1; c <= 4; c++) {
@@ -107,6 +114,7 @@
     }, [1, 2]);
     // Hortensie: Blattwerk mit cremeweißen Blütenbällen aus vielen kleinen Einzelblüten
     const tHydr = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur hortensie');
       g.fillStyle = 'rgba(70,96,44,0.04)'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 70; i++) { const a = rnd() * 6.283, d = Math.sqrt(rnd()) * 0.46 * w, l = 26 + rnd() * 14; leafShape(g, w / 2 + Math.cos(a) * d, h / 2 + Math.sin(a) * d, l, l * 0.5, a, shade([70, 96, 44], 0.75 + rnd() * 0.4)); }
       for (let b = 0; b < 4; b++) {
@@ -120,6 +128,7 @@
     });
     // Lavendel: graugrüne Stiele mit violetten Ähren
     const tLav = canvasTex(128, 256, (g, w, h) => {
+      const rnd = zufall('textur lavendel');
       g.fillStyle = 'rgba(110,100,150,0.04)'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 30; i++) {
         const x0 = w * (0.3 + rnd() * 0.4), x1 = w * (0.05 + rnd() * 0.9), top = h * (0.12 + rnd() * 0.3);
@@ -132,11 +141,13 @@
       for (let i = 0; i < 40; i++) { const x = w * (0.15 + rnd() * 0.7); g.strokeStyle = 'rgb(120,134,108)'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(x, h); g.lineTo(x + (rnd() - 0.5) * 22, h * (0.7 + rnd() * 0.3)); g.stroke(); }
     });
     const tBark = canvasTex(128, 256, (g, w, h) => {
+      const rnd = zufall('textur rinde');
       g.fillStyle = '#6a5e50'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 260; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(40,34,28,0.35)' : 'rgba(150,140,124,0.25)'; g.fillRect(rnd() * w, rnd() * h, 1 + rnd() * 2.5, 10 + rnd() * 50); }
     }, [2, 3]);
     // Putz der Nachbarhäuser: Kachel 4 m breit und 12 m hoch, unten Sockel und leichte Verschmutzung
     const tPlaster = canvasTex(256, 512, (g, w, h) => {
+      const rnd = zufall('textur nachbarputz');
       g.fillStyle = '#ecebe6'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 9000; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.035)' : 'rgba(255,255,255,0.05)'; g.fillRect(rnd() * w, rnd() * h, 1.5, 1.5); }
       const m = h / 12, gr = g.createLinearGradient(0, h - 1.1 * m, 0, h - 0.35 * m);
@@ -147,6 +158,7 @@
     tPlaster.wrapT = THREE.ClampToEdgeWrapping;
     // Dachziegel der Nachbarn, Kachel 1,20 × 1,20 m; die Farbe kommt aus dem Material
     const tTiles = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur dachziegel');
       g.fillStyle = '#7d7d7d'; g.fillRect(0, 0, w, h);
       const rows = 3, cols = 4, rh = h / rows, cw = w / cols;
       for (let r = 0; r < rows; r++) for (let c = -1; c <= cols; c++) {
@@ -157,13 +169,14 @@
       for (let i = 0; i < 4000; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
     });
     const tGravel = canvasTex(128, 128, (g, w, h) => {
+      const rnd = zufall('textur kies');
       g.fillStyle = '#8e8d88'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 3500; i++) { const v = 90 + rnd() * 90 | 0; g.fillStyle = `rgba(${v},${v},${v - 6},0.6)`; g.fillRect(rnd() * w, rnd() * h, 1.5, 1.5); }
     }, [0.5, 0.5]);
     // Wasser: feine, kachelbare Wellen als Normalenkarte
     const tWaves = (() => {
       const N = 256, c = document.createElement('canvas'); c.width = c.height = N;
-      const g = c.getContext('2d'), img = g.createImageData(N, N), hgt = new Float32Array(N * N);
+      const g = c.getContext('2d'), img = g.createImageData(N, N), hgt = new Float32Array(N * N), rnd = zufall('textur wellen');
       const waves = Array.from({ length: 7 }, () => ({ k: 2 + Math.floor(rnd() * 6), a: rnd() * 6.283, p: rnd() * 6.283, s: 0.4 + rnd() * 0.6 }));
       for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
         let v = 0;
@@ -202,9 +215,8 @@
     // Durchsichtiges Glas mit leichter Spiegelung; dahinter sieht man die Räume
     const glass = () => new THREE.MeshStandardMaterial({ color: 0x31424c, roughness: 0.04, metalness: 0.2, transparent: true, opacity: 0.38, depthWrite: false, envMapIntensity: 2.4, side: THREE.DoubleSide });
     // Fliesen in Bädern und Küche: 60 × 60 cm, hell, mit feiner Fuge (Kachel 2,40 m = 4 × 4 Fliesen)
-    let sq = 23; const rq = () => (sq = (sq * 16807) % 2147483647) / 2147483647;
     const tTile = canvasTex(512, 512, (g, w) => {
-      const n = 4, c = w / n;
+      const rq = zufall('textur fliesen'), n = 4, c = w / n;
       for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
         g.fillStyle = `hsl(36, ${6 + rq() * 3}%, ${82 + rq() * 4}%)`; g.fillRect(i * c, j * c, c, c);
         for (let k = 0; k < 260; k++) { g.fillStyle = rq() < 0.5 ? 'rgba(90,80,70,0.07)' : 'rgba(255,255,255,0.12)'; g.fillRect(i * c + rq() * c, j * c + rq() * c, 1.5, 1.5); }
@@ -214,7 +226,7 @@
     });
     // Gym: Sportboden aus Gummifliesen 1 × 1 m, anthrazit mit feiner heller und blauer Einstreuung (Kachel 2,00 m)
     const tGym = canvasTex(512, 512, (g, w) => {
-      const n = 2, c = w / n;
+      const rq = zufall('textur gym'), n = 2, c = w / n;
       for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
         g.fillStyle = `hsl(210, 4%, ${21 + rq() * 2}%)`; g.fillRect(i * c, j * c, c, c);
         for (let k = 0; k < 2200; k++) { g.fillStyle = rq() < 0.82 ? 'rgba(150,150,150,0.35)' : 'rgba(70,120,160,0.45)'; g.fillRect(i * c + rq() * c, j * c + rq() * c, 1.6, 1.6); }
@@ -224,7 +236,7 @@
     });
     // Halle: heller Kalkstein 80 × 80 cm mit kleinen dunklen Cabochons an den Ecken (Kachel 3,20 m)
     const tHall = canvasTex(512, 512, (g, w) => {
-      const n = 4, c = w / n;
+      const rq = zufall('textur halle'), n = 4, c = w / n;
       for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
         g.fillStyle = `hsl(${38 + rq() * 4}, ${20 + rq() * 6}%, ${85 + rq() * 4}%)`; g.fillRect(i * c, j * c, c, c);
         g.strokeStyle = 'rgba(150,135,110,0.12)'; g.lineWidth = 0.8;
@@ -236,8 +248,8 @@
       for (let i = 0; i <= n; i++) for (let j = 0; j <= n; j++) { g.save(); g.translate(i * c, j * c); g.rotate(Math.PI / 4); g.fillRect(-9, -9, 18, 18); g.restore(); }
     });
     // Naturstein draußen (Terrasse, Poolterrasse, Balkone): Travertin 90 × 60 cm im Verband, Kachel 3,60 m
-    const slab = (g, w) => {
-      const cw = w / 4, ch = w / 6;
+    const slab = name => (g, w) => {
+      const rq = zufall('textur ' + name), cw = w / 4, ch = w / 6;
       for (let r = 0; r < 6; r++) for (let c = -1; c < 5; c++) {
         const x = c * cw + (r % 2) * cw / 2, y = r * ch;
         g.fillStyle = `hsl(${36 + rq() * 5}, ${22 + rq() * 8}%, ${78 + rq() * 6}%)`; g.fillRect(x, y, cw, ch);
@@ -247,9 +259,10 @@
       for (let r = 0; r <= 6; r++) g.fillRect(0, r * ch - 1, w, 2);
       for (let r = 0; r < 6; r++) for (let c = -1; c < 6; c++) g.fillRect(c * cw + (r % 2) * cw / 2 - 1, r * ch, 2, ch);
     };
-    const tSlab = canvasTex(512, 512, slab), tDeck = canvasTex(512, 512, slab, [1 / 3.6, 1 / 3.6]);
+    const tSlab = canvasTex(512, 512, slab('stein')), tDeck = canvasTex(512, 512, slab('terrasse'), [1 / 3.6, 1 / 3.6]);
     // Tiefgarage: heller, seidenmatter Beschichtungsboden mit feinen Einstreuungen (Kachel 2 m)
     const tEpoxy = canvasTex(256, 256, (g, w, h) => {
+      const rq = zufall('textur epoxid');
       g.fillStyle = '#c3c3bf'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 2600; i++) { const v = 150 + rq() * 90 | 0; g.fillStyle = `rgba(${v},${v},${v - 4},0.35)`; g.fillRect(rq() * w, rq() * h, 1.2, 1.2); }
     }, [0.5, 0.5]);
@@ -282,6 +295,7 @@
     });
     // Möbel: Stoff, Eiche, Lack, Stein, Keramik, Spiegel, Bücher; abends leuchten Lampenschirme und das Kaminfeuer
     const tBooks = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur bücher');
       g.fillStyle = '#f1eee8'; g.fillRect(0, 0, w, h);
       const rows = 5, rh = h / rows, pal = [[120, 54, 44], [44, 70, 96], [190, 172, 140], [70, 90, 64], [160, 120, 70], [60, 60, 66], [210, 200, 180], [130, 96, 80]];
       for (let r = 0; r < rows; r++) {

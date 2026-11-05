@@ -1,0 +1,9 @@
+{
+  "_": "Bekannte, gewollte Kontakte der Rundgänge für ./vg rundgang und ./vg pruefen (Prüfung: View3D._probe in src/view3d/90-bild.js, der Rundgang läuft ab wie beim Gehen, Türen und Tore öffnen sich). Je Eintrag Rundgang, Art (nah: Bauteil näher als 0,2 m auf Augenhöhe · boden: Abstand zum Boden weicht mehr als 0,3 m von der Augenhöhe ab · durch: der Weg schneidet ein Bauteil), Material (mehrere mit |), Ort im Plan (x Ost, y Nord) mit Toleranz tol in m für alle Treffer des Kontakts, Grund. Ein Eintrag, zu dem kein Kontakt mehr passt, wird als veraltet gemeldet.",
+  "kontakte": [
+    { "rundgang": "ankommen", "art": "boden", "material": "water|tile", "x": 8.0, "y": -30.5, "tol": 5.5, "grund": "Pool: Stufen hinunter, schwimmen und tauchen, Augenhöhe absichtlich knapp über bzw. unter dem Wasser" },
+    { "rundgang": "ankommen", "art": "durch", "material": "water", "x": 8.0, "y": -31.5, "tol": 4.5, "grund": "Pool: Abtauchen und Auftauchen durch die Wasserfläche" },
+    { "rundgang": "garage", "art": "nah", "material": "frame", "x": 7.0, "y": -10.8, "tol": 0.6, "grund": "DG-Balkontür (zweiflügelig): der offene Westflügel steht knapp neben dem Weg zur Tür" },
+    { "rundgang": "eg", "art": "nah", "material": "metal", "x": 7.7, "y": -1.3, "tol": 0.6, "grund": "Start in der Halle: die Haustür geht auf, ihr Stoßgriff ist knapp neben dem Weg" }
+  ]
+}

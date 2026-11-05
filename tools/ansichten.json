@@ -1,0 +1,30 @@
+{
+  "_": "Standardansichten für ./vg pruefen und ./vg bild <name>. Formate in tools/lib/anker.js: innen an den Plandaten verankert (raum, anker), außen auch feste Kameras (pos/tgt in Weltkoordinaten X = Plan-x, Y = Höhe, Z = −Plan-y) oder die Kameras der Seite (cam), dazu der Geschossblick je Geschoss.",
+  "ansichten": [
+    { "name": "start", "text": "Startansicht der Seite: aus dem Garten aufs Haus (Kamera „garten“)", "cam": "garten" },
+    { "name": "strasse", "text": "Straßenseite von Süden, erhöht über Zaun und Hecke", "pos": [10, 7.5, 62], "tgt": [10, 3, 12] },
+    { "name": "ost", "text": "Ostseite aus dem Nachbargarten (Kamera „ost“)", "cam": "ost" },
+    { "name": "west", "text": "Westseite über die Grenzhecke (Kamera „west“)", "cam": "west" },
+    { "name": "nord", "text": "Nordseite mit Eingang, von weitem (Kamera „eingang“)", "cam": "eingang" },
+    { "name": "eingang", "text": "vor der Haustür, Blick auf Tür, Vordach und Pfeiler", "anker": "eingang" },
+    { "name": "rampe", "text": "Zufahrt und Rampe von der Straße (Kamera „zufahrt“)", "cam": "zufahrt" },
+    { "name": "ueberblick", "text": "Garten und Haus von oben (Kamera „ueberblick“)", "cam": "ueberblick" },
+    { "name": "spielplatz", "text": "Spielturm, Rutsche und Schaukel im Vorgarten", "anker": "spielplatz" },
+    { "name": "pool", "text": "über das Becken auf das Poolhaus", "anker": "pool" },
+    { "name": "lichthof", "text": "Lichthof an der Westseite, von oben hinein", "anker": "lichthof" },
+    { "name": "halle", "text": "Halle von der Haustür auf die gerade Treppe", "anker": "halle" },
+    { "name": "halle-tuer", "text": "Halle vom Fuß der Treppe zurück zur Haustür", "anker": "halle-tuer" },
+    { "name": "galerie", "text": "OG-Galerie am Antritt der Dachtreppe, über den Luftraum in die Halle", "anker": "galerie" },
+    { "name": "wohnen", "text": "EG Wohnen nach Süden zur Terrasse", "geschoss": "EG", "raum": "Wohnen", "blick": "S" },
+    { "name": "kueche", "text": "EG Küche nach Süden", "geschoss": "EG", "raum": "Küche", "blick": "S" },
+    { "name": "foyer", "text": "UG-Foyer nach Süden zum offenen Zugang in die Tiefgarage", "geschoss": "UG", "raum": "Foyer", "blick": "S" },
+    { "name": "tg-gang", "text": "Tiefgarage: Gang zwischen Stellplätzen und Fahrrädern zum Eingangsbereich", "anker": "tg-gang" },
+    { "name": "tg-stellplaetze", "text": "Tiefgarage: aus der Fahrgasse über die drei Stellplätze", "anker": "tg-stellplaetze" },
+    { "name": "buero", "text": "DG-Büro nach Süden zur Balkontür", "geschoss": "DG", "raum": "Büro", "blick": "S" },
+    { "name": "balkon-dg", "text": "DG-Balkon vor dem Büro, von Westen entlang", "anker": "balkon-dg" },
+    { "name": "geschoss-ug", "text": "Geschossblick UG wie der Button", "geschossblick": "UG" },
+    { "name": "geschoss-eg", "text": "Geschossblick EG wie der Button", "geschossblick": "EG" },
+    { "name": "geschoss-og", "text": "Geschossblick OG wie der Button", "geschossblick": "OG" },
+    { "name": "geschoss-dg", "text": "Geschossblick DG wie der Button", "geschossblick": "DG" }
+  ]
+}

@@ -1,11 +1,12 @@
 // Hilfsrechnungen für die Werte im Seitentext ({{ … }} in src/seite/*.html). Läuft nur beim Bauen (tools/bauen.js), in derselben vm wie
 // SITE, HOUSE, Plans, Elev, Site … und die Formate z, m, cm, m2, proz, grad. Alles Abgeleitete ist eine Funktion: ein Fehler (Raum
 // umbenannt, Bauteil entfernt) erscheint dann beim Bauen mit dem Ausdruck, der ihn braucht, und bricht ab, statt still eine falsche Zahl
-// in den Text zu schreiben.
+// in den Text zu schreiben. Prosa, die Räume beim Namen nennt, bekommt daneben die unsichtbare Prüfung {{ W.da('UG', 'Gym', …) }}.
+// Jede Datei in src/seite mit Ausdrücken beginnt mit {{ W.datei('…') }}: der Bau ersetzt der Reihe nach, so nennen die Meldungen die Datei.
 
 // Anzahl als Wort wie im Text („drei Stellplätze“), ab 13 in Ziffern. 0, 1 und Brüche brechen ab: dann muss der Satz anders lauten.
 const wort = n => {
-  if (!Number.isInteger(n) || n < 2) throw new Error(`Anzahl ${n}: den Satz im Seitentext umformulieren (kein/ein, Einzahl)`);
+  if (!Number.isInteger(n) || n < 2) throw new Error(`Anzahl ${n}: den Satz in ${W.wo()} umformulieren (kein/ein, Einzahl)`);
   return n > 12 ? String(n) : ['zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf', 'zwölf'][n - 2];
 };
 const Wort = n => wort(n).replace(/^./, c => c.toUpperCase());   // am Satzanfang
@@ -18,12 +19,27 @@ const masse = (P, d = 2) => {
 };
 
 const W = {
+  // Marke am Anfang einer Datei (liefert ''); wo() nennt sie in den Meldungen
+  _datei: '',
+  datei(n) { W._datei = n; return ''; },
+  wo: () => (W._datei ? `src/seite/${W._datei}` : 'src/seite/ (Marke {{ W.datei(…) }} am Dateianfang fehlt)'),
+  geschoss(fl) {
+    if (!Plans.FL[fl]) throw new Error(`Geschoss ${fl} gibt es im Grundriss nicht (${Object.keys(Plans.FL).join(', ')}) – ${W.wo()} anpassen`);
+    return Plans.FL[fl];
+  },
+  // Unsichtbare Prüfung neben Prosa, die Räume nennt (Namen wie im Grundriss): liefert '' oder bricht ab, wenn einer fehlt
+  da(fl, ...namen) {
+    const da = W.geschoss(fl).rooms.map(r => r.n), weg = namen.filter(n => !da.includes(n));
+    if (weg.length) throw new Error(`${weg.length > 1 ? 'Räume' : 'Raum'} ${weg.map(n => `„${n}“`).join(', ')} ${weg.length > 1 ? 'fehlen' : 'fehlt'} im ${fl}`
+      + ` (es gibt: ${da.join(', ')}) – Text in ${W.wo()} anpassen`);
+    return '';
+  },
   // Räume eines Geschosses aus dem Grundriss, Name genau oder als RegExp, je { n, a, wf } wie in der Raumtabelle der Seite.
   // Passt keiner (mehr), bricht der Bau mit den vorhandenen Namen ab: dann den Seitentext an den Grundriss anpassen.
   raeume(fl, name) {
-    if (!Plans.FL[fl]) throw new Error(`Geschoss ${fl} gibt es im Grundriss nicht (${Object.keys(Plans.FL).join(', ')})`);
+    W.geschoss(fl);
     const alle = Plans.table(fl).rows, rows = alle.filter(r => (typeof name === 'string' ? r.n === name : name.test(r.n)));
-    if (!rows.length) throw new Error(`kein Raum ${name} im ${fl} (es gibt: ${alle.map(r => r.n).join(', ')}) – Seitentext anpassen`);
+    if (!rows.length) throw new Error(`kein Raum ${name} im ${fl} (es gibt: ${alle.map(r => r.n).join(', ')}) – Text in ${W.wo()} anpassen`);
     return rows;
   },
   // Spanne der Flächen, gerundet wie im Text: „17 bis 25 m²“, bei gleicher Größe „je 20 m²“
@@ -41,7 +57,7 @@ const W = {
       const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
       return R.some(r => cx > r[0] && cx < r[1] && cy > r[2] && cy < r[3]);
     });
-    if (T.length !== 1) throw new Error(`${T.length} Tische in ${name} (${fl}), der Seitentext nennt einen`);
+    if (T.length !== 1) throw new Error(`${T.length} Tische in ${name} (${fl}), der Text in ${W.wo()} nennt einen`);
     const [, , , , n = 3, ends = true] = T[0];
     return 2 * n + (ends ? 2 : 0);
   },
@@ -55,7 +71,7 @@ const W = {
   ogBruestung() {
     const b = [...new Set(Object.values(HOUSE.fas).flatMap(F => F.open).filter(o => o.kind === 'fenster' && o.z0 > HOUSE.Z.ffbOG)
       .map(o => +(o.z0 - HOUSE.Z.ffbOG).toFixed(3)))];
-    if (b.length !== 1) throw new Error(`OG-Fenster mit ${b.length ? 'verschiedenen Brüstungen ' + b.join(' / ') : 'keiner Brüstung'} – Seitentext anpassen`);
+    if (b.length !== 1) throw new Error(`OG-Fenster mit ${b.length ? 'verschiedenen Brüstungen ' + b.join(' / ') : 'keiner Brüstung'} – ${W.wo()} anpassen`);
     return b[0];
   },
   // DG-Balkon: Tiefe vor der Südfassade und die Türen im Zwerchhaus
@@ -63,13 +79,13 @@ const W = {
   dgTueren: () => HOUSE.fas.S.dormers.find(d => d.zwerch).win,
   dgSeitentuer() {
     const T = W.dgTueren(), b = [T[0], T[T.length - 1]].map(t => +(t.u1 - t.u0).toFixed(3));
-    if (b[0] !== b[1]) throw new Error(`seitliche DG-Balkontüren verschieden breit (${b.join(' / ')} m) – Seitentext anpassen`);
+    if (b[0] !== b[1]) throw new Error(`seitliche DG-Balkontüren verschieden breit (${b.join(' / ')} m) – ${W.wo()} anpassen`);
     return b[0];
   },
   // Tiefgarage: Platz neben dem Ferrari auf P1 bis zur Südwand (seine Tür geht ganz auf); Fahrgasse bis zur Wand gegenüber den Stellplätzen
   ferrariWand() {
     const G = HOUSE.tg;
-    if (G.autos[0].k !== 'ferrari') throw new Error('Ferrari steht nicht mehr auf P1 an der Südwand – Seitentext anpassen');
+    if (G.autos[0].k !== 'ferrari') throw new Error(`Ferrari steht nicht mehr auf P1 an der Südwand – ${W.wo()} anpassen`);
     return G.mitte(0) - G.autos[0].W / 2 - Math.max(...G.waende.filter(w => w[1] - w[0] > 1 && w[3] <= G.y0).map(w => w[3]));
   },
   fahrgasse() {

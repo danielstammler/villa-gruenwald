@@ -6,14 +6,26 @@
 # hängende Gruppen (benachbarte 4×4-Blöcke mit solchen Pixeln) ab „gruppe“ Pixeln: verstreute Einzelpixel fallen weg, ein verschobenes Teil
 # nicht (gemessen: 5 cm verschobene Kissen im fernen Geschossblick 41 px, Tür um 1° 717 px, Möbel um 3 cm 2751 px). Geändert ab „min_px“.
 # Die Bilder selbst sind gleich, wenn sich nichts geändert hat (Rendern ohne Zufall, siehe tools/browser.js) – die Schwelle ist nur Reserve.
-# Aufruf: python3 tools/vergleich.py < auftrag.json   mit {"art": "3d"|"2d", "paare": [{"name", "ref", "akt", "aus"}], "uebersicht": pfad|null}
-# Ausgabe: JSON {name: {"anteil", "px", "box": [x0, y0, x1, y1], "ort", "bild"} | {"gleich": true} | {"fehlt": "ref"|"akt"} | {"groesse": [..]}}
+# Stufen im 3D: Rauschen ändert viele Pixel ein wenig. Gemessen 5.11.2026 an zwei neuen Rauschmustern der Umgebungsverdeckung in allen 25
+# Ansichten (50 Paare): bis 71 % der Pixel, im Mittel 0,2–2,5 von 255; über 12 bis 2,4 % (größte Gruppe 580 px), über 40 nur verstreut
+# (größte Gruppe 40 px, zusammen höchstens 143 px). Sichtbar: eine Gruppe über 40 ab „sichtbar“ px (2,5 × Rauschen) oder eine über 12 ab
+# „flaeche“ px (schwache, aber zusammenhängende Änderung wie ein anderer Farbton, 4 × Rauschen). Deutlich: über 40 zusammen ab „deutlich“
+# des Bilds (1020 × 775 px) oder über 12 ab „ganz“. Haustür 0,30 m versetzt: Eingang vom alten Standpunkt 10,8 % über 40, Galerie 5,3 %
+# (deutlich), Nordseite von weitem 0,74 %, Geschossblicke EG/OG Gruppen 413/253 px (sichtbar), Westseite streifend hinter dem Pfeiler 8 px
+# (Rauschen, man sieht es nicht).
+# Aufruf: python3 tools/vergleich.py < auftrag.json   mit {"art": "3d"|"2d", "paare": [{"name", "ref", "akt", "aus", "zeige"?, "marke"?}],
+#   "uebersicht": pfad|null} (zeige: Bild für die Übersicht statt akt, z. B. die Ansicht vom neuen Standpunkt, wenn akt vom alten Standpunkt
+#   gerendert ist; marke: Zusatz unter dem Namen in der Übersicht)
+# Ausgabe: JSON {name: {"anteil", "px", "box": [x0, y0, x1, y1], "ort", "bild", "stufe", "kern", "flaeche", "stark"} | {"gleich": true}
+#   | {"fehlt": "ref"|"akt"} | {"groesse": [..]}}; stufe im 3D „deutlich“, „sichtbar“ oder „rauschen“ (dann ohne vorher | nachher),
+#   kern/flaeche = größte Gruppe über 40 bzw. über 12 in px, stark = Anteil über 40
 import json, sys
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage
 
-ART = {'3d': {'pixel': 12, 'block': 4, 'gruppe': 12, 'min_px': 12}, '2d': {'pixel': 8, 'block': 1, 'gruppe': 1, 'min_px': 3}}
+ART = {'3d': {'pixel': 12, 'block': 4, 'gruppe': 12, 'min_px': 12, 'stark': 40, 'sichtbar': 100, 'flaeche': 2500, 'deutlich': 0.01, 'ganz': 0.2},
+       '2d': {'pixel': 8, 'block': 1, 'gruppe': 1, 'min_px': 3}}
 
 
 def lade(p):
@@ -23,21 +35,33 @@ def lade(p):
         return None
 
 
-def maske(a, b, s):
-    m = np.abs(a.astype(np.int16) - b.astype(np.int16)).max(axis=2) > s['pixel']
-    k = s['block']
-    if k > 1 and s['gruppe'] > 1 and m.any():
-        # Pixel je k×k-Block zählen (Rand auf volle Blöcke auffüllen), benachbarte Blöcke (auch schräg) zu Gruppen, kleine Gruppen weg
-        h, w = m.shape
-        H, W = -(-h // k) * k, -(-w // k) * k
-        p = np.zeros((H, W), bool)
-        p[:h, :w] = m
-        n = p.reshape(H // k, k, W // k, k).sum(axis=(1, 3))
-        lab, cnt = ndimage.label(n > 0, structure=np.ones((3, 3), int))
-        behalten = np.zeros(cnt + 1, bool)
-        behalten[1:] = np.asarray(ndimage.sum(n, lab, index=np.arange(1, cnt + 1))) >= s['gruppe']
-        m = m & np.repeat(np.repeat(behalten[lab], k, axis=0), k, axis=1)[:h, :w]
-    return m
+def gruppen(m, k, gruppe):
+    # Pixel je k×k-Block zählen (Rand auf volle Blöcke auffüllen), benachbarte Blöcke (auch schräg) zu Gruppen, kleine Gruppen weg;
+    # Ergebnis: Maske ohne die kleinen Gruppen und die Größe der größten Gruppe in Pixeln
+    h, w = m.shape
+    H, W = -(-h // k) * k, -(-w // k) * k
+    p = np.zeros((H, W), bool)
+    p[:h, :w] = m
+    n = p.reshape(H // k, k, W // k, k).sum(axis=(1, 3))
+    lab, cnt = ndimage.label(n > 0, structure=np.ones((3, 3), int))
+    if not cnt:
+        return m, 0
+    groesse = np.asarray(ndimage.sum(n, lab, index=np.arange(1, cnt + 1)))
+    behalten = np.zeros(cnt + 1, bool)
+    behalten[1:] = groesse >= gruppe
+    return m & np.repeat(np.repeat(behalten[lab], k, axis=0), k, axis=1)[:h, :w], int(groesse.max())
+
+
+def maske(d, s, pixel=None):
+    m = d > (s['pixel'] if pixel is None else pixel)
+    if s['block'] > 1 and s['gruppe'] > 1 and m.any():
+        return gruppen(m, s['block'], s['gruppe'])
+    return m, int(m.sum())
+
+
+def kasten(m):
+    ys, xs = np.nonzero(m)
+    return [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1]
 
 
 def ort(box, w, h):
@@ -72,30 +96,32 @@ def paar_bild(a, b, box, aus):
 
 
 def uebersicht(eintraege, aus):
-    # alle aktuellen Bilder klein, 4 Spalten à 240 px, geänderte mit rotem Rahmen und Anteil unter dem Namen
+    # alle aktuellen Bilder klein, 4 Spalten à 240 px, sichtbar oder deutlich geänderte mit rotem Rahmen und Anteil unter dem Namen,
+    # Rauschen nur grau vermerkt
     tw, cols, gap, cap = 240, 4, 8, 14
     bilder = []
-    for name, pfad, info in eintraege:
+    for name, pfad, info, marke in eintraege:
         try:
             im = Image.open(pfad).convert('RGB')
         except OSError:
             continue
         im.thumbnail((tw, tw * 3), Image.LANCZOS)
-        bilder.append((name, im, info))
+        bilder.append((name, im, info, marke))
     if not bilder:
         return
     rows = -(-len(bilder) // cols)
-    rh = max(im.height for _, im, _ in bilder) + cap + gap
+    rh = max(im.height for _, im, _, _ in bilder) + cap + gap
     out = Image.new('RGB', (cols * (tw + gap) + gap, rows * rh + gap), (255, 255, 255))
     dr = ImageDraw.Draw(out)
-    for i, (name, im, info) in enumerate(bilder):
+    for i, (name, im, info, marke) in enumerate(bilder):
         x, y = gap + (i % cols) * (tw + gap), gap + (i // cols) * rh
         out.paste(im, (x, y))
-        rot = 'anteil' in info
+        rot = 'anteil' in info and info.get('stufe') != 'rauschen'
         if rot:
             dr.rectangle([x - 3, y - 3, x + im.width + 2, y + im.height + 2], outline=(220, 30, 30), width=4)
-        txt = name + (f"  {info['anteil'] * 100:.1f} %".replace('.', ',') if rot else '  neu' if info.get('fehlt') == 'ref' else '')
-        dr.text((x, y + im.height + 2), txt, fill=(200, 20, 20) if rot else (0, 0, 0))
+        txt = name + (f"  {info['anteil'] * 100:.1f} %".replace('.', ',') if rot else '  Rauschen' if 'anteil' in info
+                      else '  neu' if info.get('fehlt') == 'ref' else '') + (f'  {marke}' if marke else '')
+        dr.text((x, y + im.height + 2), txt, fill=(200, 20, 20) if rot else (120, 120, 120) if 'anteil' in info else (0, 0, 0))
     out.save(aus, optimize=True)
 
 
@@ -110,21 +136,32 @@ def main():
         elif a is None:
             erg[p['name']] = {'fehlt': 'ref'}
         elif a.shape != b.shape:
-            erg[p['name']] = {'groesse': [list(a.shape[1::-1]), list(b.shape[1::-1])], 'anteil': 1.0}
+            erg[p['name']] = {'groesse': [list(a.shape[1::-1]), list(b.shape[1::-1])], 'anteil': 1.0, 'stufe': 'deutlich'}
         else:
-            m = maske(a, b, s)
+            d = np.abs(a.astype(np.int16) - b.astype(np.int16)).max(axis=2)
+            m, flaeche = maske(d, s)
             n = int(m.sum())
             if n < s['min_px']:
                 erg[p['name']] = {'gleich': True, 'px': n}
             else:
-                ys, xs = np.nonzero(m)
-                box = [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1]
-                e = {'anteil': n / m.size, 'px': n, 'box': box, 'ort': ort(box, m.shape[1], m.shape[0])}
-                if p.get('aus'):
+                e, fokus = {'anteil': n / m.size, 'px': n}, m
+                if 'stark' in s:
+                    # Stufe aus den größten Gruppen (stark geändert bzw. schwach, aber zusammenhängend) und den Mengen, siehe oben
+                    ms, kern = maske(d, s, s['stark'])
+                    st = int(ms.sum())
+                    sichtbar = kern >= s['sichtbar'] or flaeche >= s['flaeche']
+                    deutlich = st >= s['deutlich'] * m.size or n >= s['ganz'] * m.size
+                    e.update(kern=kern, flaeche=flaeche, stark=st / m.size,
+                             stufe='deutlich' if sichtbar and deutlich else 'sichtbar' if sichtbar else 'rauschen')
+                    if kern >= s['sichtbar']:
+                        fokus = ms   # Bereich nur aus den starken Gruppen, verstreutes Rauschen zöge ihn sonst aufs ganze Bild
+                box = kasten(fokus)
+                e.update(box=box, ort=ort(box, m.shape[1], m.shape[0]))
+                if p.get('aus') and e.get('stufe') != 'rauschen':
                     paar_bild(a, b, box, p['aus'])
                     e['bild'] = p['aus']
                 erg[p['name']] = e
-        liste.append((p['name'], p['akt'], erg[p['name']]))
+        liste.append((p['name'], p.get('zeige') or p['akt'], erg[p['name']], p.get('marke')))
     if auftrag.get('uebersicht'):
         uebersicht(liste, auftrag['uebersicht'])
     json.dump(erg, sys.stdout)

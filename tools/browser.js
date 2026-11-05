@@ -1,17 +1,21 @@
 'use strict';
 // Treiber für das 3D-Modell und die Zeichnungen ohne Fenster (in WSL): eigener Server für den Checkout auf einem freien Port, Chrome headless
 // mit Software-WebGL (SwiftShader) über das DevTools-Protokoll (WebSocket, ohne npm-Pakete). Die Seite wird einmal geladen und arbeitet dann
-// alle Aufträge nacheinander ab; ihre Bildschleife steht still, Bilder entstehen nur über _frame + snapshot, Math.random ist fest gesät:
-// gleiche Szene, gleiches Bild. Chrome-Profil je Checkout und Platz unter ~/.cache/villa-gruenwald (three.js kommt dann aus dem Cache).
+// alle Aufträge nacheinander ab; ihre Bildschleife steht still, Bilder entstehen nur über _frame + snapshot, ohne Zufall: gleiche Szene,
+// gleiches Bild, und was in einer Ansicht nicht zu sehen ist, ändert sie nicht. Chrome-Profil je Checkout und Platz unter
+// ~/.cache/villa-gruenwald (three.js kommt dann aus dem Cache).
 // Aufrufe über ./vg (Ausgabe je Bereich eine Zeile, Einzelheiten nur bei Problemen):
 //   ./vg pruefen                    ruft "3d" und "zeichnungen" auf (siehe tools/pruefen.sh)
 //   ./vg bild <ansicht…>            Ansichten aus tools/ansichten.json → tools/shots/bild-<name>.png, mit Vergleich, wenn es eine Referenz gibt
 //   ./vg bild <name> "pos=x,y,z&tgt=x,y,z[&level=EG]"   freie Kamera; "cam=ost" wie die Kamera-Buttons, "level=OG" Geschossblick
 //   ./vg rundgang [name…]           Rundgänge wie beim Gehen prüfen (Türen öffnen sich), bekannte Kontakte stehen in tools/erwartet.json
 //   ./vg plan [UG|EG|OG|DG…]        Grundrisse als PNG nach tools/shots/plan-<fl>.png, bei Abweichung von der Referenz vorher | nachher
-//   ./vg abnehmen                   aktuelle Bilder, Zeichnungen und Prüfsumme werden die neue Referenz (nur nach gewollten Änderungen)
+//   ./vg abnehmen                   aktuelle Bilder, Kameras, Zeichnungen und Prüfsumme werden die neue Referenz (nur nach gewollten Änderungen)
 //   ./vg houseshot …                die alten Aufrufe von tools/houseshot.sh (Bild, probe, fingerprint)
 // Direkt: node tools/browser.js <3d|zeichnungen|bild|rundgang|plan|abnehmen|houseshot> … (VG_ZEIT=1 zeigt die Zeiten je Schritt).
+// Bildvergleich der Ansichten in Stufen (tools/vergleich.py): deutlich und sichtbar je eine Zeile, Rauschen wird nur gezählt. Die Referenz
+// kennt die Kamera jeder Ansicht (kameras.json); wandert eine verankerte Kamera mit dem Grundriss, wird zusätzlich vom alten Standpunkt
+// gerendert und dieser Vergleich zählt, die Zeile nennt die Verschiebung.
 const fs = require('fs'), path = require('path'), http = require('http'), os = require('os'), crypto = require('crypto');
 const { spawn, spawnSync } = require('child_process');
 const ROOT = path.join(__dirname, '..'), SHOTS = path.join(ROOT, 'tools', 'shots');
@@ -56,9 +60,9 @@ function server() {
 }
 
 // ---------- Chrome ----------
-// Schalter wie bisher in houseshot.sh (SwiftShader), dazu: Math.random fest gesät (die Entrauschung der Umgebungsverdeckung, GTAO, baut ihr
-// Rauschmuster daraus, sonst weicht jedes Laden in rund der Hälfte der Pixel ab; die Optik bleibt dieselbe), Fernsteuerung auf freiem Port,
-// keine Hintergrunddienste, keine Drosselung von Hintergrund-Tabs
+// Schalter wie bisher in houseshot.sh (SwiftShader), dazu: Math.random fest gesät (nur noch Reserve: das Rauschmuster der Umgebungsverdeckung
+// nimmt seit 5.11.2026 eine eigene feste Folge, siehe setupPost in src/view3d/90-bild.js; ohne Saat waren die Bilder gleich, 0 px),
+// Fernsteuerung auf freiem Port, keine Hintergrunddienste, keine Drosselung von Hintergrund-Tabs
 const CHROME = ['--headless=new', '--js-flags=--random-seed=4711', '--no-sandbox', '--disable-dev-shm-usage', '--no-first-run', '--no-default-browser-check', '--disable-gcm',
   '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--hide-scrollbars', '--window-size=1400,900', '--mute-audio',
   '--disable-background-networking', '--disable-component-update', '--disable-sync', '--disable-extensions', '--disable-default-apps',
@@ -289,14 +293,19 @@ const proz = a => `${zahl(a * 100, a < 0.001 ? 2 : 1)} %`;
 // Bildpaare an tools/vergleich.py (Python mit PIL/numpy), Ergebnis je Name
 function vergleiche(art, paare, uebersicht = null) {
   if (!paare.length && !uebersicht) return {};
+  for (const p of paare) if (p.aus) fs.mkdirSync(path.dirname(p.aus), { recursive: true });
   const r = spawnSync('python3', [path.join(ROOT, 'tools', 'vergleich.py')], { input: JSON.stringify({ art, paare, uebersicht }), encoding: 'utf8', maxBuffer: 1 << 26 });
   if (r.status !== 0) throw new Error(`Bildvergleich: ${String(r.stderr || r.error || '').trim().split('\n').pop()}`);
   return JSON.parse(r.stdout);
 }
-// alte Vergleichsbilder einer Sorte weg (zeichnung-* oder die Ansichten), damit nur Aktuelles herumliegt
-function vergleichLeeren(zeichnungen) {
+// Vergleichsbilder in tools/shots/vergleich/ mit eigenem Präfix je Befehl, jeder räumt nur seine alten weg (sonst löschte ./vg pruefen die
+// von ./vg plan): ./vg pruefen <ansicht>.png und zeichnung-<datei>.png, ./vg plan plan-<datei>.png, ./vg bild bild-<ansicht>.png;
+// ./vg abnehmen räumt alles (alle Vergleiche galten der alten Referenz). sorte: ein Präfix, 'ansicht' (ohne Präfix) oder 'alle'
+const PRAEFIX = ['zeichnung-', 'plan-', 'bild-'];
+function vergleichLeeren(sorte) {
   fs.mkdirSync(VGL, { recursive: true });
-  for (const f of fs.readdirSync(VGL)) if (f.startsWith('zeichnung-') === zeichnungen) fs.rmSync(path.join(VGL, f), { force: true });
+  const eigen = f => sorte === 'alle' || (sorte === 'ansicht' ? !PRAEFIX.some(p => f.startsWith(p)) : f.startsWith(sorte));
+  for (const f of fs.readdirSync(VGL)) if (eigen(f)) fs.rmSync(path.join(VGL, f), { force: true });
 }
 
 // Treffer eines Rundgangs zu Kontakten bündeln: gleiche Art und gleiches Material, jeder Treffer höchstens 1 m vom vorigen der Gruppe
@@ -349,8 +358,39 @@ function szeneZeile(fp, ref) {
 // ---------- Ansichten ----------
 // als Aufträge; Geschossblicke zuletzt (der Schnitt übersetzt die Hausmaterialien neu), sonst in der Reihenfolge der Datei
 const STUFE = { alle: 0, UG: 1, EG: 2, OG: 3, DG: 4 };
-const bildAuftraege = (liste, ordner) => liste.filter(a => a.v).map(a => ({ art: 'bild', name: a.name, v: a.v, datei: path.join(ordner, `${a.name}.png`) }))
-  .sort((p, q) => (STUFE[p.v.level || 'alle'] ?? 9) - (STUFE[q.v.level || 'alle'] ?? 9));
+const nachStufe = auf => auf.sort((p, q) => (STUFE[p.v.level || 'alle'] ?? 9) - (STUFE[q.v.level || 'alle'] ?? 9));
+const bildAuftraege = (liste, ordner) => nachStufe(liste.filter(a => a.v).map(a => ({ art: 'bild', name: a.name, v: a.v, datei: path.join(ordner, `${a.name}.png`) })));
+// Kameras je Ansicht (kameras.json in aktuell/ und referenz/): die aufgelöste Kamera v (pos/tgt/level/cam, siehe tools/lib/anker.js) und wo
+// die Kamera nach dem Rendern stand (cam). Hängt eine Ansicht am Grundriss, wandert ihre Kamera bei Umbauten mit; dann wird zusätzlich mit
+// der Kamera der Referenz gerendert (Auftrag mit alt), damit vorher | nachher denselben Standpunkt zeigen.
+const KAMERAS = 'kameras.json';
+const kamSchluessel = v => JSON.stringify([v.pos || null, v.tgt || null, v.level || 'alle', v.cam || null]);
+const kameras = (liste, erg) => Object.fromEntries(liste.filter(a => a.v && erg[a.name] && !erg[a.name].fehler).map(a => [a.name, { v: a.v, cam: erg[a.name].cam }]));
+// Ansichten, deren Kamera gegenüber der Referenz anders steht: Name → Kamera der Referenz
+function gewandert(liste, refKam) {
+  const alt = {};
+  for (const a of liste) { const r = refKam && a.v && refKam[a.name]; if (r && r.v && kamSchluessel(r.v) !== kamSchluessel(a.v)) alt[a.name] = r.v; }
+  return alt;
+}
+const vomAltenStandpunkt = (wandern, praefix = '') => Object.entries(wandern).map(([name, v]) => ({ art: 'bild', name, v, alt: true, datei: path.join(AKT, 'standpunkt', `${praefix}${name}.png`) }));
+// Verschiebung von p nach q in Planrichtungen (Welt X = Ost, −Z = Nord, Y = Höhe): „0,30 m nach Westen“ oder „0,36 m (0,30 W, 0,20 N)“
+const RICHTUNG = [['Osten', 'Westen', 'O', 'W'], ['Norden', 'Süden', 'N', 'S'], ['oben', 'unten', 'hoch', 'tief']];
+function versatz(p, q) {
+  const d = [q[0] - p[0], p[2] - q[2], q[1] - p[1]], teile = d.map((x, i) => [x, i]).filter(([x]) => Math.abs(x) >= 0.005);
+  if (teile.length === 1) { const [x, i] = teile[0]; return `${zahl(Math.abs(x), 2)} m nach ${RICHTUNG[i][x > 0 ? 0 : 1]}`; }
+  return `${zahl(Math.hypot(...d), 2)} m (${teile.map(([x, i]) => `${zahl(Math.abs(x), 2)} ${RICHTUNG[i][x > 0 ? 2 : 3]}`).join(', ')})`;
+}
+// Was an der Kamera anders ist: Standpunkt, Ziel (nur wenn es nicht mit dem Standpunkt mitwandert), Geschossschnitt
+function wanderung(alt, neu) {
+  const t = [];
+  if (alt.pos && neu.pos && alt.tgt && neu.tgt) {
+    const dp = neu.pos.map((x, i) => x - alt.pos[i]), dz = neu.tgt.map((x, i) => x - alt.tgt[i]);
+    if (Math.hypot(...dp) >= 0.005) t.push(`Kamera ${versatz(alt.pos, neu.pos)}`);
+    if (Math.hypot(...dz) >= 0.005 && Math.hypot(...dz.map((x, i) => x - dp[i])) >= 0.01) t.push(`Ziel ${versatz(alt.tgt, neu.tgt)}`);
+  } else if ((alt.cam || '') !== (neu.cam || '') || !alt.pos !== !neu.pos) t.push(`Kamera anders eingestellt (vorher ${alt.cam ? `cam ${alt.cam}` : alt.pos ? 'pos/tgt' : 'die der Seite'})`);
+  if ((alt.level || 'alle') !== (neu.level || 'alle')) t.push(`Geschossschnitt ${neu.level || 'aus'} statt ${alt.level || 'aus'}`);
+  return t.join(', ') || 'Kamera anders eingestellt';
+}
 // Hinweise zu einem Bild: Kamera steckt in einem Bauteil, Blick gleich verdeckt (Wand, Türflügel, Hecke), Kamera versetzt (die Seite begrenzt
 // den Blick nach oben, solange man draußen ist)
 function hinweise(a, r) {
@@ -361,21 +401,41 @@ function hinweise(a, r) {
   if (a.v.pos && Math.hypot(...a.v.pos.map((p, i) => p - r.cam[i])) > 0.05) h.push(`Kamera versetzt auf ${r.cam.map(v => zahl(v, 2)).join(' / ')} (Blick nach oben begrenzt)`);
   return h;
 }
-// Zeile „Ansichten“: Vergleich mit der Referenz, je geänderter Ansicht eine Zeile (Anteil, Ort), Übersicht aller Bilder; true ohne Fehler
-function ansichtenZeilen(liste, erg, erster = false) {
-  vergleichLeeren(false);
-  const gerendert = liste.filter(a => a.v && erg[a.name] && !erg[a.name].fehler);
-  const paare = gerendert.map(a => ({ name: a.name, ref: path.join(REF, 'ansichten', `${a.name}.png`), akt: path.join(AKT, 'ansichten', `${a.name}.png`), aus: path.join(VGL, `${a.name}.png`) }));
+// Bildpaar einer Ansicht gegen die Referenz; gibt es ein Bild vom alten Standpunkt (alt: Ergebnis mit datei), zählt dieses, die Übersicht
+// zeigt trotzdem das neue
+function ansichtPaar(name, akt, aus, alt) {
+  const s = alt && !alt.fehler ? alt.datei : null;
+  return { name, ref: path.join(REF, 'ansichten', `${name}.png`), akt: s || akt, aus, ...(s ? { zeige: akt, marke: 'Kamera gewandert' } : {}) };
+}
+// Zusatz zur Zeile einer Ansicht mit gewanderter Kamera (vorher: Kamera der Referenz, jetzt: aufgelöste Kamera, alt: Bild vom alten Standpunkt)
+const wanderText = (vorher, jetzt, alt) => `${wanderung(vorher, jetzt)}${alt && !alt.fehler ? ', verglichen vom alten Standpunkt'
+  : ` (Bild vom alten Standpunkt fehlt: ${alt ? alt.fehler : 'kein Ergebnis'})`}`;
+// Zeile „Ansichten“: Vergleich mit der Referenz in Stufen (tools/vergleich.py) – deutlich und sichtbar geänderte Ansichten je eine Zeile (Stufe,
+// Anteil, Ort, gewanderte Kamera), Rauschen nur gezählt; dazu die Übersicht aller Bilder. wandern: Name → Kamera der Referenz, alt: Name →
+// Bild vom alten Standpunkt. true ohne Fehler
+function ansichtenZeilen(liste, erg, { erster = false, wandern = {}, alt = {}, ohneKameras = false } = {}) {
+  vergleichLeeren('ansicht');
+  const gerendert = liste.filter(a => a.v && erg[a.name] && !erg[a.name].fehler), jetzt = n => liste.find(a => a.name === n).v;
+  const paare = gerendert.map(a => ansichtPaar(a.name, path.join(AKT, 'ansichten', `${a.name}.png`), path.join(VGL, `${a.name}.png`), alt[a.name]));
   const v = vergleiche('3d', paare, path.join(SHOTS, 'uebersicht.png'));
-  const geaendert = paare.filter(p => v[p.name] && v[p.name].anteil !== undefined).sort((p, q) => v[q.name].anteil - v[p.name].anteil);
+  const stufe = p => (v[p.name] || {}).stufe, RANG = { deutlich: 0, sichtbar: 1 }, anzahl = s => paare.filter(p => stufe(p) === s).length;
+  const zeigen = paare.filter(p => stufe(p) in RANG).sort((p, q) => RANG[stufe(p)] - RANG[stufe(q)] || v[q.name].anteil - v[p.name].anteil);
   const neu = paare.filter(p => v[p.name] && v[p.name].fehlt === 'ref'), ohne = liste.filter(a => a.fehler), kaputt = liste.filter(a => a.v && !gerendert.includes(a));
-  const zusatz = [neu.length && `${neu.length} neu`, ohne.length && `${ohne.length} ohne Anker`, kaputt.length && `${kaputt.length} FEHLER`].filter(Boolean).join(' · ');
-  if (!geaendert.length) zeile('Ansichten', `${kaputt.length ? 'FEHLER ' : 'ok    '}${paare.length - neu.length} unverändert${zusatz ? ' · ' + zusatz : ''} → tools/shots/uebersicht.png`);
-  else zeile('Ansichten', `${geaendert.length} von ${paare.length} geändert${zusatz ? ' · ' + zusatz : ''} → tools/shots/vergleich/ · Übersicht tools/shots/uebersicht.png`);
-  for (const p of geaendert) { const e = v[p.name]; console.log(`  ${p.name.padEnd(16)} ${e.groesse ? 'Bildgröße geändert' : `${proz(e.anteil).padStart(7)}  ${e.ort}`}`); }
+  const zusatz = [anzahl('rauschen') && `${anzahl('rauschen')} Rauschen`, `${paare.filter(p => (v[p.name] || {}).gleich).length} unverändert`, neu.length && `${neu.length} neu`,
+    ohne.length && `${ohne.length} ohne Anker`, kaputt.length && `${kaputt.length} FEHLER`].filter(Boolean).join(' · ');
+  if (!zeigen.length) zeile('Ansichten', `${kaputt.length ? 'FEHLER ' : 'ok    '}${zusatz} → tools/shots/uebersicht.png`);
+  else zeile('Ansichten', `${zeigen.length} von ${paare.length} geändert (${['deutlich', 'sichtbar'].filter(anzahl).map(s => `${anzahl(s)} ${s}`).join(', ')}) · ${zusatz}` +
+    ' → tools/shots/vergleich/ · Übersicht tools/shots/uebersicht.png');
+  for (const p of zeigen) {
+    const e = v[p.name];
+    console.log(`  ${p.name.padEnd(16)} ${e.stufe.padEnd(9)}${e.groesse ? 'Bildgröße geändert' : `${proz(e.anteil).padStart(7)}  ${e.ort}`}${wandern[p.name] ? ` · ${wanderText(wandern[p.name], jetzt(p.name), alt[p.name])}` : ''}`);
+  }
+  const still = paare.filter(p => wandern[p.name] && v[p.name] && (v[p.name].gleich || stufe(p) === 'rauschen')).map(p => p.name);
+  if (still.length) console.log(`  Kamera gewandert, vom alten Standpunkt ohne sichtbare Änderung: ${still.map(n => `${n} ${wanderText(wandern[n], jetzt(n), alt[n]).replace(', verglichen vom alten Standpunkt', '')}`).join(' · ')}`);
   for (const a of ohne) console.log(`  ${a.name}: Anker fehlt – ${a.fehler}`);
   for (const a of liste.filter(q => q.v)) for (const h of hinweise(a, erg[a.name])) console.log(`  ${a.name}: ${h}`);
   if (neu.length && !erster) console.log(`  neu ohne Referenz: ${neu.map(p => p.name).join(', ')} (./vg abnehmen)`);
+  if (ohneKameras && !erster) console.log('  Referenz ohne Kameras (älterer Stand): gewanderte Kameras erkennt der Vergleich erst nach ./vg abnehmen');
   return !kaputt.length;
 }
 
@@ -389,14 +449,15 @@ function kopiereOrdner(von, nach, filter = () => true) {
   if (fs.existsSync(von)) for (const f of fs.readdirSync(von)) if (filter(f)) { fs.copyFileSync(path.join(von, f), path.join(nach, f)); n++; }
   return n;
 }
-// aktuelle Bilder, Zeichnungen und Prüfsumme werden Referenz
+// aktuelle Bilder samt Kameras, Zeichnungen und Prüfsumme werden Referenz
 function uebernimm() {
   const n = kopiereOrdner(path.join(AKT, 'ansichten'), path.join(REF, 'ansichten'), f => f.endsWith('.png'));
   const z = kopiereOrdner(path.join(AKT, 'svg'), path.join(REF, 'svg'), f => /\.(svg|css)$/.test(f)) - 1;
-  const fp = lies(path.join(AKT, 'fingerprint.json'), null);
+  const fp = lies(path.join(AKT, 'fingerprint.json'), null), kam = lies(path.join(AKT, KAMERAS), null);
   if (fp && !fp.fehler) schreib(path.join(REF, 'fingerprint.json'), JSON.stringify(fp));
+  if (kam) schreib(path.join(REF, KAMERAS), JSON.stringify(kam)); else fs.rmSync(path.join(REF, KAMERAS), { force: true });
   schreib(path.join(REF, 'stand.json'), JSON.stringify({ zeit: new Date().toISOString(), docs: hash(DOCS), ansichten: n, zeichnungen: z }));
-  for (const sorte of [true, false]) vergleichLeeren(sorte);
+  vergleichLeeren('alle');
   return `${n} Ansichten, ${Math.max(0, z)} Zeichnungen, Prüfsumme ${fp && fp.gesamt}`;
 }
 // SVGs aller Zeichnungen nach tools/shots/aktuell/svg (wie tools/check.js --svg)
@@ -407,8 +468,9 @@ function svgsSchreiben(ctx = kontext()) {
   fs.writeFileSync(path.join(d, 'style.css'), Z.css());
 }
 // Zeichnungen als PNG (z.png oder tools/shots/aktuell/zeichnungen/<datei>.png); weicht SVG oder CSS von der Referenz ab, auch die Referenz,
-// dann Vergleich. liste: [{ datei, titel, akt: SVG, ref: SVG oder null, png? }]; Ergebnis je Datei wie tools/vergleich.py, dazu gleich/neu
-async function zeichnungsVergleich(liste, cssA, cssR) {
+// dann Vergleich nach tools/shots/vergleich/<praefix><datei>.png. liste: [{ datei, titel, akt: SVG, ref: SVG oder null, png? }]; Ergebnis je
+// Datei wie tools/vergleich.py, dazu gleich/neu
+async function zeichnungsVergleich(liste, cssA, cssR, praefix) {
   const paare = [], erg = {};
   await zeichnungsTab(async t => {
     for (const z of liste) {
@@ -418,7 +480,7 @@ async function zeichnungsVergleich(liste, cssA, cssR) {
       if (z.ref === z.akt && cssA === cssR) { erg[z.datei] = { gleich: true }; continue; }
       const r = path.join(AKT, 'zeichnungen', `${z.datei}.ref.png`);
       schreib(r, await svgPng(t, z.ref, cssR));
-      paare.push({ name: z.datei, ref: r, akt: a, aus: path.join(VGL, `zeichnung-${z.datei}.png`) });
+      paare.push({ name: z.datei, ref: r, akt: a, aus: path.join(VGL, `${praefix}${z.datei}.png`) });
     }
   });
   const v = vergleiche('2d', paare);
@@ -445,26 +507,30 @@ function freieAnsicht(par) {
 // 3D-Teil von ./vg pruefen: Prüfsumme, alle Rundgänge und alle Ansichten in zwei Instanzen; Zeilen Rundgänge, Szene, Ansichten
 async function befehl3d() {
   frist(900);
-  const liste = anker.ansichten(kontext());
-  fs.rmSync(path.join(AKT, 'ansichten'), { recursive: true, force: true });
-  const touren = {}, bilder = {};
+  const liste = anker.ansichten(kontext()), refKam = lies(path.join(REF, KAMERAS), null), wandern = gewandert(liste, refKam);
+  for (const d of ['ansichten', 'standpunkt']) fs.rmSync(path.join(AKT, d), { recursive: true, force: true });
+  const touren = {}, bilder = {}, alt = {};
   let fp = null;
-  // eine Instanz rendert (alle Kerne), die andere geht die Rundgänge ab (ein Kern) und hilft danach beim Rendern; VG_INSTANZEN=1 alles in einer
-  const bilder0 = [{ art: 'fp', erst: true }, ...bildAuftraege(liste, path.join(AKT, 'ansichten'))], touren0 = tourAuftraege(null, SCHRITT);
+  // eine Instanz rendert (alle Kerne), die andere geht die Rundgänge ab (ein Kern) und hilft danach beim Rendern; VG_INSTANZEN=1 alles in einer.
+  // Gewanderte Kameras zusätzlich vom alten Standpunkt.
+  const bilder0 = [{ art: 'fp', erst: true }, ...nachStufe([...bildAuftraege(liste, path.join(AKT, 'ansichten')), ...vomAltenStandpunkt(wandern)])];
+  const touren0 = tourAuftraege(null, SCHRITT);
   await parallel(process.env.VG_INSTANZEN === '1' ? [[...bilder0, ...touren0]] : [bilder0, touren0], (a, r) => {
     if (a.art === 'fp') fp = r;
     else if (a.art === 'probe') touren[a.name] = r;
     else if (a.art === 'touren') { if (r && r.fehler) touren['(Namen)'] = r; }
+    else if (a.alt) alt[a.name] = { ...(r || { fehler: 'kein Ergebnis' }), datei: a.datei };
     else bilder[a.name] = r;
   });
   zeit('Browser fertig');
   schreib(path.join(AKT, 'fingerprint.json'), JSON.stringify(fp));
   schreib(path.join(AKT, 'rundgaenge.json'), JSON.stringify(touren));
+  schreib(path.join(AKT, KAMERAS), JSON.stringify(kameras(liste, bilder)));
   schreib(path.join(AKT, 'stand.json'), JSON.stringify({ zeit: new Date().toISOString(), stand: stand(liste) }));
   const erster = !fs.existsSync(path.join(REF, 'stand.json'));
   let ok = rundgangZeilen(touren);
   ok = szeneZeile(fp, lies(path.join(REF, 'fingerprint.json'), null)) && ok;
-  ok = ansichtenZeilen(liste, bilder, erster) && ok;
+  ok = ansichtenZeilen(liste, bilder, { erster, wandern, alt, ohneKameras: !refKam }) && ok;
   if (erster) console.log(`  Referenz angelegt: ${uebernimm()}`);
   return ok;
 }
@@ -476,21 +542,23 @@ async function befehlZeichnungen() {
   const cssA = text(path.join(akt, 'style.css')), cssR = text(path.join(ref, 'style.css'));
   const liste = Z.LISTE.map(z => ({ ...z, akt: text(path.join(akt, `${z.datei}.svg`)), ref: text(path.join(ref, `${z.datei}.svg`)) }))
     .filter(z => z.akt !== null && (z.akt !== z.ref || cssA !== cssR));
-  vergleichLeeren(true);
+  vergleichLeeren('zeichnung-');
   if (!liste.length) { console.log('0 geändert'); return true; }
-  const erg = await zeichnungsVergleich(liste, cssA, cssR);
+  const erg = await zeichnungsVergleich(liste, cssA, cssR, 'zeichnung-');
   const anders = liste.filter(z => !erg[z.datei].gleich || erg[z.datei].nurText);
   console.log(`${anders.length} geändert: ${anders.map(z => `${z.titel} ${zText(erg[z.datei])}`).join(' · ')}${anders.some(z => erg[z.datei].bild) ? ' → tools/shots/vergleich/' : ''}`);
   return true;
 }
-// ./vg plan [UG|EG|OG|DG …]: Grundrisse frisch als PNG, bei Abweichung von der Referenz vorher | nachher
+// ./vg plan [UG|EG|OG|DG …]: Grundrisse frisch als PNG, bei Abweichung von der Referenz vorher | nachher (tools/shots/vergleich/plan-<datei>.png;
+// die alten nur dieser Geschosse weg)
 async function befehlPlan(args) {
   frist(120);
   const fl = args.map(a => a.toUpperCase()), falsch = fl.filter(a => !STUFE[a]), ctx = kontext();
   if (falsch.length) throw new Error(`Geschoss ${falsch.join(', ')} gibt es nicht (UG, EG, OG, DG)`);
   const liste = Z.zeichnungen(ctx, fl.length ? fl : ['UG', 'EG', 'OG', 'DG']).map(z => ({ ...z, akt: z.text, ref: text(path.join(REF, 'svg', `${z.datei}.svg`)), png: path.join(SHOTS, `plan-${z.fl}.png`) }));
   const cssA = Z.css(), cssR = text(path.join(REF, 'svg', 'style.css')) ?? cssA;
-  const erg = await zeichnungsVergleich(liste, cssA, cssR);
+  for (const z of liste) fs.rmSync(path.join(VGL, `plan-${z.datei}.png`), { force: true });
+  const erg = await zeichnungsVergleich(liste, cssA, cssR, 'plan-');
   for (const z of liste) {
     const e = erg[z.datei];
     console.log(`${z.titel.padEnd(13)} ${zText(e).padEnd(22)} ${winPfad(e.bild || z.png)}${e.bild ? `  (ganzer Plan: ${winPfad(z.png)})` : ''}`);
@@ -498,29 +566,35 @@ async function befehlPlan(args) {
   return true;
 }
 // ./vg bild <ansicht…> | <name> "pos=…&tgt=…": Bilder nach tools/shots/bild-<name>.png, benannte Ansichten mit Vergleich zur Referenz
+// (tools/shots/vergleich/bild-<name>.png; gewanderte Kameras wie in ./vg pruefen zusätzlich vom alten Standpunkt, dieser Vergleich zählt)
 async function befehlBild(args) {
   frist(300);
   const liste = anker.ansichten(kontext());
   if (!args.length) { for (const a of liste) console.log(`${a.name.padEnd(16)} ${a.fehler ? 'Anker fehlt: ' + a.fehler : a.text}`); return true; }
   const frei = args.length === 2 && args[1].includes('=');
-  let auf;
+  let auf, wandern = {};
   if (frei) auf = [{ art: 'bild', name: args[0], v: freieAnsicht(args[1]), datei: path.join(SHOTS, `bild-${args[0]}.png`) }];
   else {
     const fehlt = args.filter(n => !liste.some(a => a.name === n));
     if (fehlt.length) throw new Error(`Ansicht ${fehlt.join(', ')} gibt es nicht (${liste.map(a => a.name).join(', ')})`);
     for (const a of liste.filter(q => args.includes(q.name) && q.fehler)) console.log(`${a.name}: Anker fehlt – ${a.fehler}`);
     auf = bildAuftraege(liste.filter(q => args.includes(q.name)), SHOTS).map(a => ({ ...a, datei: path.join(SHOTS, `bild-${a.name}.png`) }));
+    wandern = gewandert(liste.filter(q => args.includes(q.name)), lies(path.join(REF, KAMERAS), null));
+    for (const a of auf) fs.rmSync(path.join(VGL, `bild-${a.name}.png`), { force: true });
   }
-  const erg = {};
-  await parallel([[...auf]], (a, r) => { erg[a.name] = r; });
+  const erg = {}, alt = {};
+  await parallel([nachStufe([...auf, ...vomAltenStandpunkt(wandern, 'bild-')])], (a, r) => {
+    if (a.alt) alt[a.name] = { ...(r || { fehler: 'kein Ergebnis' }), datei: a.datei }; else erg[a.name] = r;
+  });
   const paare = frei ? [] : auf.filter(a => erg[a.name] && !erg[a.name].fehler && fs.existsSync(path.join(REF, 'ansichten', `${a.name}.png`)))
-    .map(a => ({ name: a.name, ref: path.join(REF, 'ansichten', `${a.name}.png`), akt: a.datei, aus: path.join(VGL, `${a.name}.png`) }));
+    .map(a => ansichtPaar(a.name, a.datei, path.join(VGL, `bild-${a.name}.png`), alt[a.name]));
   const v = vergleiche('3d', paare);
   let ok = true;
   for (const a of auf) {
-    const r = erg[a.name], e = v[a.name];
+    const r = erg[a.name], e = v[a.name], w = wandern[a.name] ? ` · ${wanderText(wandern[a.name], a.v, alt[a.name])}` : '';
     if (!r || r.fehler) { ok = false; console.log(`${a.name}: FEHLER ${r ? r.fehler : 'kein Ergebnis'}`); continue; }
-    console.log(`${winPfad(a.datei)}${e ? (e.gleich ? ' · wie die Referenz' : ` · geändert ${proz(e.anteil || 1)} ${e.ort || ''} → ${winPfad(e.bild || '')}`) : ''}`);
+    console.log(`${winPfad(a.datei)}${e ? (e.gleich ? ' · wie die Referenz' : e.stufe === 'rauschen' ? ` · nur Rauschen (${proz(e.anteil)}, kein sichtbarer Unterschied)`
+      : ` · ${e.stufe || 'geändert'} ${proz(e.anteil || 1)} ${e.ort || ''} → ${winPfad(e.bild || '')}`) : ''}${w}`);
     for (const h of hinweise(a, r)) console.log(`  ${h}`);
   }
   return ok;
@@ -549,10 +623,12 @@ async function befehlAbnehmen() {
     console.log('Bilder sind nicht vom aktuellen Stand, rendere neu …');
     fs.rmSync(path.join(AKT, 'ansichten'), { recursive: true, force: true });
     let fp = null, schlecht = 0;
+    const bilder = {};
     await parallel([[{ art: 'fp', erst: true }, ...bildAuftraege(liste, path.join(AKT, 'ansichten'))]], (a, r) => {
-      if (a.art === 'fp') fp = r; else if (!r || r.fehler) { schlecht++; console.log(`  ${a.name}: FEHLER ${r ? r.fehler : ''}`); }
+      if (a.art === 'fp') fp = r; else { bilder[a.name] = r; if (!r || r.fehler) { schlecht++; console.log(`  ${a.name}: FEHLER ${r ? r.fehler : ''}`); } }
     });
     schreib(path.join(AKT, 'fingerprint.json'), JSON.stringify(fp));
+    schreib(path.join(AKT, KAMERAS), JSON.stringify(kameras(liste, bilder)));
     schreib(path.join(AKT, 'stand.json'), JSON.stringify({ zeit: new Date().toISOString(), stand: stand(liste) }));
     if (schlecht) throw new Error(`${schlecht} Ansichten ohne Bild, Referenz nicht übernommen`);
   }

@@ -9,7 +9,13 @@
       const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: Math.min(big ? 4 : 2, renderer.capabilities.maxSamples || 4) });
       rt.depthTexture = new THREE.DepthTexture(4, 4);
       const out = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
-      const ao = new GTAOPass(scene, camP, 2, 2);
+      // Rauschen der Entrauschung fest: GTAOPass würfelt es im Konstruktor mit Math.random (SimplexNoise, 256 Zahlen), und dessen Stand hängt
+      // an der Zahl der Objekte davor (jede UUID zieht vier Zahlen) – ein Möbel mehr im DG gab sonst allen Bildern ein neues Muster. Mit eigener
+      // Folge ist es bei jedem Laden und in jeder Szene gleich; später würfelt GTAO nicht mehr (setSize und die Materialien rechnen ohne Zufall).
+      const wuerfel = Math.random;
+      let ao;
+      Math.random = zufall('gtao rauschen');
+      try { ao = new GTAOPass(scene, camP, 2, 2); } finally { Math.random = wuerfel; }
       ao.setGBuffer(rt.depthTexture);
       ao.updateGtaoMaterial({ radius: 1.1, distanceExponent: 1.4, thickness: 1.6, scale: 1.5, samples: big ? 16 : 10, distanceFallOff: 1.0, screenSpaceRadius: false });
       ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, radiusExponent: 1, rings: 2, samples: big ? 16 : 10 });

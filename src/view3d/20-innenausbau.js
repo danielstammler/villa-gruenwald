@@ -1,7 +1,7 @@
   // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Innenwände, Böden, Aufzug, Treppe und Möbel aus dem Grundriss; Liegen und Sonnenschirme
   // Innenräume nach dem Grundriss-Vorschlag: Böden, Wände, Treppe und Aufzugsschacht
   function buildInterior() {
-    const lv = { UG: [Zh.ffbUG, -0.15], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
+    const lv = { UG: [Zh.ffbUG, Zh.deckeUG], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
     // Fliesen in Bädern, Küche und Nebenräumen, Kalkstein in Halle und Garderobe, sonst Eichendielen
     const nass = /bad|wc|dusche|küche|backkitchen|speis|abstell|schleuse|lager|technik|waschen|vorraum/i, halle = /halle|garderobe|foyer/i, gym = /gym/i;
     const W = HOUSE.W, D = HOUSE.D, roofIn = HOUSE.roofIn, { LINE, HOLES, LIFT, VOID } = Plans.CORE;
@@ -22,16 +22,16 @@
     const t0 = HOUSE.wall, ug = [[0, W, -D, -D + t0, HOUSE.tg.schleuse.hausTuer], [0, W, -t0, 0], [W - t0, W, -D + t0, -t0]];
     for (const [a, b, c, e, gap] of ug) {
       const segs = gap ? [[a, gap[0]], [gap[1], b]] : [[a, b]];
-      for (const [p, q] of segs) { boxPlan(M.inWall, p, q, c, e, Zh.ffbUG - 0.3, -0.15); wallRects.push({ fl: 'UG', r: [p, q, c, e], top: -0.15 }); }
+      for (const [p, q] of segs) { boxPlan(M.inWall, p, q, c, e, Zh.ffbUG - 0.3, Zh.deckeUG); wallRects.push({ fl: 'UG', r: [p, q, c, e], top: Zh.deckeUG }); }
     }
     // Westwand des UG mit den Fenstern zum Lichthof vor dem Gym: bis zum Boden, schwarze Rahmen mit Mittelsprosse, darüber ein Sturz
     {
-      const LH = HOUSE.lichthof, wy = LH.win.map(([a, b]) => [-b, -a]).sort((p, q) => p[0] - q[0]), zt = -0.62;
+      const LH = HOUSE.lichthof, wy = LH.win.map(([a, b]) => [-b, -a]).sort((p, q) => p[0] - q[0]), zt = LH.sturz;
       let y = -D + t0;
       for (const [a, b] of [...wy, [-t0, -t0]]) {
-        if (a > y) { boxPlan(M.inWall, 0, t0, y, a, Zh.ffbUG - 0.3, -0.15); wallRects.push({ fl: 'UG', r: [0, t0, y, a], top: -0.15 }); }
+        if (a > y) { boxPlan(M.inWall, 0, t0, y, a, Zh.ffbUG - 0.3, Zh.deckeUG); wallRects.push({ fl: 'UG', r: [0, t0, y, a], top: Zh.deckeUG }); }
         if (b > a) {
-          boxPlan(M.inWall, 0, t0, a, b, zt, -0.15);
+          boxPlan(M.inWall, 0, t0, a, b, zt, Zh.deckeUG);
           for (const [p, q, z0, z1] of [[a, a + 0.07, Zh.ffbUG, zt], [b - 0.07, b, Zh.ffbUG, zt], [a, b, zt - 0.07, zt], [a, b, Zh.ffbUG, Zh.ffbUG + 0.07], [(a + b) / 2 - 0.035, (a + b) / 2 + 0.035, Zh.ffbUG, zt]])
             boxPlan(M.frame, 0.1, 0.18, p, q, z0, z1);
           boxPlan(M.glass, 0.13, 0.15, a + 0.05, b - 0.05, Zh.ffbUG + 0.05, zt - 0.05);
@@ -40,7 +40,7 @@
       }
     }
     // Sturz über der Tür von der Tiefgarage ins Foyer (die Flügel enden bei 2,28 m)
-    { const [ta, tb] = HOUSE.tg.schleuse.hausTuer; boxPlan(M.inWall, ta, tb, -D, -D + t0, Zh.ffbUG + 2.3, -0.15); }
+    { const [ta, tb] = HOUSE.tg.schleuse.hausTuer; boxPlan(M.inWall, ta, tb, -D, -D + t0, Zh.ffbUG + 2.3, Zh.deckeUG); }
     // Bodenplatte des Untergeschosses, damit auch unter Türöffnungen Boden ist; im DG Boden bis an die Zwerchhausfronten
     boxPlan(M.slab, 0, W, -D, 0, Zh.ffbUG - 0.3, Zh.ffbUG - 0.025);
     for (const [y0, y1] of [[-D + 0.12, -D + 0.36], [-0.36, -0.12]]) boxPlan(M.floorOak, 4.45, 11.55, y0, y1, Zh.ffbDG - 0.11, Zh.ffbDG + 0.005);
@@ -101,8 +101,8 @@
     buildFurniture();
   }
   // Treppen: drei gerade Läufe in der Treppenbahn an der Rückwand der Halle, je ein Geschoss, alle nach Westen steigend und genau
-  // übereinander. Weiße Läufe mit Stufen aus hellem Naturstein; zur Halle hin eine geschlossene Brüstung mit Steinabdeckung, die im EG
-  // bis zum Boden reicht (dahinter liegt die Kellertreppe), mit Pfosten am Antritt und im EG einer breiten, gerundeten Antrittsstufe.
+  // übereinander. Weiße Läufe mit Stufen aus hellem Naturstein; zur Halle hin ein offenes Geländer aus schwarzen Stäben mit
+  // Handlauf, im EG darunter eine geschlossene Wange bis zum Boden (dahinter liegt die Kellertreppe), mit Pfosten am Antritt und im EG einer breiten, gerundeten Antrittsstufe.
   function buildStair() {
     const { LINE, FLIGHTS } = Plans.CORE, ly0 = LINE[2], ly1 = LINE[3], h = 0.92, t = 0.13;
     // Prisma aus einem Längsschnitt (Punkte [x, z]) über die Breite y0 … y1 der Bahn
@@ -140,7 +140,7 @@
   // Möbel nach dem Grundriss-Vorschlag: dieselben Positionen wie im 2D-Plan, Höhen nach üblichen Maßen, im DG unter der Schräge gekappt
   function buildFurniture() {
     const W = HOUSE.W, D = HOUSE.D, roofIn = HOUSE.roofIn;
-    const levels = { UG: [Zh.ffbUG, -0.15], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
+    const levels = { UG: [Zh.ffbUG, Zh.deckeUG], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
     const dirs = { N: [0, -1], S: [0, 1], E: [-1, 0], W: [1, 0] };
     // Draußen (Terrasse, Freisitz, Balkone): schwarzes Metall, helle wetterfeste Polster, Tischplatten aus Stein
     const OUT = { fFabric: M.fOut, fFabric2: M.fOut, fOak: M.fOutMetal, fDark: M.fOutMetal, fCushion: M.fCushionOut };

@@ -104,7 +104,7 @@
   // zur Seite geschoben), nach Norden ein großes Fenster; Veranda auf zwei quadratischen Pfeilern, flaches Walmdach mit Schiefer.
   // Innen Bar, Liege und Handtücher. Boden eine Stufe über der Poolterrasse (H.z) auf der Decke der Durchfahrt; Gesims und Dach bleiben auf ihrer Höhe.
   function buildPoolhaus(g) {
-    const H = HOUSE.poolhaus, { x0, x1, y0, y1, z, wand: t, gesims, traufe } = H, xv = x0 - H.veranda, ov = 0.25, len = y1 - y0;
+    const H = HOUSE.poolhaus, { x0, x1, y0, y1, z, wand: t, gesims, traufe } = H, xv = x0 - H.veranda, ov = H.ueberstand, len = y1 - y0;
     boxPlan(M.stone, x0, x1, y0, y1, 0, z);
     boxPlan(M.site, x0, x1, y0, y0 + t, 0, gesims); boxPlan(M.site, x1 - t, x1, y0 + t, y1 - t, 0, gesims);
     // Nordwand mit großem Fenster (u ab der Ostecke nach Westen)

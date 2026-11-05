@@ -82,10 +82,10 @@
     let s = '';
     if (up) {
       const g = (up.x0 - up.x1) / (up.n - 1), h = (up.zb - up.za) / up.n;
-      s += R(up.x1, up.x0, ly0, ly1, 'g-stair', `${TREPPE[fl]} · gerade, 1,30 m breit · ${up.n} Steigungen à ${num(h * 100)} cm, Auftritt ${num(g * 100, 0)} cm`);
+      s += R(up.x1, up.x0, ly0, ly1, 'g-stair', `${TREPPE[fl]} · gerade, ${num(ly1 - ly0, 2)} m breit · ${up.n} Steigungen à ${num(h * 100)} cm, Auftritt ${num(g * 100, 0)} cm`);
       for (let i = 1; i < up.n - 1; i++) s += L(up.x1 + i * g, ly0, up.x1 + i * g, ly1, 'g-tread');
       if (fl === 'EG') s += `<path d="M${f(up.x0)} ${f(-ly0)} V${f(-(ly1 + 0.2))} A0.2 0.2 0 0 0 ${f(up.x0 - 0.2)} ${f(-(ly1 + 0.4))} H${f(up.x0 - g)} V${f(-ly1)} H${f(up.x0)} Z" class="g-stair" data-tip="Antrittsstufe · zur Halle hin 40 cm breiter, gerundet"/>`;
-      // geschlossene Brüstung an der Nordseite (zur Halle bzw. zum Luftraum)
+      // Geländer an der Nordseite (zur Halle bzw. zum Luftraum), offen mit schwarzen Stäben wie im 3D
       s += L(up.x1, ly1 + 0.04, up.x0, ly1 + 0.04, 'g-railing');
       s += `<polyline points="${pts([[up.x0 - 0.15, ym], [up.x1 + 0.5, ym]])}" class="g-walk"/>` +
         `<polygon points="${pts([[up.x1 + 0.55, ym + 0.14], [up.x1 + 0.55, ym - 0.14], [up.x1 + 0.27, ym]])}" class="g-walkhead"/>`;
@@ -104,7 +104,7 @@
   // Luftraum über der Halle (im OG): schraffiert; Geländer am Antritt der Dachtreppe
   function voidArea() {
     const [a] = VOID;
-    let s = R(a[0], a[1], a[2], a[3], 'g-void', 'Luftraum über der Halle · zweigeschossig, 6,10 m hoch, mit dem Fenster über der Haustür');
+    let s = R(a[0], a[1], a[2], a[3], 'g-void', `Luftraum über der Halle · zweigeschossig, ${num(HOUSE.Z.deckeDG - HOUSE.Z.ffbEG, 2)} m hoch, mit dem Fenster über der Haustür`);
     s += L(a[0], a[3], a[1], a[2], 'g-thin') + L(a[0], a[2], a[1], a[3], 'g-thin');
     return s + L(FLIGHTS.OG.x0, a[2] - 0.04, a[1], a[2] - 0.04, 'g-railing') + T((a[0] + a[1]) / 2, -1.25, 'Luftraum', 'g-ftxt');
   }

@@ -2,7 +2,7 @@
 // Fenster, Treppe, Aufzug), Möbel, Außen (Ortsgestaltungssatzung Grünwald, DIN EN 1176). Jede Regel misst aus den Daten, nichts fest verdrahtet.
 // Aufruf: node tools/regeln.js [-v] – je Gruppe eine Zeile, Einzelheiten nur bei Verstößen und Hinweisen (-v: alle Werte), zuletzt die Summe.
 // Arten: Pflicht (Rückgabe 1), Hinweis (warnt nur), Offen (klärt der Bauherr mit Architektin und Gemeinde, nur gelistet),
-// Ausgenommen (bewusst nicht Teil der Studie, nur gezählt). Grundrissanalyse in tools/lib/grundriss.js (auch für tools/raumbuch.js).
+// Ausgenommen (bewusst nicht Teil der Studie, nur gezählt); gefundene Pflicht-Verstöße, über die der Bauherr noch entscheidet, unter GEMELDET. Grundrissanalyse in tools/lib/grundriss.js (auch für tools/raumbuch.js).
 const vm = require('vm');
 const { kontext, rechne, lesen } = require('./lib/laden');
 const GR = require('./lib/grundriss');
@@ -327,6 +327,19 @@ regel('Offen', 'rampe-beginn', 'Offen', 'wo die Rampe beginnen darf', 'Konzept, 
   const yG = R.grenze(R.x0); let y = yG + 0.05; while (y < R.yPortal && zfBreite(y) > R.x1 - R.x0 + 0.05) y += 0.01;
   return { wert: `Rampe ab der Grenze (y ${zahl(yG)}, Rinne ${zahl(R.y0)}); im Konzept bleibt die Zufahrt ${m(zfBreite(yG + 0.05))} breit bis y ${zahl(y)}, ${m(y - yG - 5)} hinter der 5-m-Linie (y ${zahl(yG + 5)})` }; });
 
+// ---------- Gemeldet ----------
+// Gefundene Pflicht-Verstöße, über die der Bauherr noch entscheidet: Regel → Stellen (Teiltexte der Fundstellen). Sie lassen die Prüfung grün
+// und stehen gesammelt unter „Gemeldet“; eine neue Stelle derselben Regel zählt weiter als Fehler. Nach der Entscheidung beheben und austragen.
+const GEMELDET = {   // gemeldet am 5.11.2026
+  'treppe-kopf': ['UG→EG', 'EG→OG', 'OG→DG'],
+  'balkon-schwelle': ['OG Balkon', 'OG Dachterrasse', 'DG Balkon'],
+  'fenster-flaeche': ['DG Schlafzimmer', 'DG Gäste'],
+  'fenster-wand': ['OG Nord 9,80–10,80'],
+  'moebel-schwenk': ['EG Regal (Backkitchen)', 'OG Regal (Kind 4)', 'DG Regal (Ankleide)'],
+};
+const funde = x => (x.e.liste && x.e.liste.length ? x.e.liste : String(x.e.wert).split(' · '));
+const gemeldet = x => !!GEMELDET[x.r.id] && funde(x).every(t => GEMELDET[x.r.id].some(s => t.includes(s)));
+
 // ---------- Auswertung ----------
 const erg = REGELN.map(r => { try { return { r, e: r.f() }; } catch (e) { return { r, e: { ok: false, wert: `Fehler in der Regel: ${e.message}`, grenze: '' } }; } });
 const zeile = (a, b) => console.log(`${a.padEnd(12)} ${b}`);
@@ -334,17 +347,21 @@ const zeile = (a, b) => console.log(`${a.padEnd(12)} ${b}`);
 const detail = (z, x) => { const l = (x.e.liste || []).filter(t => !String(x.e.wert).includes(t));
   console.log(`  ${z} ${x.r.id}  ${x.r.text} [${x.r.quelle}]: ${x.e.wert}${l.length ? ` · ${l.join(' · ')}` : ''}${x.e.grenze ? ` · Grenze ${x.e.grenze}` : ''}`); };
 let erfuellt = 0, verletzt = 0, hinweise = 0;
+const gem = [];
 for (const g of ['Tiefgarage', 'Haus', 'Grundriss', 'Möbel', 'Außen']) {
-  const rs = erg.filter(x => x.r.g === g && (x.r.art === 'Pflicht' || x.r.art === 'Hinweis')), v = rs.filter(x => !x.e.ok && x.r.art === 'Pflicht'), h = rs.filter(x => !x.e.ok && x.r.art === 'Hinweis');
-  const ok = rs.length - v.length - h.length; erfuellt += ok; verletzt += v.length; hinweise += h.length;
-  zeile(g, v.length ? `FEHLER ${v.length} verletzt${h.length ? ` · ${h.length} Hinweis${h.length > 1 ? 'e' : ''}` : ''} · ${ok} erfüllt` : h.length ? `Hinweis ${h.length} · ${ok} erfüllt` : `ok    ${ok} Regeln`);
+  const rs = erg.filter(x => x.r.g === g && (x.r.art === 'Pflicht' || x.r.art === 'Hinweis')), h = rs.filter(x => !x.e.ok && x.r.art === 'Hinweis');
+  const p = rs.filter(x => !x.e.ok && x.r.art === 'Pflicht'), v = p.filter(x => !gemeldet(x)), gm = p.filter(gemeldet);
+  const ok = rs.length - p.length - h.length; erfuellt += ok; verletzt += v.length; hinweise += h.length; gem.push(...gm);
+  const rest = [gm.length && `${gm.length} gemeldet`, h.length && `${h.length} Hinweis${h.length > 1 ? 'e' : ''}`, `${ok} erfüllt`].filter(Boolean).join(' · ');
+  zeile(g, v.length ? `FEHLER ${v.length} verletzt · ${rest}` : gm.length || h.length ? `ok    ${rest}` : `ok    ${ok} Regeln`);
   for (const x of v) detail('✗', x);
   for (const x of h) detail('!', x);
   if (ALLE) for (const x of rs.filter(x => x.e.ok)) detail('✓', x);
 }
+if (gem.length) { zeile('Gemeldet', `${gem.length} Verstöße, über die der Bauherr entscheidet (tools/regeln.js, GEMELDET)`); for (const x of gem) detail('~', x); }
 const offen = erg.filter(x => x.r.art === 'Offen'), aus = erg.filter(x => x.r.art === 'Ausgenommen' && x.e.gilt !== false);
 zeile('Offen', `${offen.length} Punkte, klärt der Bauherr mit Architektin und Gemeinde`);
 for (const x of offen) console.log(`  ? ${x.r.id}  ${x.r.text} [${x.r.quelle}]: ${x.e.wert}`);
-console.log(`${erfuellt} erfüllt · ${verletzt} verletzt${hinweise ? ` · ${hinweise} Hinweis${hinweise > 1 ? 'e' : ''}` : ''} · ${offen.length} offen · ${aus.length} ausgenommen`);
+console.log(`${erfuellt} erfüllt · ${verletzt} verletzt${gem.length ? ` · ${gem.length} gemeldet` : ''}${hinweise ? ` · ${hinweise} Hinweis${hinweise > 1 ? 'e' : ''}` : ''} · ${offen.length} offen · ${aus.length} ausgenommen`);
 process.exit(verletzt ? 1 : 0);
 

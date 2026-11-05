@@ -6,7 +6,7 @@
     let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · drei Stellplätze, mittig unter der Terrasse der Eingangsbereich zum Haus, östlich daneben die Fahrräder"/>`;
     // Vorplatz ab der Grenze bis zur Rinne, dann die Rampe: offen in der Zufahrt, unter dem Poolhaus bis in den Anschluss der Tiefgarage (GaStellV § 3)
     s += `<polygon points="${pts(rp.vorplatz)}" class="g-ramp" data-tip="Vorplatz · ${num(rp.vor.l, 2)} m ab der Grenze (Westkante, an der Ostkante ${num(rp.y0 - gr(rp.x1), 2)} m) mit ${pct(rp.vor.s)} % bis zur Rinne"/>`;
-    s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · offen in der Zufahrt, dann unter dem Poolhaus · 2,80 m breit · ${num(rp.lm, 2)} m mit ${pct(rp.s)} %, unten ${num(rp.unten.l, 2)} m mit ${pct(rp.unten.s)} %, dann ${num(rp.eben, 2)} m eben bis zum Tor`);
+    s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · offen in der Zufahrt, dann unter dem Poolhaus · ${num(rp.x1 - rp.x0, 2)} m breit · ${num(rp.lm, 2)} m mit ${pct(rp.s)} %, unten ${num(rp.unten.l, 2)} m mit ${pct(rp.unten.s)} %, dann ${num(rp.eben, 2)} m eben bis zum Tor`);
     for (let y = rp.y0 + 1; y < rp.y1 - 0.2; y += 1) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
     s += R(wx0, rp.x0, rp.y0, rp.yTor, 'g-wall') + R(rp.x1, wx1, rp.y0, rp.yTor, 'g-wall');
     for (const [a, b] of [[wx0, rp.x0], [rp.x1, wx1]]) s += R(a, b, Math.max(gr(a), gr(b)) + 0.02, rp.y0, 'g-furn', 'Randstein am Vorplatz, bündig mit Pflaster und Rasen');
@@ -46,7 +46,10 @@
     const Rd = G.raeder;
     s += `<g data-tip="Fahrräder · ${Rd.x.length} Stück, halb hochgestellt (Vorderrad im Wandhalter) · ${num(Rd.tief, 2)} m tief, davor der Weg zum Eingang">` +
       Rd.x.map(x => { const w = Rd.wand(x); return L(x, w - 0.06, x, w - Rd.tief, 'g-furn-l') + L(x - 0.25, w - 1.04, x + 0.25, w - 1.04, 'g-furn-l'); }).join('') + '</g>';
-    s += T(14.6, -13.6, 'Fahrräder', 'g-ftxt') + T(20.2, -18.2, 'Fahrgasse 6,00 m', 'g-ftxt');
+    // Fahrgasse von der Buchtkante bis zur nächsten Wand im Osten, auf Höhe der Buchten (Beschriftung in ihrer Mitte)
+    const yb = [G.y0, G.y0 + G.autos.length * G.bucht];
+    const gasse = Math.min(...G.waende.filter(w => w[0] >= G.x1 - 1e-6 && w[2] < yb[1] && w[3] > yb[0]).map(w => w[0])) - G.x1;
+    s += T(14.6, -13.6, 'Fahrräder', 'g-ftxt') + T(Math.round((G.x1 + gasse / 2) * 10) / 10, -18.2, `Fahrgasse ${num(gasse, 2)} m`, 'g-ftxt');
     s += T(20.2, -14.85, 'Tiefgarage', 'g-roomtxt') + T(20.2, -15.5, `${num(area2(tg))} m² · lichte Höhe ${num(G.lichte, 2)} m`, 'g-areatxt');
     return s;
   }

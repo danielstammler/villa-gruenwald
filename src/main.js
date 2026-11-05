@@ -202,7 +202,7 @@
     `<tr><th scope="row">Tiefgarage unter dem Garten</th><td>${num(S.tgGarten, 1)} m²</td></tr>` +
     `<tr class="sum"><th scope="row">Garten ohne Unterbauung</th><td>${num(S.gruenOhneTG, 1)} m² · ${pct(S.gruenOhneTG)}</td></tr>`;
   for (const el of $$('[data-stat]')) {
-    const v = { grz: 186.4 / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG, wohnfl: wf.sum }[el.dataset.stat];
+    const v = { grz: HOUSE.W * HOUSE.D / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG, wohnfl: wf.sum }[el.dataset.stat];
     el.textContent = num(v, { grz: 3, versiegelt: 1, tg: 1, plot: 1, wohnfl: 0 }[el.dataset.stat] ?? 2);
   }
 

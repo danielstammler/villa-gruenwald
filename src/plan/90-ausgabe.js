@@ -4,16 +4,16 @@
     const sq = (x, y, w, tip) => R(x - w / 2, x + w / 2, y - w / 2, y + w / 2, 'g-col', tip);
     const pk = HOUSE.fas.N.portikus, bd = HOUSE.balkonDG;
     const rails = B => L(B.x0 + 0.06, B.y0 + 0.06, B.x1 - 0.06, B.y0 + 0.06, 'g-railing') + L(B.x0 + 0.06, B.y0 + 0.06, B.x0 + 0.06, B.y1, 'g-railing') + L(B.x1 - 0.06, B.y0 + 0.06, B.x1 - 0.06, B.y1, 'g-railing');
-    if (fl === 'EG') return `<polygon points="${pts(t.poly)}" class="g-outside" data-tip="Terrasse · durchgehend 19,00 × 4,00 m bis an den Freisitz · Naturstein · Lounge mittig unter dem Balkon"/>` +
+    if (fl === 'EG') return `<polygon points="${pts(t.poly)}" class="g-outside" data-tip="Terrasse · durchgehend ${num(t.x1 - t.x0, 2)} × ${num(t.y1 - t.y0, 2)} m bis an den Freisitz · Naturstein · Lounge mittig unter dem Balkon"/>` +
       R(t.stufe[0], t.stufe[1], t.y0 - 0.35, t.y0, 'g-outside', 'Stufe zum Weg an den Pool') + L(t.stufe[0], t.y0, t.stufe[1], t.y0, 'g-tread') +
-      b.cols.map(x => sq(x, b.colY, b.colW, 'Pfeiler · 40 × 40 cm')).join('') +
-      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', 'Freisitz · 3,00 × 5,00 m · überdacht, Esstisch') + sq(fz.x1 - 0.175, fz.y0 + 0.175, 0.35) + sq(fz.x1 - 0.175, fz.y1 - 0.175, 0.35) +
+      b.cols.map(x => sq(x, b.colY, b.colW, `Pfeiler · ${num(b.colW * 100, 0)} × ${num(b.colW * 100, 0)} cm`)).join('') +
+      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', `Freisitz · ${num(fz.x1 - fz.x0, 2)} × ${num(fz.y1 - fz.y0, 2)} m · überdacht, Esstisch`) + sq(fz.x1 - 0.175, fz.y0 + 0.175, 0.35) + sq(fz.x1 - 0.175, fz.y1 - 0.175, 0.35) +
       R(p.x0, p.x1, p.y0, p.y1, 'g-outside', 'Podest am Eingang') + R(W - pk.u1, W - pk.u0, 0, pk.depth, 'g-above', 'Portikus über dem Eingang') +
       pk.pillars.map(u => sq(W - u, pk.py, pk.pw, 'Pfeiler des Portikus')).join('') + T(8, -15.25, 'Terrasse', 'g-ftxt') + T(17.5, -6.25, 'Freisitz', 'g-ftxt') + T(8, 0.4, 'Eingang', 'g-ftxt');
-    if (fl === 'OG') return R(b.x0, b.x1, b.y0, b.y1, 'g-outside', 'Balkon · 7,00 × 3,00 m') + rails(b) + T(8, -14.3, 'Balkon', 'g-ftxt') +
-      bd.cols.map(x => sq(x, bd.colY, bd.colW, 'Pfeiler · 34 × 34 cm · trägt den Balkon im DG')).join('') +
-      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', 'Dachterrasse auf dem Freisitz · 3,00 × 5,00 m') + T(17.5, -8.4, 'Dachterrasse', 'g-ftxt');
-    if (fl === 'DG') return R(bd.x0, bd.x1, bd.y0, bd.y1, 'g-outside', 'Balkon vor dem Büro · 7,00 × 1,00 m · tritt nach vorne, auf zwei Pfeilern') + rails(bd) +
+    if (fl === 'OG') return R(b.x0, b.x1, b.y0, b.y1, 'g-outside', `Balkon · ${num(b.x1 - b.x0, 2)} × ${num(b.y1 - b.y0, 2)} m`) + rails(b) + T(8, -14.3, 'Balkon', 'g-ftxt') +
+      bd.cols.map(x => sq(x, bd.colY, bd.colW, `Pfeiler · ${num(bd.colW * 100, 0)} × ${num(bd.colW * 100, 0)} cm · trägt den Balkon im DG`)).join('') +
+      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', `Dachterrasse auf dem Freisitz · ${num(fz.x1 - fz.x0, 2)} × ${num(fz.y1 - fz.y0, 2)} m`) + T(17.5, -8.4, 'Dachterrasse', 'g-ftxt');
+    if (fl === 'DG') return R(bd.x0, bd.x1, bd.y0, bd.y1, 'g-outside', `Balkon vor dem Büro · ${num(bd.x1 - bd.x0, 2)} × ${num(bd.y1 - bd.y0, 2)} m · tritt nach vorne, auf zwei Pfeilern`) + rails(bd) +
       bd.cols.map(x => sq(x, bd.colY, bd.colW)).join('') + T(9.6, -12.25, 'Balkon', 'g-ftxt');
     return '';
   }
@@ -50,8 +50,8 @@
     // Außenmaße und Nordpfeil
     // Im UG liegt südlich des Hauses die Tiefgarage, dort steht die Breite an der Nordseite
     const dy = fl === 'UG' ? 0.9 : -D - 0.9;
-    s += `<g class="g-dims">${L(0, dy, W, dy, 'g-dim')}${L(-0.9, -D, -0.9, 0, 'g-dim')}${T(W / 2, dy + 0.15, '16,00', 'g-dimtxt')}` +
-      `<text x="-0.75" y="${f(D / 2)}" class="g-dimtxt" transform="rotate(-90 -0.75 ${f(D / 2)})">11,65</text></g>`;
+    s += `<g class="g-dims">${L(0, dy, W, dy, 'g-dim')}${L(-0.9, -D, -0.9, 0, 'g-dim')}${T(W / 2, dy + 0.15, num(W, 2), 'g-dimtxt')}` +
+      `<text x="-0.75" y="${f(D / 2)}" class="g-dimtxt" transform="rotate(-90 -0.75 ${f(D / 2)})">${num(D, 2)}</text></g>`;
     const na = (rot => { const a = rot * Math.PI / 180, c = [-1.6, 1.9], Rt = p => [c[0] + p[0] * Math.cos(a) - p[1] * Math.sin(a), c[1] + p[0] * Math.sin(a) + p[1] * Math.cos(a)]; return `<polygon points="${pts([[0, 0.9], [0.32, -0.55], [-0.32, -0.55]].map(Rt))}" class="g-north"/>` + T(...Rt([0, 1.35]), 'N', 'g-ntxt'); })(SITE.north.grid);
     s += na;
     const vb = fl === 'UG' ? [-2.6, -2.2, 28.6, 53.8] : [-2.6, -1.6, 22.2, 17.2];

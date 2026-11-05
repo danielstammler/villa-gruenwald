@@ -11,7 +11,7 @@
     for (const [a, b, c, e] of [[x0 - t - 0.03, x0 + 0.02, y0 - t - 0.03, y1 + t + 0.03], [x0, 0, y0 - t - 0.03, y0 + 0.02], [x0, 0, y1 - 0.02, y1 + t + 0.03]]) boxPlan(M.coping, a, b, c, e, 0.04, 0.09);
     boxPlan(M.stone, x0, 0, y0, y1, zb - 0.3, zb - 0.02);
     // Geländer an den drei Seiten, auf der Abdeckung
-    const zr = 0.09, hr = 1.0;
+    const zr = 0.09, hr = LH.gelaender;
     railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(x0 - t / 2, 0, 0)), y0 - t / 2, y1 + t / 2, zr, zr + hr, 0);
     for (const y of [y0 - t / 2, y1 + t / 2]) railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -y), x0 - t / 2, -0.02, zr, zr + hr, 0);
   }

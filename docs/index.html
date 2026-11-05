@@ -695,9 +695,10 @@ const SUN = (() => {
 // Lichthof und Rückgabe, 50 Garten (Hecken, Spielplatz).
 const HOUSE = (() => {
   const W = 16.0, D = 11.65, wall = 0.36;
-  // deckeSpitz: Unterseite der flachen Decke im DG (lichte Höhe 2,60 m), darüber der Spitzboden
+  // deckeSpitz: Unterseite der flachen Decke im DG (lichte Höhe 2,60 m), darüber der Spitzboden; deckeUG: Unterseite der Decke über dem UG
+  // (wie im 3D und in Plans.CORE.HOLES, für die Prüfungen in tools/regeln.js)
   const Z = {
-    ffbUG: -3.4, gelaende: 0, sockel: 0.2, ffbEG: 0.2, gurtU: 3.2, gurtO: 3.45, ffbOG: 3.55,
+    ffbUG: -3.4, deckeUG: -0.15, gelaende: 0, sockel: 0.2, ffbEG: 0.2, gurtU: 3.2, gurtO: 3.45, ffbOG: 3.55,
     sturzOG: 6.05, deckeDG: 6.3, ffbDG: 6.65, gesimsU: 6.55, gesimsO: 6.83, wand: 7.25, deckeSpitz: 9.25, knick: 10.35, first: 11.12,
   };
   // Klassisches Mansarddach wie im Rendering: unten steil (~70°), oben flach (~9°)
@@ -717,6 +718,8 @@ const HOUSE = (() => {
   // Alle Fenster und Fenstertüren mit senkrechter Mittelsprosse, also zwei Glasfelder (Daniel, 4.11.2026); die Haustür bleibt einflügelig.
   // Türen bis 1,10 m Breite einflügelig mit aufgesetzter Sprosse (zwei Flügel à ~0,37 m wären unbrauchbar), sonst zwei Flügel
   const fluegel = (u0, u1, kind) => kind === 'tuer' && u1 - u0 <= 1.1 ? { leaves: 1, sprosse: true } : { leaves: 2 };
+  // Blendrahmen je Seite wie im 3D (windowUnit): die lichte Breite einer Fenstertür ist die Öffnung ohne zwei Rahmen (tools/regeln.js)
+  const rahmen = 0.07;
   const op = (u0, u1, z0, z1, kind, extra = {}) => ({ u0, u1, z0, z1, kind, ...fluegel(u0, u1, kind), ...extra });
   const gaube = (u0, u1, win, extra = {}) => ({ u0, u1, top: 9.4, clad: 'putz', front: 0.2, win, ...extra });
   const gWin = (c, w = 0.9, z1 = 9.05) => ({ u0: c - w / 2, u1: c + w / 2, z0: 7.9, z1, leaves: 2 });
@@ -870,8 +873,9 @@ const HOUSE = (() => {
   // davor eine überdachte Veranda auf zwei Pfeilern. Darunter führt die Rampe in die Tiefgarage.
   // Boden eine Stufe über der Poolterrasse (+0,15, vor der Schiebewand eine Stufe aus Naturstein): über der Durchfahrt (Unterkante −0,15)
   // bleiben 30 cm für Decke und Belag. Gesims und Traufe bleiben auf ihrer Höhe, innen wird es 10 cm niedriger.
+  // ueberstand: Dachüberstand rundum wie im 3D (buildPoolhaus), für die Wandhöhe nach Ortsgestaltungssatzung § 6 in tools/regeln.js
   const poolhaus = { x0: 19.384, x1: 22.885, y0: -33.651, y1: -27.652, z: 0.15, wand: 0.25, gesims: 2.75, traufe: 2.95, neigung: 27,
-    veranda: 1.8, pfeiler: 0.3, front: [0.3, 5.7], fenster: [20.75, 22.45], stufe: 0.32 };
+    veranda: 1.8, pfeiler: 0.3, front: [0.3, 5.7], fenster: [20.75, 22.45], stufe: 0.32, ueberstand: 0.25 };
   // Zaun über die ganze Straßenseite (an Stämmen auf der Grenze eng vorbei): weißer Sockel mit schwarzen Stäben zwischen Pfeilern;
   // Einfahrtstor zweiflügelig, daneben die Gartentür. Alles höchstens 1,60 m über dem Pflaster (Ortsgestaltungssatzung Grünwald § 9 Abs. 4):
   // Pfeiler mit Abdeckung 1,60 m, Stäbe mit Spitzen 1,55 m, Torbogen bis 1,60 m, Leuchten vorn an den Torpfeilern statt obenauf.
@@ -880,8 +884,9 @@ const HOUSE = (() => {
 
   // Lichthof vor dem Gym im UG (Westseite, u wie in der Westansicht von Norden gemessen): bis zum UG-Boden, Fenster bis zum Boden.
   // Ortsgestaltungssatzung Grünwald § 8: Lichtschächte höchstens 1,50 m tief und höchstens ein Drittel der Ansichtsbreite (11,65 / 3 = 3,88 m)
-  const lichthof = { side: 'W', u0: 6.6, u1: 10.45, tief: 1.5, win: [[6.9, 8.4], [8.65, 10.15]] };
-  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe,
+  // sturz: Oberkante der Fenster (vom UG-Boden an), gelaender: Höhe des Geländers über der Abdeckung, beides wie im 3D (für tools/regeln.js)
+  const lichthof = { side: 'W', u0: 6.6, u1: 10.45, tief: 1.5, win: [[6.9, 8.4], [8.65, 10.15]], sturz: -0.62, gelaender: 1.0 };
+  return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, rahmen, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe,
     tg, pool, poolDeck, poolWeg, poolhaus, zaun, lichthof };
 })();
 // Teil des Hausmodells (src/haus/, siehe 00-grund.js): Garten mit Hecken und Spielplatz (HOUSE.garten)
@@ -1262,7 +1267,7 @@ const Elev = (() => {
   const TITLES = {
     S: ['Ansicht Süd · Garten', 'Grundriss und Fensterachsen aus dem Konzeptplan, Gliederung aus dem Rendering'],
     N: ['Ansicht Nord · Eingang', 'Im Konzept noch nicht gezeichnet: Fenster und Eingang als Annahme im gleichen Stil'],
-    E: ['Ansicht Ost · Freisitz', 'Freisitz 3,00 × 5,00 m aus dem Konzeptplan, Öffnungen angenommen'],
+    E: ['Ansicht Ost · Freisitz', `Freisitz ${num(HOUSE.freisitz.x1 - HOUSE.freisitz.x0)} × ${num(HOUSE.freisitz.y1 - HOUSE.freisitz.y0)} m aus dem Konzeptplan, Öffnungen angenommen`],
     W: ['Ansicht West', 'Öffnungen angenommen'],
     A: ['Schnitt A–A · Hausmitte, Blick nach Westen', 'Geschosshöhen, Untergeschoss und Dachaufbau sind Annahmen'],
     B: ['Schnitt B–B · Rampe zur Tiefgarage', 'Längsschnitt in der Rampenachse, Blick nach Westen; Neigungen und Höhen der Tiefgarage sind ein Vorschlag'],
@@ -1852,10 +1857,10 @@ const Plans = (() => {
     let s = '';
     if (up) {
       const g = (up.x0 - up.x1) / (up.n - 1), h = (up.zb - up.za) / up.n;
-      s += R(up.x1, up.x0, ly0, ly1, 'g-stair', `${TREPPE[fl]} · gerade, 1,30 m breit · ${up.n} Steigungen à ${num(h * 100)} cm, Auftritt ${num(g * 100, 0)} cm`);
+      s += R(up.x1, up.x0, ly0, ly1, 'g-stair', `${TREPPE[fl]} · gerade, ${num(ly1 - ly0, 2)} m breit · ${up.n} Steigungen à ${num(h * 100)} cm, Auftritt ${num(g * 100, 0)} cm`);
       for (let i = 1; i < up.n - 1; i++) s += L(up.x1 + i * g, ly0, up.x1 + i * g, ly1, 'g-tread');
       if (fl === 'EG') s += `<path d="M${f(up.x0)} ${f(-ly0)} V${f(-(ly1 + 0.2))} A0.2 0.2 0 0 0 ${f(up.x0 - 0.2)} ${f(-(ly1 + 0.4))} H${f(up.x0 - g)} V${f(-ly1)} H${f(up.x0)} Z" class="g-stair" data-tip="Antrittsstufe · zur Halle hin 40 cm breiter, gerundet"/>`;
-      // geschlossene Brüstung an der Nordseite (zur Halle bzw. zum Luftraum)
+      // Geländer an der Nordseite (zur Halle bzw. zum Luftraum), offen mit schwarzen Stäben wie im 3D
       s += L(up.x1, ly1 + 0.04, up.x0, ly1 + 0.04, 'g-railing');
       s += `<polyline points="${pts([[up.x0 - 0.15, ym], [up.x1 + 0.5, ym]])}" class="g-walk"/>` +
         `<polygon points="${pts([[up.x1 + 0.55, ym + 0.14], [up.x1 + 0.55, ym - 0.14], [up.x1 + 0.27, ym]])}" class="g-walkhead"/>`;
@@ -1874,7 +1879,7 @@ const Plans = (() => {
   // Luftraum über der Halle (im OG): schraffiert; Geländer am Antritt der Dachtreppe
   function voidArea() {
     const [a] = VOID;
-    let s = R(a[0], a[1], a[2], a[3], 'g-void', 'Luftraum über der Halle · zweigeschossig, 6,10 m hoch, mit dem Fenster über der Haustür');
+    let s = R(a[0], a[1], a[2], a[3], 'g-void', `Luftraum über der Halle · zweigeschossig, ${num(HOUSE.Z.deckeDG - HOUSE.Z.ffbEG, 2)} m hoch, mit dem Fenster über der Haustür`);
     s += L(a[0], a[3], a[1], a[2], 'g-thin') + L(a[0], a[2], a[1], a[3], 'g-thin');
     return s + L(FLIGHTS.OG.x0, a[2] - 0.04, a[1], a[2] - 0.04, 'g-railing') + T((a[0] + a[1]) / 2, -1.25, 'Luftraum', 'g-ftxt');
   }
@@ -1893,7 +1898,7 @@ const Plans = (() => {
     let s = `<polygon points="${pts(tg)}" class="g-tgfloor" data-tip="Tiefgarage · ${num(area2(tg))} m² · drei Stellplätze, mittig unter der Terrasse der Eingangsbereich zum Haus, östlich daneben die Fahrräder"/>`;
     // Vorplatz ab der Grenze bis zur Rinne, dann die Rampe: offen in der Zufahrt, unter dem Poolhaus bis in den Anschluss der Tiefgarage (GaStellV § 3)
     s += `<polygon points="${pts(rp.vorplatz)}" class="g-ramp" data-tip="Vorplatz · ${num(rp.vor.l, 2)} m ab der Grenze (Westkante, an der Ostkante ${num(rp.y0 - gr(rp.x1), 2)} m) mit ${pct(rp.vor.s)} % bis zur Rinne"/>`;
-    s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · offen in der Zufahrt, dann unter dem Poolhaus · 2,80 m breit · ${num(rp.lm, 2)} m mit ${pct(rp.s)} %, unten ${num(rp.unten.l, 2)} m mit ${pct(rp.unten.s)} %, dann ${num(rp.eben, 2)} m eben bis zum Tor`);
+    s += R(rp.x0, rp.x1, rp.y0, rp.y1, 'g-ramp', `Rampe · offen in der Zufahrt, dann unter dem Poolhaus · ${num(rp.x1 - rp.x0, 2)} m breit · ${num(rp.lm, 2)} m mit ${pct(rp.s)} %, unten ${num(rp.unten.l, 2)} m mit ${pct(rp.unten.s)} %, dann ${num(rp.eben, 2)} m eben bis zum Tor`);
     for (let y = rp.y0 + 1; y < rp.y1 - 0.2; y += 1) s += L(rp.x0, y, rp.x1, y, 'g-furn-l');
     s += R(wx0, rp.x0, rp.y0, rp.yTor, 'g-wall') + R(rp.x1, wx1, rp.y0, rp.yTor, 'g-wall');
     for (const [a, b] of [[wx0, rp.x0], [rp.x1, wx1]]) s += R(a, b, Math.max(gr(a), gr(b)) + 0.02, rp.y0, 'g-furn', 'Randstein am Vorplatz, bündig mit Pflaster und Rasen');
@@ -1933,7 +1938,10 @@ const Plans = (() => {
     const Rd = G.raeder;
     s += `<g data-tip="Fahrräder · ${Rd.x.length} Stück, halb hochgestellt (Vorderrad im Wandhalter) · ${num(Rd.tief, 2)} m tief, davor der Weg zum Eingang">` +
       Rd.x.map(x => { const w = Rd.wand(x); return L(x, w - 0.06, x, w - Rd.tief, 'g-furn-l') + L(x - 0.25, w - 1.04, x + 0.25, w - 1.04, 'g-furn-l'); }).join('') + '</g>';
-    s += T(14.6, -13.6, 'Fahrräder', 'g-ftxt') + T(20.2, -18.2, 'Fahrgasse 6,00 m', 'g-ftxt');
+    // Fahrgasse von der Buchtkante bis zur nächsten Wand im Osten, auf Höhe der Buchten (Beschriftung in ihrer Mitte)
+    const yb = [G.y0, G.y0 + G.autos.length * G.bucht];
+    const gasse = Math.min(...G.waende.filter(w => w[0] >= G.x1 - 1e-6 && w[2] < yb[1] && w[3] > yb[0]).map(w => w[0])) - G.x1;
+    s += T(14.6, -13.6, 'Fahrräder', 'g-ftxt') + T(Math.round((G.x1 + gasse / 2) * 10) / 10, -18.2, `Fahrgasse ${num(gasse, 2)} m`, 'g-ftxt');
     s += T(20.2, -14.85, 'Tiefgarage', 'g-roomtxt') + T(20.2, -15.5, `${num(area2(tg))} m² · lichte Höhe ${num(G.lichte, 2)} m`, 'g-areatxt');
     return s;
   }
@@ -1943,16 +1951,16 @@ const Plans = (() => {
     const sq = (x, y, w, tip) => R(x - w / 2, x + w / 2, y - w / 2, y + w / 2, 'g-col', tip);
     const pk = HOUSE.fas.N.portikus, bd = HOUSE.balkonDG;
     const rails = B => L(B.x0 + 0.06, B.y0 + 0.06, B.x1 - 0.06, B.y0 + 0.06, 'g-railing') + L(B.x0 + 0.06, B.y0 + 0.06, B.x0 + 0.06, B.y1, 'g-railing') + L(B.x1 - 0.06, B.y0 + 0.06, B.x1 - 0.06, B.y1, 'g-railing');
-    if (fl === 'EG') return `<polygon points="${pts(t.poly)}" class="g-outside" data-tip="Terrasse · durchgehend 19,00 × 4,00 m bis an den Freisitz · Naturstein · Lounge mittig unter dem Balkon"/>` +
+    if (fl === 'EG') return `<polygon points="${pts(t.poly)}" class="g-outside" data-tip="Terrasse · durchgehend ${num(t.x1 - t.x0, 2)} × ${num(t.y1 - t.y0, 2)} m bis an den Freisitz · Naturstein · Lounge mittig unter dem Balkon"/>` +
       R(t.stufe[0], t.stufe[1], t.y0 - 0.35, t.y0, 'g-outside', 'Stufe zum Weg an den Pool') + L(t.stufe[0], t.y0, t.stufe[1], t.y0, 'g-tread') +
-      b.cols.map(x => sq(x, b.colY, b.colW, 'Pfeiler · 40 × 40 cm')).join('') +
-      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', 'Freisitz · 3,00 × 5,00 m · überdacht, Esstisch') + sq(fz.x1 - 0.175, fz.y0 + 0.175, 0.35) + sq(fz.x1 - 0.175, fz.y1 - 0.175, 0.35) +
+      b.cols.map(x => sq(x, b.colY, b.colW, `Pfeiler · ${num(b.colW * 100, 0)} × ${num(b.colW * 100, 0)} cm`)).join('') +
+      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', `Freisitz · ${num(fz.x1 - fz.x0, 2)} × ${num(fz.y1 - fz.y0, 2)} m · überdacht, Esstisch`) + sq(fz.x1 - 0.175, fz.y0 + 0.175, 0.35) + sq(fz.x1 - 0.175, fz.y1 - 0.175, 0.35) +
       R(p.x0, p.x1, p.y0, p.y1, 'g-outside', 'Podest am Eingang') + R(W - pk.u1, W - pk.u0, 0, pk.depth, 'g-above', 'Portikus über dem Eingang') +
       pk.pillars.map(u => sq(W - u, pk.py, pk.pw, 'Pfeiler des Portikus')).join('') + T(8, -15.25, 'Terrasse', 'g-ftxt') + T(17.5, -6.25, 'Freisitz', 'g-ftxt') + T(8, 0.4, 'Eingang', 'g-ftxt');
-    if (fl === 'OG') return R(b.x0, b.x1, b.y0, b.y1, 'g-outside', 'Balkon · 7,00 × 3,00 m') + rails(b) + T(8, -14.3, 'Balkon', 'g-ftxt') +
-      bd.cols.map(x => sq(x, bd.colY, bd.colW, 'Pfeiler · 34 × 34 cm · trägt den Balkon im DG')).join('') +
-      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', 'Dachterrasse auf dem Freisitz · 3,00 × 5,00 m') + T(17.5, -8.4, 'Dachterrasse', 'g-ftxt');
-    if (fl === 'DG') return R(bd.x0, bd.x1, bd.y0, bd.y1, 'g-outside', 'Balkon vor dem Büro · 7,00 × 1,00 m · tritt nach vorne, auf zwei Pfeilern') + rails(bd) +
+    if (fl === 'OG') return R(b.x0, b.x1, b.y0, b.y1, 'g-outside', `Balkon · ${num(b.x1 - b.x0, 2)} × ${num(b.y1 - b.y0, 2)} m`) + rails(b) + T(8, -14.3, 'Balkon', 'g-ftxt') +
+      bd.cols.map(x => sq(x, bd.colY, bd.colW, `Pfeiler · ${num(bd.colW * 100, 0)} × ${num(bd.colW * 100, 0)} cm · trägt den Balkon im DG`)).join('') +
+      R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', `Dachterrasse auf dem Freisitz · ${num(fz.x1 - fz.x0, 2)} × ${num(fz.y1 - fz.y0, 2)} m`) + T(17.5, -8.4, 'Dachterrasse', 'g-ftxt');
+    if (fl === 'DG') return R(bd.x0, bd.x1, bd.y0, bd.y1, 'g-outside', `Balkon vor dem Büro · ${num(bd.x1 - bd.x0, 2)} × ${num(bd.y1 - bd.y0, 2)} m · tritt nach vorne, auf zwei Pfeilern`) + rails(bd) +
       bd.cols.map(x => sq(x, bd.colY, bd.colW)).join('') + T(9.6, -12.25, 'Balkon', 'g-ftxt');
     return '';
   }
@@ -1989,8 +1997,8 @@ const Plans = (() => {
     // Außenmaße und Nordpfeil
     // Im UG liegt südlich des Hauses die Tiefgarage, dort steht die Breite an der Nordseite
     const dy = fl === 'UG' ? 0.9 : -D - 0.9;
-    s += `<g class="g-dims">${L(0, dy, W, dy, 'g-dim')}${L(-0.9, -D, -0.9, 0, 'g-dim')}${T(W / 2, dy + 0.15, '16,00', 'g-dimtxt')}` +
-      `<text x="-0.75" y="${f(D / 2)}" class="g-dimtxt" transform="rotate(-90 -0.75 ${f(D / 2)})">11,65</text></g>`;
+    s += `<g class="g-dims">${L(0, dy, W, dy, 'g-dim')}${L(-0.9, -D, -0.9, 0, 'g-dim')}${T(W / 2, dy + 0.15, num(W, 2), 'g-dimtxt')}` +
+      `<text x="-0.75" y="${f(D / 2)}" class="g-dimtxt" transform="rotate(-90 -0.75 ${f(D / 2)})">${num(D, 2)}</text></g>`;
     const na = (rot => { const a = rot * Math.PI / 180, c = [-1.6, 1.9], Rt = p => [c[0] + p[0] * Math.cos(a) - p[1] * Math.sin(a), c[1] + p[0] * Math.sin(a) + p[1] * Math.cos(a)]; return `<polygon points="${pts([[0, 0.9], [0.32, -0.55], [-0.32, -0.55]].map(Rt))}" class="g-north"/>` + T(...Rt([0, 1.35]), 'N', 'g-ntxt'); })(SITE.north.grid);
     s += na;
     const vb = fl === 'UG' ? [-2.6, -2.2, 28.6, 53.8] : [-2.6, -1.6, 22.2, 17.2];
@@ -2007,13 +2015,20 @@ const Plans = (() => {
     try { FL[fl].furn(); } finally { Object.assign(fu, saved); }
     return out;
   }
+  // Für die Prüfungen (tools/lib/grundriss.js): dieselben Aufrufe, je Möbel das SVG, das der echte Helfer zeichnet (Formen ohne Nachbau)
+  function formen(fl) {
+    const out = [], saved = { ...fu };
+    for (const k of Object.keys(fu)) fu[k] = (...a) => { const svg = saved[k](...a); out.push({ t: k, a, svg }); return svg; };
+    try { FL[fl].furn(); } finally { Object.assign(fu, saved); }
+    return out;
+  }
   function wohnflaeche() {
     const part = ['EG', 'OG', 'DG'].map(fl => table(fl).wf);
     const B = HOUSE.balkon, BD = HOUSE.balkonDG;
     const aussen = 0.25 * (area([B.x0, B.x1, B.y0, B.y1]) + 15.0 + area([BD.x0, BD.x1, BD.y0, BD.y1]));
     return { eg: part[0], og: part[1], dg: part[2], aussen, sum: part[0] + part[1] + part[2] + aussen };
   }
-  return { render, table, wohnflaeche, items, FL, num, CORE: { LINE, FLIGHTS, HOLES, LIFT, VOID } };
+  return { render, table, wohnflaeche, items, formen, FL, num, CORE: { LINE, FLIGHTS, HOLES, LIFT, VOID } };
 })();
 </script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
@@ -3228,16 +3243,50 @@ const View3D = (() => {
     t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
     return t;
   }
-  let seed = 7;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  // Zufall je Bereich: zufall(name) gibt eine eigene Folge (Park-Miller wie früher die eine gemeinsame Folge rnd für alles). So ändert ein
+  // Aufruf mehr oder weniger nur seinen Bereich, nicht Bäume, Hecken und Texturen anderswo – Bildvergleiche vorher/nachher bleiben sauber.
+  // Ein Bereich holt sich seine Folge als lokales rnd: const rnd = zufall('beet ostseite'). Was mehrfach gebaut wird, braucht je Stück einen
+  // festen Namen (Hecken nach dem ersten Punkt, Bäume nach ihrer Lage, Beete mit Namen). Gewürfelt wird nur beim Aufbau, nie zur Laufzeit.
+  // Startwerte: wo die gemeinsame Folge beim Bau des Bereichs stand (aufgezeichnet 5.11.2026), so liegt jedes Blatt und Texturpixel wie
+  // vorher. Namen ohne Eintrag starten mit einem Wert aus dem Namen (FNV-Hash); wer einen Bereich umbenennt, würfelt ihn also neu.
+  const ZUFALL = {
+    // Texturen (01-material.js, Hackschnitzel am Spielplatz, Wolken)
+    'textur eiche': 11, 'textur putz': 7, 'textur schindeln': 1844176919, 'textur rasen': 210261137, 'textur asphalt': 1544144833,
+    'textur laub': 499646036, 'textur hecke': 773421836, 'textur buchs': 1744996906, 'textur nadeln': 251854730, 'textur ziegel': 2070213871,
+    'textur hortensie': 750278318, 'textur lavendel': 2114149590, 'textur rinde': 650010740, 'textur nachbarputz': 22372460,
+    'textur dachziegel': 1020375153, 'textur kies': 349304424, 'textur wellen': 766840877, 'textur fliesen': 23, 'textur gym': 1193164060,
+    'textur halle': 1073546536, 'textur stein': 2021149765, 'textur terrasse': 1760016611, 'textur epoxid': 1270327993, 'textur bücher': 1151445676,
+    'textur wolken': 1981880190, 'textur hackschnitzel': 2076743740,
+    // Hecken (30-laub.js) je Lauf nach seinem ersten Punkt, Maße und Laub: West, Ost, Tröge, Nord, Straße, Rampe
+    'hecke -3.15,0.347': 1387804526, 'hecke -3.15,0.347 laub': 907641806, 'hecke 25.059,-44': 432552365, 'hecke 25.059,-44 laub': 1668117009,
+    'hecke 25.058,-49.95': 707050149, 'hecke 25.058,-49.95 laub': 60701654, 'hecke 25.061,5.893': 683318653, 'hecke 25.061,5.893 laub': 649678669,
+    'hecke -4.36,-49.318': 806166379, 'hecke -4.36,-49.318 laub': 303234424, 'hecke 18.98,-49.75': 1812865010, 'hecke 18.98,-49.75 laub': 251982052,
+    // Bäume auf dem Grundstück nach ihrer Lage (SITE.trees, 60-gelaende.js) und die der Nachbarn (50-garten.js)
+    'baum 26.92,7.03': 334129586, 'baum 1.4,-40.02': 1040921948, 'baum -1.02,-49.32': 221320182, 'baum 3.52,5.02': 47366169,
+    'baum 6.71,-47.1': 1589301152, 'baum 12.53,-43.39': 1186639509, 'baum 26.1,-47.94': 1225299827, 'baum 12.93,-49.63': 1009443156,
+    'baum 2.38,9.95': 811262096, 'nachbarbäume': 523963437,
+    // Beete (60-gelaende.js): Lage der Pflanzen und je Art das Laub; Buchskugeln je Gruppe
+    'beet terrasse west': 733290027, 'beet terrasse west gruen': 248955399, 'beet terrasse west hortensie': 1344418327, 'beet terrasse west lavendel': 1033480716,
+    'beet terrasse ost': 1119045194, 'beet terrasse ost gruen': 1836919893, 'beet terrasse ost hortensie': 574316023, 'beet terrasse ost lavendel': 1137919858,
+    'beet westseite': 959920916, 'beet westseite gruen': 262785037, 'beet westseite hortensie': 1187742386, 'beet westseite lavendel': 1454766709,
+    'beet ostseite': 1681467938, 'beet ostseite hortensie': 231872598, 'beet ostseite lavendel': 1168981832,
+    'beet eingang west': 1359613064, 'beet eingang west gruen': 500824819, 'beet eingang west hortensie': 1871656212,
+    'beet eingang ost': 2065656842, 'beet eingang ost gruen': 721963258, 'beet eingang ost hortensie': 1203539600,
+    'buchs fassade': 535372181, 'buchs allee': 1511474051, 'buchs kübel': 1019113812,
+  };
+  const zufall = name => {
+    let s = ZUFALL[name];
+    if (!s) { s = 2166136261; for (const ch of name) s = Math.imul(s ^ ch.charCodeAt(0), 16777619); s = (s >>> 0) % 2147483646 + 1; }
+    return () => (s = (s * 16807) % 2147483647) / 2147483647;
+  };
 
   // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): alle Materialien M mit ihren Texturen
   function makeMaterials() {
     const std = (color, r = 0.9, m = 0, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: r, metalness: m, ...extra });
+    // Jede Textur würfelt mit eigener Folge (zufall in 00-kern.js): eine Änderung an einer Textur lässt die anderen, wie sie sind
     // Eichendielen 20 cm breit, 1,2 bis 2,4 m lang, versetzt gestoßen; Kachel 2,4 × 2,4 m, Holzbild leicht wechselnd
-    let so = 11; const ro = () => (so = (so * 16807) % 2147483647) / 2147483647;
     const tOak = canvasTex(512, 512, (g, w, h) => {
-      const n = 12, ph = h / n;
+      const ro = zufall('textur eiche'), n = 12, ph = h / n;
       for (let i = 0; i < n; i++) {
         // Reihe genau eine Kachelbreite lang, jede Diele zusätzlich um eine Breite versetzt gezeichnet: nahtlos wiederholbar
         const xs = -ro() * w * 0.5; let x = xs;
@@ -3260,11 +3309,13 @@ const View3D = (() => {
     });
     // Weißer Glattputz wie im Referenzbild; feines Korn, damit die Fläche nicht künstlich glatt wirkt (Kachel 2 × 2 m)
     const rust = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur putz');
       g.fillStyle = '#f1efea'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 7000; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.028)' : 'rgba(255,255,255,0.05)'; g.fillRect(rnd() * w, rnd() * h, 1.2, 1.2); }
     }, [0.5, 0.5]);
     // Dachdeckung: anthrazitfarbene Rechteckschindeln
     const shingles = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur schindeln');
       g.fillStyle = '#141618'; g.fillRect(0, 0, w, h);
       const rows = 5, rh = h / rows, cw = w / 2.5;
       for (let r = 0; r < rows; r++) {
@@ -3280,6 +3331,7 @@ const View3D = (() => {
     const wrapped = (w, h, x, y, r, fn) => { for (const dx of [-w, 0, w]) for (const dy of [-h, 0, h]) if (x + dx + r > 0 && x + dx - r < w && y + dy + r > 0 && y + dy - r < h) fn(x + dx, y + dy); };
     // Rasen: gemischtes, leicht gelbliches Grün mit feinen Halmen; Kachel 8 m, damit sich das Muster kaum wiederholt
     const grass = canvasTex(1024, 1024, (g, w, h) => {
+      const rnd = zufall('textur rasen');
       g.fillStyle = '#5a7a3b'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 160; i++) {
         const x = rnd() * w, y = rnd() * h, r = 50 + rnd() * 170, col = rnd() < 0.5 ? '128,140,72' : '48,76,34';
@@ -3295,6 +3347,7 @@ const View3D = (() => {
       }
     }, [0.125, 0.125]);
     const asphalt = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur asphalt');
       g.fillStyle = '#5c5f63'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 9000; i++) { const v = 70 + Math.floor(rnd() * 45); g.fillStyle = `rgba(${v},${v},${v + 3},0.5)`; g.fillRect(rnd() * w, rnd() * h, 1.5, 1.5); }
     }, [0.25, 0.25]);
@@ -3305,18 +3358,20 @@ const View3D = (() => {
       g.fillStyle = fill; g.fill(); g.restore();
     };
     const shade = (c, k) => `rgb(${Math.min(255, c[0] * k) | 0},${Math.min(255, c[1] * k) | 0},${Math.min(255, c[2] * k) | 0})`;
-    const leafTex = (n, len, pal, { spread = 0.9, wid = 0.42 } = {}) => canvasTex(256, 256, (g, w, h) => {
+    const leafTex = (name, n, len, pal, { spread = 0.9, wid = 0.42 } = {}) => canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur ' + name);
       g.fillStyle = `rgba(${pal[0].join(',')},0.04)`; g.fillRect(0, 0, w, h);
       for (let i = 0; i < n; i++) {
         const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * spread * w / 2, l = len * w * (0.75 + rnd() * 0.5);
         leafShape(g, w / 2 + Math.cos(a) * d, h / 2 + Math.sin(a) * d, l, l * wid, a + (rnd() - 0.5) * 1.4, shade(pal[i % pal.length], 0.78 + rnd() * 0.4));
       }
     });
-    const tLeaf = leafTex(240, 0.09, [[70, 98, 42], [56, 84, 34], [86, 112, 50], [48, 72, 30], [96, 118, 56]], { spread: 0.94 });
-    const tHedge = leafTex(330, 0.06, [[60, 86, 38], [48, 72, 32], [72, 96, 44], [42, 64, 30]], { spread: 0.96 });
-    const tBox = leafTex(520, 0.04, [[50, 74, 34], [40, 62, 28], [60, 86, 40]], { spread: 0.96, wid: 0.55 });
+    const tLeaf = leafTex('laub', 240, 0.09, [[70, 98, 42], [56, 84, 34], [86, 112, 50], [48, 72, 30], [96, 118, 56]], { spread: 0.94 });
+    const tHedge = leafTex('hecke', 330, 0.06, [[60, 86, 38], [48, 72, 32], [72, 96, 44], [42, 64, 30]], { spread: 0.96 });
+    const tBox = leafTex('buchs', 520, 0.04, [[50, 74, 34], [40, 62, 28], [60, 86, 40]], { spread: 0.96, wid: 0.55 });
     // Nadelzweige: dunkle, bläulich grüne Nadeln an feinen Zweigen (Fichte, Tanne, Eibe wie auf den Luftbildern)
     const tNeedle = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur nadeln');
       g.fillStyle = 'rgba(36,56,40,0.04)'; g.fillRect(0, 0, w, h); g.lineCap = 'round';
       for (let i = 0; i < 46; i++) {
         const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * w * 0.36, x = w / 2 + Math.cos(a) * d, y = h / 2 + Math.sin(a) * d, ang = a + (rnd() - 0.5), len = 30 + rnd() * 40;
@@ -3331,6 +3386,7 @@ const View3D = (() => {
     });
     // Ziegelmauer (Kachel 1,0 × 0,5 m)
     const tBrick = canvasTex(256, 128, (g, w, h) => {
+      const rnd = zufall('textur ziegel');
       g.fillStyle = '#b9a89a'; g.fillRect(0, 0, w, h);
       const bh = h / 8, bw = w / 4;
       for (let r = 0; r < 8; r++) for (let c = -1; c <= 4; c++) {
@@ -3340,6 +3396,7 @@ const View3D = (() => {
     }, [1, 2]);
     // Hortensie: Blattwerk mit cremeweißen Blütenbällen aus vielen kleinen Einzelblüten
     const tHydr = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur hortensie');
       g.fillStyle = 'rgba(70,96,44,0.04)'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 70; i++) { const a = rnd() * 6.283, d = Math.sqrt(rnd()) * 0.46 * w, l = 26 + rnd() * 14; leafShape(g, w / 2 + Math.cos(a) * d, h / 2 + Math.sin(a) * d, l, l * 0.5, a, shade([70, 96, 44], 0.75 + rnd() * 0.4)); }
       for (let b = 0; b < 4; b++) {
@@ -3353,6 +3410,7 @@ const View3D = (() => {
     });
     // Lavendel: graugrüne Stiele mit violetten Ähren
     const tLav = canvasTex(128, 256, (g, w, h) => {
+      const rnd = zufall('textur lavendel');
       g.fillStyle = 'rgba(110,100,150,0.04)'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 30; i++) {
         const x0 = w * (0.3 + rnd() * 0.4), x1 = w * (0.05 + rnd() * 0.9), top = h * (0.12 + rnd() * 0.3);
@@ -3365,11 +3423,13 @@ const View3D = (() => {
       for (let i = 0; i < 40; i++) { const x = w * (0.15 + rnd() * 0.7); g.strokeStyle = 'rgb(120,134,108)'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(x, h); g.lineTo(x + (rnd() - 0.5) * 22, h * (0.7 + rnd() * 0.3)); g.stroke(); }
     });
     const tBark = canvasTex(128, 256, (g, w, h) => {
+      const rnd = zufall('textur rinde');
       g.fillStyle = '#6a5e50'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 260; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(40,34,28,0.35)' : 'rgba(150,140,124,0.25)'; g.fillRect(rnd() * w, rnd() * h, 1 + rnd() * 2.5, 10 + rnd() * 50); }
     }, [2, 3]);
     // Putz der Nachbarhäuser: Kachel 4 m breit und 12 m hoch, unten Sockel und leichte Verschmutzung
     const tPlaster = canvasTex(256, 512, (g, w, h) => {
+      const rnd = zufall('textur nachbarputz');
       g.fillStyle = '#ecebe6'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 9000; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.035)' : 'rgba(255,255,255,0.05)'; g.fillRect(rnd() * w, rnd() * h, 1.5, 1.5); }
       const m = h / 12, gr = g.createLinearGradient(0, h - 1.1 * m, 0, h - 0.35 * m);
@@ -3380,6 +3440,7 @@ const View3D = (() => {
     tPlaster.wrapT = THREE.ClampToEdgeWrapping;
     // Dachziegel der Nachbarn, Kachel 1,20 × 1,20 m; die Farbe kommt aus dem Material
     const tTiles = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur dachziegel');
       g.fillStyle = '#7d7d7d'; g.fillRect(0, 0, w, h);
       const rows = 3, cols = 4, rh = h / rows, cw = w / cols;
       for (let r = 0; r < rows; r++) for (let c = -1; c <= cols; c++) {
@@ -3390,13 +3451,14 @@ const View3D = (() => {
       for (let i = 0; i < 4000; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
     });
     const tGravel = canvasTex(128, 128, (g, w, h) => {
+      const rnd = zufall('textur kies');
       g.fillStyle = '#8e8d88'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 3500; i++) { const v = 90 + rnd() * 90 | 0; g.fillStyle = `rgba(${v},${v},${v - 6},0.6)`; g.fillRect(rnd() * w, rnd() * h, 1.5, 1.5); }
     }, [0.5, 0.5]);
     // Wasser: feine, kachelbare Wellen als Normalenkarte
     const tWaves = (() => {
       const N = 256, c = document.createElement('canvas'); c.width = c.height = N;
-      const g = c.getContext('2d'), img = g.createImageData(N, N), hgt = new Float32Array(N * N);
+      const g = c.getContext('2d'), img = g.createImageData(N, N), hgt = new Float32Array(N * N), rnd = zufall('textur wellen');
       const waves = Array.from({ length: 7 }, () => ({ k: 2 + Math.floor(rnd() * 6), a: rnd() * 6.283, p: rnd() * 6.283, s: 0.4 + rnd() * 0.6 }));
       for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
         let v = 0;
@@ -3435,9 +3497,8 @@ const View3D = (() => {
     // Durchsichtiges Glas mit leichter Spiegelung; dahinter sieht man die Räume
     const glass = () => new THREE.MeshStandardMaterial({ color: 0x31424c, roughness: 0.04, metalness: 0.2, transparent: true, opacity: 0.38, depthWrite: false, envMapIntensity: 2.4, side: THREE.DoubleSide });
     // Fliesen in Bädern und Küche: 60 × 60 cm, hell, mit feiner Fuge (Kachel 2,40 m = 4 × 4 Fliesen)
-    let sq = 23; const rq = () => (sq = (sq * 16807) % 2147483647) / 2147483647;
     const tTile = canvasTex(512, 512, (g, w) => {
-      const n = 4, c = w / n;
+      const rq = zufall('textur fliesen'), n = 4, c = w / n;
       for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
         g.fillStyle = `hsl(36, ${6 + rq() * 3}%, ${82 + rq() * 4}%)`; g.fillRect(i * c, j * c, c, c);
         for (let k = 0; k < 260; k++) { g.fillStyle = rq() < 0.5 ? 'rgba(90,80,70,0.07)' : 'rgba(255,255,255,0.12)'; g.fillRect(i * c + rq() * c, j * c + rq() * c, 1.5, 1.5); }
@@ -3447,7 +3508,7 @@ const View3D = (() => {
     });
     // Gym: Sportboden aus Gummifliesen 1 × 1 m, anthrazit mit feiner heller und blauer Einstreuung (Kachel 2,00 m)
     const tGym = canvasTex(512, 512, (g, w) => {
-      const n = 2, c = w / n;
+      const rq = zufall('textur gym'), n = 2, c = w / n;
       for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
         g.fillStyle = `hsl(210, 4%, ${21 + rq() * 2}%)`; g.fillRect(i * c, j * c, c, c);
         for (let k = 0; k < 2200; k++) { g.fillStyle = rq() < 0.82 ? 'rgba(150,150,150,0.35)' : 'rgba(70,120,160,0.45)'; g.fillRect(i * c + rq() * c, j * c + rq() * c, 1.6, 1.6); }
@@ -3457,7 +3518,7 @@ const View3D = (() => {
     });
     // Halle: heller Kalkstein 80 × 80 cm mit kleinen dunklen Cabochons an den Ecken (Kachel 3,20 m)
     const tHall = canvasTex(512, 512, (g, w) => {
-      const n = 4, c = w / n;
+      const rq = zufall('textur halle'), n = 4, c = w / n;
       for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
         g.fillStyle = `hsl(${38 + rq() * 4}, ${20 + rq() * 6}%, ${85 + rq() * 4}%)`; g.fillRect(i * c, j * c, c, c);
         g.strokeStyle = 'rgba(150,135,110,0.12)'; g.lineWidth = 0.8;
@@ -3469,8 +3530,8 @@ const View3D = (() => {
       for (let i = 0; i <= n; i++) for (let j = 0; j <= n; j++) { g.save(); g.translate(i * c, j * c); g.rotate(Math.PI / 4); g.fillRect(-9, -9, 18, 18); g.restore(); }
     });
     // Naturstein draußen (Terrasse, Poolterrasse, Balkone): Travertin 90 × 60 cm im Verband, Kachel 3,60 m
-    const slab = (g, w) => {
-      const cw = w / 4, ch = w / 6;
+    const slab = name => (g, w) => {
+      const rq = zufall('textur ' + name), cw = w / 4, ch = w / 6;
       for (let r = 0; r < 6; r++) for (let c = -1; c < 5; c++) {
         const x = c * cw + (r % 2) * cw / 2, y = r * ch;
         g.fillStyle = `hsl(${36 + rq() * 5}, ${22 + rq() * 8}%, ${78 + rq() * 6}%)`; g.fillRect(x, y, cw, ch);
@@ -3480,9 +3541,10 @@ const View3D = (() => {
       for (let r = 0; r <= 6; r++) g.fillRect(0, r * ch - 1, w, 2);
       for (let r = 0; r < 6; r++) for (let c = -1; c < 6; c++) g.fillRect(c * cw + (r % 2) * cw / 2 - 1, r * ch, 2, ch);
     };
-    const tSlab = canvasTex(512, 512, slab), tDeck = canvasTex(512, 512, slab, [1 / 3.6, 1 / 3.6]);
+    const tSlab = canvasTex(512, 512, slab('stein')), tDeck = canvasTex(512, 512, slab('terrasse'), [1 / 3.6, 1 / 3.6]);
     // Tiefgarage: heller, seidenmatter Beschichtungsboden mit feinen Einstreuungen (Kachel 2 m)
     const tEpoxy = canvasTex(256, 256, (g, w, h) => {
+      const rq = zufall('textur epoxid');
       g.fillStyle = '#c3c3bf'; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 2600; i++) { const v = 150 + rq() * 90 | 0; g.fillStyle = `rgba(${v},${v},${v - 4},0.35)`; g.fillRect(rq() * w, rq() * h, 1.2, 1.2); }
     }, [0.5, 0.5]);
@@ -3515,6 +3577,7 @@ const View3D = (() => {
     });
     // Möbel: Stoff, Eiche, Lack, Stein, Keramik, Spiegel, Bücher; abends leuchten Lampenschirme und das Kaminfeuer
     const tBooks = canvasTex(256, 256, (g, w, h) => {
+      const rnd = zufall('textur bücher');
       g.fillStyle = '#f1eee8'; g.fillRect(0, 0, w, h);
       const rows = 5, rh = h / rows, pal = [[120, 54, 44], [44, 70, 96], [190, 172, 140], [70, 90, 64], [160, 120, 70], [60, 60, 66], [210, 200, 180], [130, 96, 80]];
       for (let r = 0; r < rows; r++) {
@@ -3667,7 +3730,7 @@ const View3D = (() => {
     doors.push({ grp, sign, max, c: center, open: 0 });
   }
   function windowUnit(mx, o, face, depth, parent) {
-    const w = o.u1 - o.u0, fw = 0.07, gl = Math.min(0.15, depth * 0.55);
+    const w = o.u1 - o.u0, fw = HOUSE.rahmen, gl = Math.min(0.15, depth * 0.55);
     const at = (u, z, d) => new THREE.Vector3(u, z, d).applyMatrix4(mx);
     if (o.kind === 'eingang') {
       // Haustür in dunklem Lack mit hohem Glasfeld und langem Stoßgriff (einflügelig oder zweiflügelig), verglaste Seitenteile, Oberlicht
@@ -3855,7 +3918,7 @@ const View3D = (() => {
     // Decken mit Öffnungen über den Treppenläufen und am Aufzug; im OG der Luftraum über der Halle zusammen mit der Öffnung der Haupttreppe
     const { HOLES, LIFT, VOID } = Plans.CORE, rp = ([a, b, c, e]) => [[a, c], [b, c], [b, e], [a, e]];
     const V = VOID[0], H = HOLES.OG, hall = [[V[0], V[3]], [V[1], V[3]], [V[1], V[2]], [H[1], V[2]], [H[1], H[2]], [H[0], H[2]], [H[0], H[3]], [V[0], H[3]]];
-    for (const [z0, z1, holes] of [[-0.15, Zh.ffbEG, [rp(HOLES.EG), rp(LIFT)]], [Zh.gurtU, Zh.ffbOG, [hall, rp(LIFT)]], [Zh.deckeDG, Zh.ffbDG, [rp(HOLES.DG), rp(LIFT)]]]) {
+    for (const [z0, z1, holes] of [[Zh.deckeUG, Zh.ffbEG, [rp(HOLES.EG), rp(LIFT)]], [Zh.gurtU, Zh.ffbOG, [hall, rp(LIFT)]], [Zh.deckeDG, Zh.ffbDG, [rp(HOLES.DG), rp(LIFT)]]]) {
       const sl = extrude([[0.3, -11.35], [15.7, -11.35], [15.7, -0.3], [0.3, -0.3]], M.slab, z0, z1 - z0, holes); sl.castShadow = false; g.add(sl);
     }
     buildInterior();
@@ -3930,7 +3993,7 @@ const View3D = (() => {
   // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Innenwände, Böden, Aufzug, Treppe und Möbel aus dem Grundriss; Liegen und Sonnenschirme
   // Innenräume nach dem Grundriss-Vorschlag: Böden, Wände, Treppe und Aufzugsschacht
   function buildInterior() {
-    const lv = { UG: [Zh.ffbUG, -0.15], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
+    const lv = { UG: [Zh.ffbUG, Zh.deckeUG], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
     // Fliesen in Bädern, Küche und Nebenräumen, Kalkstein in Halle und Garderobe, sonst Eichendielen
     const nass = /bad|wc|dusche|küche|backkitchen|speis|abstell|schleuse|lager|technik|waschen|vorraum/i, halle = /halle|garderobe|foyer/i, gym = /gym/i;
     const W = HOUSE.W, D = HOUSE.D, roofIn = HOUSE.roofIn, { LINE, HOLES, LIFT, VOID } = Plans.CORE;
@@ -3951,16 +4014,16 @@ const View3D = (() => {
     const t0 = HOUSE.wall, ug = [[0, W, -D, -D + t0, HOUSE.tg.schleuse.hausTuer], [0, W, -t0, 0], [W - t0, W, -D + t0, -t0]];
     for (const [a, b, c, e, gap] of ug) {
       const segs = gap ? [[a, gap[0]], [gap[1], b]] : [[a, b]];
-      for (const [p, q] of segs) { boxPlan(M.inWall, p, q, c, e, Zh.ffbUG - 0.3, -0.15); wallRects.push({ fl: 'UG', r: [p, q, c, e], top: -0.15 }); }
+      for (const [p, q] of segs) { boxPlan(M.inWall, p, q, c, e, Zh.ffbUG - 0.3, Zh.deckeUG); wallRects.push({ fl: 'UG', r: [p, q, c, e], top: Zh.deckeUG }); }
     }
     // Westwand des UG mit den Fenstern zum Lichthof vor dem Gym: bis zum Boden, schwarze Rahmen mit Mittelsprosse, darüber ein Sturz
     {
-      const LH = HOUSE.lichthof, wy = LH.win.map(([a, b]) => [-b, -a]).sort((p, q) => p[0] - q[0]), zt = -0.62;
+      const LH = HOUSE.lichthof, wy = LH.win.map(([a, b]) => [-b, -a]).sort((p, q) => p[0] - q[0]), zt = LH.sturz;
       let y = -D + t0;
       for (const [a, b] of [...wy, [-t0, -t0]]) {
-        if (a > y) { boxPlan(M.inWall, 0, t0, y, a, Zh.ffbUG - 0.3, -0.15); wallRects.push({ fl: 'UG', r: [0, t0, y, a], top: -0.15 }); }
+        if (a > y) { boxPlan(M.inWall, 0, t0, y, a, Zh.ffbUG - 0.3, Zh.deckeUG); wallRects.push({ fl: 'UG', r: [0, t0, y, a], top: Zh.deckeUG }); }
         if (b > a) {
-          boxPlan(M.inWall, 0, t0, a, b, zt, -0.15);
+          boxPlan(M.inWall, 0, t0, a, b, zt, Zh.deckeUG);
           for (const [p, q, z0, z1] of [[a, a + 0.07, Zh.ffbUG, zt], [b - 0.07, b, Zh.ffbUG, zt], [a, b, zt - 0.07, zt], [a, b, Zh.ffbUG, Zh.ffbUG + 0.07], [(a + b) / 2 - 0.035, (a + b) / 2 + 0.035, Zh.ffbUG, zt]])
             boxPlan(M.frame, 0.1, 0.18, p, q, z0, z1);
           boxPlan(M.glass, 0.13, 0.15, a + 0.05, b - 0.05, Zh.ffbUG + 0.05, zt - 0.05);
@@ -3969,7 +4032,7 @@ const View3D = (() => {
       }
     }
     // Sturz über der Tür von der Tiefgarage ins Foyer (die Flügel enden bei 2,28 m)
-    { const [ta, tb] = HOUSE.tg.schleuse.hausTuer; boxPlan(M.inWall, ta, tb, -D, -D + t0, Zh.ffbUG + 2.3, -0.15); }
+    { const [ta, tb] = HOUSE.tg.schleuse.hausTuer; boxPlan(M.inWall, ta, tb, -D, -D + t0, Zh.ffbUG + 2.3, Zh.deckeUG); }
     // Bodenplatte des Untergeschosses, damit auch unter Türöffnungen Boden ist; im DG Boden bis an die Zwerchhausfronten
     boxPlan(M.slab, 0, W, -D, 0, Zh.ffbUG - 0.3, Zh.ffbUG - 0.025);
     for (const [y0, y1] of [[-D + 0.12, -D + 0.36], [-0.36, -0.12]]) boxPlan(M.floorOak, 4.45, 11.55, y0, y1, Zh.ffbDG - 0.11, Zh.ffbDG + 0.005);
@@ -4030,8 +4093,8 @@ const View3D = (() => {
     buildFurniture();
   }
   // Treppen: drei gerade Läufe in der Treppenbahn an der Rückwand der Halle, je ein Geschoss, alle nach Westen steigend und genau
-  // übereinander. Weiße Läufe mit Stufen aus hellem Naturstein; zur Halle hin eine geschlossene Brüstung mit Steinabdeckung, die im EG
-  // bis zum Boden reicht (dahinter liegt die Kellertreppe), mit Pfosten am Antritt und im EG einer breiten, gerundeten Antrittsstufe.
+  // übereinander. Weiße Läufe mit Stufen aus hellem Naturstein; zur Halle hin ein offenes Geländer aus schwarzen Stäben mit
+  // Handlauf, im EG darunter eine geschlossene Wange bis zum Boden (dahinter liegt die Kellertreppe), mit Pfosten am Antritt und im EG einer breiten, gerundeten Antrittsstufe.
   function buildStair() {
     const { LINE, FLIGHTS } = Plans.CORE, ly0 = LINE[2], ly1 = LINE[3], h = 0.92, t = 0.13;
     // Prisma aus einem Längsschnitt (Punkte [x, z]) über die Breite y0 … y1 der Bahn
@@ -4069,7 +4132,7 @@ const View3D = (() => {
   // Möbel nach dem Grundriss-Vorschlag: dieselben Positionen wie im 2D-Plan, Höhen nach üblichen Maßen, im DG unter der Schräge gekappt
   function buildFurniture() {
     const W = HOUSE.W, D = HOUSE.D, roofIn = HOUSE.roofIn;
-    const levels = { UG: [Zh.ffbUG, -0.15], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
+    const levels = { UG: [Zh.ffbUG, Zh.deckeUG], EG: [Zh.ffbEG, Zh.gurtU], OG: [Zh.ffbOG, Zh.deckeDG], DG: [Zh.ffbDG, Zh.ffbDG + 2.6] };
     const dirs = { N: [0, -1], S: [0, 1], E: [-1, 0], W: [1, 0] };
     // Draußen (Terrasse, Freisitz, Balkone): schwarzes Metall, helle wetterfeste Polster, Tischplatten aus Stein
     const OUT = { fFabric: M.fOut, fFabric2: M.fOut, fOak: M.fOutMetal, fDark: M.fOutMetal, fCushion: M.fCushionOut };
@@ -4309,10 +4372,10 @@ const View3D = (() => {
     const m = new THREE.Mesh(g, mat); m.castShadow = m.receiveShadow = true; m.customDepthMaterial = mat.userData.depth;
     return m;
   }
-  // Gleichverteilte Zufallsdrehung bzw. Ausrichtung auf eine Normale mit etwas Streuung
-  const randQ = () => { const u1 = rnd(), u2 = rnd() * 6.2832, u3 = rnd() * 6.2832, a = Math.sqrt(1 - u1), b = Math.sqrt(u1); return new THREE.Quaternion(a * Math.sin(u2), a * Math.cos(u2), b * Math.sin(u3), b * Math.cos(u3)); };
+  // Gleichverteilte Zufallsdrehung bzw. Ausrichtung auf eine Normale mit etwas Streuung; rnd = Zufallsfolge des Bereichs (zufall)
+  const randQ = rnd => { const u1 = rnd(), u2 = rnd() * 6.2832, u3 = rnd() * 6.2832, a = Math.sqrt(1 - u1), b = Math.sqrt(u1); return new THREE.Quaternion(a * Math.sin(u2), a * Math.cos(u2), b * Math.sin(u3), b * Math.cos(u3)); };
   const AXZ = new THREE.Vector3(0, 0, 1);
-  const faceQ = (n, tilt) => new THREE.Quaternion().setFromUnitVectors(AXZ, n).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler((rnd() - 0.5) * tilt, (rnd() - 0.5) * tilt, rnd() * 6.2832)));
+  const faceQ = (n, tilt, rnd) => new THREE.Quaternion().setFromUnitVectors(AXZ, n).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler((rnd() - 0.5) * tilt, (rnd() - 0.5) * tilt, rnd() * 6.2832)));
   // Dunkler Kern unter dem Laub, damit man nicht durch Büsche hindurchsieht
   function cores(list, mat, seg = 10) {
     const im = new THREE.InstancedMesh(new THREE.SphereGeometry(1, seg, Math.round(seg * 0.75)), mat, list.length), m = new THREE.Matrix4();
@@ -4322,29 +4385,34 @@ const View3D = (() => {
   }
   // Hecken nach HOUSE.garten.hecken, je Lauf in Stücken von etwa 1,80 m: dunkler Kern, außen dicht mit Blattkarten besetzt.
   // Die Hecke vor dem Zaun im Osten steht in Pflanztrögen aus dunklem Stahl, je knapp 2 m lang.
+  // Zufall je Lauf, benannt nach seinem ersten Punkt (bleibt, wenn andere Läufe dazukommen oder wegfallen): Maße der Stücke und Laub je eine Folge
   function hedges() {
     const grp = new THREE.Group(), boxes = [];
-    for (const H of HOUSE.garten.hecken) H.linie.slice(1).forEach((b, i) => {
-      const a = H.linie[i], L0 = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L0, uy = (b[1] - a[1]) / L0, n = Math.max(1, Math.round(L0 / 1.8)), z0 = H.z0 || 0;
-      for (let k = 0; k < n; k++) {
-        const s = L0 * (k + 0.5) / n;
-        boxes.push({ cx: a[0] + ux * s, cy: a[1] + uy * s, len: L0 / n + 0.08, w: H.b + (rnd() - 0.5) * 0.08, h: H.h + rnd() * H.dh, z0, ux, uy,
-          ende: [i === 0 && k === 0, i === H.linie.length - 2 && k === n - 1] });
-      }
-      if (H.trog) {
-        const mx = frameMx({ o: a, r: [ux, uy], n: [uy, -ux] }), nt = Math.max(1, Math.round(L0 / 2));
-        for (let k = 0; k < nt; k++) addBox(M.kuebel, mx, L0 * k / nt + 0.01, L0 * (k + 1) / nt - 0.01, 0, z0, -H.trog / 2, H.trog / 2);
-      }
-    });
+    for (const H of HOUSE.garten.hecken) {
+      const rnd = zufall('hecke ' + H.pts[0]), laub = zufall('hecke ' + H.pts[0] + ' laub');
+      H.linie.slice(1).forEach((b, i) => {
+        const a = H.linie[i], L0 = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L0, uy = (b[1] - a[1]) / L0, n = Math.max(1, Math.round(L0 / 1.8)), z0 = H.z0 || 0;
+        for (let k = 0; k < n; k++) {
+          const s = L0 * (k + 0.5) / n;
+          boxes.push({ cx: a[0] + ux * s, cy: a[1] + uy * s, len: L0 / n + 0.08, w: H.b + (rnd() - 0.5) * 0.08, h: H.h + rnd() * H.dh, z0, ux, uy, laub,
+            ende: [i === 0 && k === 0, i === H.linie.length - 2 && k === n - 1] });
+        }
+        if (H.trog) {
+          const mx = frameMx({ o: a, r: [ux, uy], n: [uy, -ux] }), nt = Math.max(1, Math.round(L0 / 2));
+          for (let k = 0; k < nt; k++) addBox(M.kuebel, mx, L0 * k / nt + 0.01, L0 * (k + 1) / nt - 0.01, 0, z0, -H.trog / 2, H.trog / 2);
+        }
+      });
+    }
     const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), M.hedgeCore, boxes.length), m = new THREE.Matrix4(), q = new THREE.Quaternion();
     const cards = [], up = new THREE.Vector3(0, 1, 0);
     boxes.forEach((b, i) => {
+      const rnd = b.laub;
       q.setFromAxisAngle(up, Math.atan2(b.uy, b.ux));
       m.compose(new THREE.Vector3(b.cx, b.z0 + (b.h - 0.08) / 2, -b.cy), q, new THREE.Vector3(b.len, b.h - 0.08, b.w - 0.14)); im.setMatrixAt(i, m);
       // Plan: s entlang der Hecke, t quer dazu; Welt: x = Plan-x, z = −Plan-y; Höhe ab Fuß der Hecke (im Trog ab Trogrand)
       const at = (s, t, z) => [b.cx + b.ux * s - b.uy * t, b.z0 + z, -(b.cy + b.uy * s + b.ux * t)];
       const side = sg => new THREE.Vector3(-b.uy * sg, 0, -b.ux * sg);
-      const add = (p, n, sz) => { const k = (0.72 + 0.32 * rnd()) * (p[1] - b.z0 < 0.45 ? 0.8 : 1); cards.push({ p, n: [n.x, n.y, n.z], q: faceQ(n, 1.3), w: sz, h: sz, c: [k, k * 1.02, k * 0.96], flip: rnd() < 0.5 }); };
+      const add = (p, n, sz) => { const k = (0.72 + 0.32 * rnd()) * (p[1] - b.z0 < 0.45 ? 0.8 : 1); cards.push({ p, n: [n.x, n.y, n.z], q: faceQ(n, 1.3, rnd), w: sz, h: sz, c: [k, k * 1.02, k * 0.96], flip: rnd() < 0.5 }); };
       const nTop = Math.round(b.len * b.w * 16), nSide = Math.round(b.len * b.h * 14);
       for (let k = 0; k < nTop; k++) {
         const t = (rnd() - 0.5) * b.w, n = up.clone().add(side(Math.sign(t)).multiplyScalar(Math.max(0, Math.abs(t) / (b.w / 2) - 0.5) * 1.6)).normalize();
@@ -4382,7 +4450,7 @@ const View3D = (() => {
     for (const [a, b, c, e] of [[x0 - t - 0.03, x0 + 0.02, y0 - t - 0.03, y1 + t + 0.03], [x0, 0, y0 - t - 0.03, y0 + 0.02], [x0, 0, y1 - 0.02, y1 + t + 0.03]]) boxPlan(M.coping, a, b, c, e, 0.04, 0.09);
     boxPlan(M.stone, x0, 0, y0, y1, zb - 0.3, zb - 0.02);
     // Geländer an den drei Seiten, auf der Abdeckung
-    const zr = 0.09, hr = 1.0;
+    const zr = 0.09, hr = LH.gelaender;
     railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(x0 - t / 2, 0, 0)), y0 - t / 2, y1 + t / 2, zr, zr + hr, 0);
     for (const y of [y0 - t / 2, y1 + t / 2]) railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -y), x0 - t / 2, -0.02, zr, zr + hr, 0);
   }
@@ -4698,9 +4766,7 @@ const View3D = (() => {
   // Bäume in den Nachbargärten nach den Luftbildern: dichter Bestand aus Laub- und Nadelbäumen, einzelne Blutbuchen.
   // Nicht auf Häusern, Straßen und dem eigenen Grundstück und nicht in den Sichtachsen der Kamerablicke.
   function neighborGreen() {
-    // feste Zufallsfolge (Stand 4.11.2026), damit Änderungen an Beeten oder Bäumen davor die Nachbarbäume nicht umwürfeln
-    seed = 523963437;
-    const grp = new THREE.Group(), leaf = [], needle = [], barkParts = [], Yax = new THREE.Vector3(0, 1, 0);
+    const rnd = zufall('nachbarbäume'), grp = new THREE.Group(), leaf = [], needle = [], barkParts = [], Yax = new THREE.Vector3(0, 1, 0);
     const inPoly = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
     const segDist = (x, y, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(x - a[0] - t * dx, y - a[1] - t * dy); };
     const polyDist = (x, y, P) => { let d = 1e9; for (let i = 0; i < P.length; i++) d = Math.min(d, segDist(x, y, P[i], P[(i + 1) % P.length])); return d; };
@@ -4728,7 +4794,7 @@ const View3D = (() => {
         for (let k = 0; k < cnt; k++) {
           const t = Math.pow(rnd(), 0.8), hgt = base + t * (H - base), rad = R * Math.pow(1 - t, 0.9) * (0.55 + 0.45 * Math.sqrt(rnd())), a = rnd() * Math.PI * 2;
           const nrm = new THREE.Vector3(Math.cos(a), 0.35, Math.sin(a)).normalize(), k0 = (0.55 + 0.45 * rad / Math.max(0.3, R)) * (0.85 + 0.25 * rnd()), sz = 0.75 + 0.4 * rnd();
-          needle.push({ p: [cx + Math.cos(a) * rad, hgt, cz + Math.sin(a) * rad], n: [nrm.x, nrm.y, nrm.z], q: faceQ(nrm, 1.6), w: sz, h: sz, c: [k0 * 0.95, k0, k0 * 1.02], flip: rnd() < 0.5 });
+          needle.push({ p: [cx + Math.cos(a) * rad, hgt, cz + Math.sin(a) * rad], n: [nrm.x, nrm.y, nrm.z], q: faceQ(nrm, 1.6, rnd), w: sz, h: sz, c: [k0 * 0.95, k0, k0 * 1.02], flip: rnd() < 0.5 });
         }
       } else {
         // Laubbaum oder Blutbuche: Stamm, ein paar Äste, kugelige Krone aus Blattbüscheln
@@ -4743,7 +4809,7 @@ const View3D = (() => {
           const out = new THREE.Vector3((px - cx) / r, (py - zc) / ry, (pz - cz) / r), dep = Math.min(1, out.length()), nO = out.normalize(), k0 = (0.55 + 0.45 * dep) * (0.88 + 0.24 * rnd());
           for (let j = 0; j < 9; j++) {
             const off = new THREE.Vector3(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).multiplyScalar(cs * 1.5), nn = nO.clone().multiplyScalar(0.85).addScaledVector(off.clone().normalize(), 0.3).normalize();
-            leaf.push({ p: [px + off.x, py + off.y, pz + off.z], n: [nn.x, nn.y, nn.z], q: randQ(), w: cs, h: cs, c: [tint[0] * k0, tint[1] * k0, tint[2] * k0], flip: rnd() < 0.5 });
+            leaf.push({ p: [px + off.x, py + off.y, pz + off.z], n: [nn.x, nn.y, nn.z], q: randQ(rnd), w: cs, h: cs, c: [tint[0] * k0, tint[1] * k0, tint[2] * k0], flip: rnd() < 0.5 });
           }
         }
       }
@@ -4802,7 +4868,7 @@ const View3D = (() => {
   // zur Seite geschoben), nach Norden ein großes Fenster; Veranda auf zwei quadratischen Pfeilern, flaches Walmdach mit Schiefer.
   // Innen Bar, Liege und Handtücher. Boden eine Stufe über der Poolterrasse (H.z) auf der Decke der Durchfahrt; Gesims und Dach bleiben auf ihrer Höhe.
   function buildPoolhaus(g) {
-    const H = HOUSE.poolhaus, { x0, x1, y0, y1, z, wand: t, gesims, traufe } = H, xv = x0 - H.veranda, ov = 0.25, len = y1 - y0;
+    const H = HOUSE.poolhaus, { x0, x1, y0, y1, z, wand: t, gesims, traufe } = H, xv = x0 - H.veranda, ov = H.ueberstand, len = y1 - y0;
     boxPlan(M.stone, x0, x1, y0, y1, 0, z);
     boxPlan(M.site, x0, x1, y0, y0 + t, 0, gesims); boxPlan(M.site, x1 - t, x1, y0 + t, y1 - t, 0, gesims);
     // Nordwand mit großem Fenster (u ab der Ostecke nach Westen)
@@ -4946,6 +5012,7 @@ const View3D = (() => {
     const std = (color, r, m = 0, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: r, metalness: m, ...extra });
     // Holzhackschnitzel: helle und dunklere Späne kreuz und quer, am Rand auch gegenüber gezeichnet (kachelbar, 1,5 m, ein Pixel knapp 6 mm)
     const chips = canvasTex(256, 256, (c, w, h) => {
+      const rnd = zufall('textur hackschnitzel');
       c.fillStyle = '#9b7d59'; c.fillRect(0, 0, w, h);
       const pal = ['#c8a97e', '#89694a', '#b49369', '#d8c29c', '#7b5e40', '#a9895f'];
       for (let i = 0; i < 5200; i++) {
@@ -5126,8 +5193,6 @@ const View3D = (() => {
     buildSpielplatz(g);
     buildFence(g);
     g.add(hedges());
-    // Zufallsfolge ab hier fest (Stand vor den neuen Hecken): Bäume, Beete und Nachbargrün bleiben gleich, wenn sich Zaun, Hecken oder Spielplatz ändern
-    seed = 334129586;
     // Grenze
     const pts = [...SITE.plot, SITE.plot[0]].map(q => P(q[0], q[1], 0.05));
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0x24292e, dashSize: 0.9, gapSize: 0.45 }));
@@ -5137,7 +5202,7 @@ const View3D = (() => {
     const seg = []; for (const [a, b, c, e] of SITE.parcelLines) seg.push(P(a, b, 0.03), P(c, e, 0.03));
     grenze.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), new THREE.LineBasicMaterial({ color: 0x5b6168 })));
     grenze.visible = false; g.add(grenze); L.grenze = grenze;
-    // Bäume: Stamm mit Hauptästen, Krone aus mehreren Teilkronen, die dicht mit Blattbüscheln besetzt sind
+    // Bäume: Stamm mit Hauptästen, Krone aus mehreren Teilkronen, die dicht mit Blattbüscheln besetzt sind; Zufall je Baum nach seiner Lage
     const baeume = new THREE.Group(), barkParts = [], leafCards = [], Yax = new THREE.Vector3(0, 1, 0);
     const limb = (a, b, r0, r1) => {
       const d = new THREE.Vector3().subVectors(b, a), len = d.length(), cg = new THREE.CylinderGeometry(r1, r0, len, 9, 1, true);
@@ -5146,7 +5211,7 @@ const View3D = (() => {
     };
     const tints = [[1, 1, 0.92], [0.92, 0.98, 0.9], [1.04, 1.02, 0.84]];
     SITE.trees.forEach((t, i) => {
-      const r = t.r, H = Math.min(24, 4 + 2.0 * r), zc = H - r * 0.95, ry = r * 0.82, cx = t.c[0], cz = -t.c[1];
+      const rnd = zufall('baum ' + t.c), r = t.r, H = Math.min(24, 4 + 2.0 * r), zc = H - r * 0.95, ry = r * 0.82, cx = t.c[0], cz = -t.c[1];
       const hs = k => { const v = Math.sin((k + 1) * 127.1 + i * 311.7) * 43758.5453; return v - Math.floor(v); };
       const r0 = 0.16 + 0.035 * r, top = new THREE.Vector3(cx + (hs(1) - 0.5) * 0.5, zc - ry * 0.2, cz + (hs(2) - 0.5) * 0.5);
       limb(new THREE.Vector3(cx, -0.1, cz), top, r0, r0 * 0.5);
@@ -5174,7 +5239,7 @@ const View3D = (() => {
           for (let j = 0; j < 10; j++) {
             const cs = cs0 * (0.8 + 0.4 * rnd()), off = new THREE.Vector3(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).multiplyScalar(cs0 * 1.5);
             const n = nOut.clone().multiplyScalar(0.85).addScaledVector(off.clone().normalize(), 0.3).normalize();
-            leafCards.push({ p: [p.x + off.x, p.y + off.y, p.z + off.z], n: [n.x, n.y, n.z], q: randQ(), w: cs, h: cs, c: [tint[0] * k, tint[1] * k, tint[2] * k], flip: rnd() < 0.5 });
+            leafCards.push({ p: [p.x + off.x, p.y + off.y, p.z + off.z], n: [n.x, n.y, n.z], q: randQ(rnd), w: cs, h: cs, c: [tint[0] * k, tint[1] * k, tint[2] * k], flip: rnd() < 0.5 });
           }
         }
       }
@@ -5262,50 +5327,54 @@ const View3D = (() => {
     flushBatches(g);
     return g;
   }
-  // Beete wie im Rendering: Lavendel, weiße Hortensien und Buchskugeln vor der Fassade
+  // Beete wie im Rendering: Lavendel, weiße Hortensien und Buchskugeln vor der Fassade.
+  // Zufall je Beet (Lage der Pflanzen, dazu je Art eine Folge fürs Laub) und je Gruppe Buchskugeln; Pflanze = [x, y, r, Laub-Folge, Fußhöhe]
   function plantBeds() {
     const grp = new THREE.Group();
     const items = { lavendel: [], hortensie: [], buchs: [], gruen: [] };
-    const bed = (x0, x1, y0, y1, kinds, dens) => {
-      const n = Math.round((x1 - x0) * (y1 - y0) * dens);
+    const bed = (name, x0, x1, y0, y1, kinds, dens) => {
+      const rnd = zufall('beet ' + name), laub = {}, n = Math.round((x1 - x0) * (y1 - y0) * dens);
+      for (const k of new Set(kinds)) laub[k] = zufall(`beet ${name} ${k}`);
       for (let i = 0; i < n; i++) {
         const k = kinds[Math.floor(rnd() * kinds.length)];
         const r = k === 'lavendel' ? 0.16 + rnd() * 0.07 : k === 'hortensie' ? 0.3 + rnd() * 0.12 : 0.28 + rnd() * 0.1;
         const px = x0 + rnd() * (x1 - x0), py = y0 + rnd() * (y1 - y0);
-        items[k].push([px, py, r]);
-        if (k === 'hortensie' || k === 'gruen') for (let q = 0; q < 3; q++) items[k].push([px + (rnd() - 0.5) * r * 1.2, py + (rnd() - 0.5) * r * 1.2, r * (0.55 + rnd() * 0.25)]);
+        items[k].push([px, py, r, laub[k]]);
+        if (k === 'hortensie' || k === 'gruen') for (let q = 0; q < 3; q++) items[k].push([px + (rnd() - 0.5) * r * 1.2, py + (rnd() - 0.5) * r * 1.2, r * (0.55 + rnd() * 0.25), laub[k]]);
       }
     };
     // Lavendel und Hortensien am Rand der durchgehenden Terrasse, die Mitte bleibt frei für die Stufe zum Pool
-    bed(0.1, 6.2, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
-    bed(9.8, 18.9, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
+    bed('terrasse west', 0.1, 6.2, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
+    bed('terrasse ost', 9.8, 18.9, -16.45, -15.8, ['lavendel', 'lavendel', 'hortensie', 'gruen'], 9);
     // Westseite nur südlich des Lichthofs (house.js lichthof), davor ist der Schacht mit Geländer
-    bed(-0.95, -0.15, -HOUSE.lichthof.u0 + 0.4, -0.6, ['hortensie', 'gruen', 'lavendel'], 4);
-    bed(19.1, 19.8, -10.8, -5.9, ['hortensie', 'lavendel'], 5);
-    bed(0.3, 5.3, 0.15, 0.85, ['gruen', 'hortensie'], 4);
-    bed(10.7, 15.7, 0.15, 0.85, ['gruen', 'hortensie'], 4);
-    for (const [x, y] of [[6.35, -16.1], [9.65, -16.1], [-0.55, -16.0], [19.5, -15.95], [19.35, -11.15], [5.2, 0.55], [10.8, 0.55], [-0.6, -12.2]]) items.buchs.push([x, y, 0.42]);
+    bed('westseite', -0.95, -0.15, -HOUSE.lichthof.u0 + 0.4, -0.6, ['hortensie', 'gruen', 'lavendel'], 4);
+    bed('ostseite', 19.1, 19.8, -10.8, -5.9, ['hortensie', 'lavendel'], 5);
+    bed('eingang west', 0.3, 5.3, 0.15, 0.85, ['gruen', 'hortensie'], 4);
+    bed('eingang ost', 10.7, 15.7, 0.15, 0.85, ['gruen', 'hortensie'], 4);
+    const fassade = zufall('buchs fassade');
+    for (const [x, y] of [[6.35, -16.1], [9.65, -16.1], [-0.55, -16.0], [19.5, -15.95], [19.35, -11.15], [5.2, 0.55], [10.8, 0.55], [-0.6, -12.2]]) items.buchs.push([x, y, 0.42, fassade]);
     // kleine Buchskugeln als Allee am Weg zum Pool
-    for (let y = -17.2; y > -22.6; y -= 1.35) for (const x of [7.12, 8.88]) items.buchs.push([x, y, 0.26]);
+    const allee = zufall('buchs allee');
+    for (let y = -17.2; y > -22.6; y -= 1.35) for (const x of [7.12, 8.88]) items.buchs.push([x, y, 0.26, allee]);
     // Zwei Pflanzkübel mit Buchskugeln unter dem Vordach links und rechts der Haustür
-    const zk = HOUSE.podest.z + 0.55;
-    for (const x of [6.15, 9.85]) { boxPlan(M.kuebel, x - 0.2, x + 0.2, 0.12, 0.52, HOUSE.podest.z, zk); items.buchs.push([x, 0.32, 0.23, zk]); }
+    const zk = HOUSE.podest.z + 0.55, kuebel = zufall('buchs kübel');
+    for (const x of [6.15, 9.85]) { boxPlan(M.kuebel, x - 0.2, x + 0.2, 0.12, 0.52, HOUSE.podest.z, zk); items.buchs.push([x, 0.32, 0.23, kuebel, zk]); }
     // Jede Pflanze: dunkler Kern und darauf Blatt- bzw. Blütenkarten; Lavendel als gekreuzte, senkrechte Karten
     const core = [], cards = { blatt: [], hortensie: [], buchs: [], lavendel: [] };
-    const shell = (list, x, y, cy, r, ry, n, sz, k0) => {
+    const shell = (list, x, y, cy, r, ry, n, sz, k0, rnd) => {
       for (let j = 0; j < n; j++) {
         const u1 = rnd() * 1.6 - 0.6, phi = rnd() * 6.2832, s = Math.sqrt(1 - u1 * u1), nrm = new THREE.Vector3(s * Math.cos(phi), u1, s * Math.sin(phi));
         const k = k0 * (0.8 + 0.3 * rnd()) * (0.75 + 0.25 * (u1 + 0.6) / 1.6);
-        list.push({ p: [x + nrm.x * r, cy + nrm.y * ry, -y + nrm.z * r], n: [nrm.x, nrm.y, nrm.z], q: faceQ(nrm, 1.4), w: sz * (0.8 + 0.4 * rnd()), h: sz * (0.8 + 0.4 * rnd()), c: [k, k, k], flip: rnd() < 0.5 });
+        list.push({ p: [x + nrm.x * r, cy + nrm.y * ry, -y + nrm.z * r], n: [nrm.x, nrm.y, nrm.z], q: faceQ(nrm, 1.4, rnd), w: sz * (0.8 + 0.4 * rnd()), h: sz * (0.8 + 0.4 * rnd()), c: [k, k, k], flip: rnd() < 0.5 });
       }
     };
-    for (const [x, y, r, z0 = 0] of items.buchs) { core.push([x, z0 + r * 0.92, -y, r * 0.88, r * 0.82]); shell(cards.buchs, x, y, z0 + r * 0.92, r * 0.95, r * 0.9, r < 0.3 ? 46 : 70, 0.2, 1); }
-    for (const [x, y, r] of items.gruen) { core.push([x, r * 0.7, -y, r * 0.8, r * 0.62]); shell(cards.blatt, x, y, r * 0.7, r, r * 0.8, 16, r * 0.9, 0.95); }
-    for (const [x, y, r] of items.hortensie) {
+    for (const [x, y, r, rnd, z0 = 0] of items.buchs) { core.push([x, z0 + r * 0.92, -y, r * 0.88, r * 0.82]); shell(cards.buchs, x, y, z0 + r * 0.92, r * 0.95, r * 0.9, r < 0.3 ? 46 : 70, 0.2, 1, rnd); }
+    for (const [x, y, r, rnd] of items.gruen) { core.push([x, r * 0.7, -y, r * 0.8, r * 0.62]); shell(cards.blatt, x, y, r * 0.7, r, r * 0.8, 16, r * 0.9, 0.95, rnd); }
+    for (const [x, y, r, rnd] of items.hortensie) {
       core.push([x, r * 0.7, -y, r * 0.8, r * 0.62]);
-      shell(cards.blatt, x, y, r * 0.7, r, r * 0.78, 9, r * 0.85, 0.9); shell(cards.hortensie, x, y, r * 0.78, r * 0.98, r * 0.8, 9, r * 0.95, 1);
+      shell(cards.blatt, x, y, r * 0.7, r, r * 0.78, 9, r * 0.85, 0.9, rnd); shell(cards.hortensie, x, y, r * 0.78, r * 0.98, r * 0.8, 9, r * 0.95, 1, rnd);
     }
-    for (const [x, y, r] of items.lavendel) for (let j = 0; j < 3; j++) {
+    for (const [x, y, r, rnd] of items.lavendel) for (let j = 0; j < 3; j++) {
       const a = j * Math.PI / 3 + rnd(), w = r * 2.4, h = r * 2.8, n = new THREE.Vector3(Math.cos(a), 0.25, Math.sin(a)).normalize(), k = 0.85 + 0.25 * rnd();
       cards.lavendel.push({ p: [x, h / 2, -y], n: [n.x, n.y, n.z], q: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), a), w, h, c: [k, k, k], flip: rnd() < 0.5 });
     }
@@ -5429,7 +5498,7 @@ const View3D = (() => {
     pmrem = new THREE.PMREMGenerator(renderer);
     // Wolkenschicht: kachelbares Rauschen als Alpha, hoch über dem Grundstück
     const N = 512, c = document.createElement('canvas'); c.width = c.height = N;
-    const g = c.getContext('2d'), img = g.createImageData(N, N);
+    const g = c.getContext('2d'), img = g.createImageData(N, N), rnd = zufall('textur wolken');
     const oct = [[4, 0.5], [8, 0.25], [16, 0.13], [32, 0.07], [64, 0.04]].map(([f, a]) => ({ f, a, L: Float32Array.from({ length: f * f }, rnd) }));
     const sm = t => t * t * (3 - 2 * t);
     const noise = (o, x, y) => {
@@ -6252,7 +6321,7 @@ window.View3D = View3D;</script>
     `<tr><th scope="row">Tiefgarage unter dem Garten</th><td>${num(S.tgGarten, 1)} m²</td></tr>` +
     `<tr class="sum"><th scope="row">Garten ohne Unterbauung</th><td>${num(S.gruenOhneTG, 1)} m² · ${pct(S.gruenOhneTG)}</td></tr>`;
   for (const el of $$('[data-stat]')) {
-    const v = { grz: 186.4 / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG, wohnfl: wf.sum }[el.dataset.stat];
+    const v = { grz: HOUSE.W * HOUSE.D / 1661, versiegelt: 100 * S.befestigt / 1661, tg: S.tg, tgGarten: S.tgGarten, plot: S.plotArea, gruen: S.gruenOhneTG, wohnfl: wf.sum }[el.dataset.stat];
     el.textContent = num(v, { grz: 3, versiegelt: 1, tg: 1, plot: 1, wohnfl: 0 }[el.dataset.stat] ?? 2);
   }
 

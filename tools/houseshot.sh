@@ -1,39 +1,8 @@
 #!/usr/bin/env bash
-# Rendert das fertige Modell (docs/index.html, vorher node tools/bauen.js) ohne Browser-Fenster als PNG oder prüft einen Rundgang – auch mehrfach gleichzeitig.
-# Aufruf in WSL im Repo:
-#   tools/houseshot.sh garage "pos=21.2,-2.0,23.4&tgt=14.0,-2.7,18.6"   → tools/shots/house-garage.png
-#   tools/houseshot.sh eg "cam=sued&level=EG"                            → Kamera wie die Buttons, Geschossblick EG
-#   tools/houseshot.sh probe ankommen                                    → Kollisionen und fehlender Boden entlang des Rundgangs (JSON)
-#   tools/houseshot.sh fingerprint                                       → Prüfsumme der Szene je Material (JSON), z. B. vor und nach einem Umbau
-# Weltkoordinaten wie View3D._view: X = Plan-Ost, Y = Höhe, Z = -Plan-Nord.
-set -euo pipefail
-# PORT=8767 tools/… für eine zweite Arbeitskopie (eigener Server, sonst 8766)
-port="${PORT:-8766}"
-name="${1:?Aufruf: tools/houseshot.sh <name> \"pos=..&tgt=..\" | tools/houseshot.sh probe <rundgang>}"; par="${2:-}"
-cd "$(dirname "$0")/.."
-mkdir -p tools/shots
-up() { curl -fs -o /dev/null http://127.0.0.1:$port/tools/houseshot.html; }
-if ! up; then
-  nohup python3 -m http.server $port --bind 127.0.0.1 --directory "$(pwd -P)" >/dev/null 2>&1 &
-  for _ in 1 2 3 4 5 6 7 8 9 10; do sleep 0.3; up && break; done
-  up || { echo "FEHLER: Server auf Port $port lässt sich nicht starten"; exit 1; }
-fi
-prof="$(mktemp -d)"; trap 'rm -rf "$prof"' EXIT
-chrome=(google-chrome --headless=new --no-sandbox --disable-dev-shm-usage --user-data-dir="$prof" --no-first-run --disable-gcm
-  --use-angle=swiftshader --enable-unsafe-swiftshader --hide-scrollbars --window-size=1400,900 --virtual-time-budget=90000)
-if [ "$name" = probe ] || [ "$name" = fingerprint ]; then
-  # fingerprint: Prüfsumme der Szene (View3D._fingerprint) als JSON, gleich nach dem Laden
-  if [ "$name" = probe ]; then url="http://127.0.0.1:$port/tools/houseshot.html?probe=${par:?Rundgang fehlt}&step=${3:-10}"
-  else url="http://127.0.0.1:$port/tools/houseshot.html?fingerprint=1"; fi
-  dom=$("${chrome[@]}" --dump-dom "$url" 2>/dev/null || true)
-  res=$(printf '%s' "$dom" | sed -n 's/.*<pre id="out">\(PROBE \|FP \|FEHLER \)\(.*\)<\/pre>.*/\1\2/p')
-  [ -n "$res" ] || { echo "FEHLER: keine Antwort von der Seite"; exit 1; }
-  echo "$res" | sed 's/&quot;/"/g; s/&amp;/\&/g'
-  case "$res" in FEHLER*) exit 1;; esac
-  exit 0
-fi
-out="tools/shots/house-$name.png"
-url="http://127.0.0.1:$port/tools/houseshot.html?$par"
-"${chrome[@]}" --screenshot="$out" "$url" >/dev/null 2>&1 || true
-[ -s "$out" ] || { echo "FEHLER: kein Bild entstanden"; exit 1; }
-echo "$(pwd -P)/$out" | sed 's#^/mnt/c/#C:/#'
+# Alte Aufrufe, jetzt über tools/browser.js (eigener Server auf freiem Port, PORT wird nicht mehr gebraucht). Vorher node tools/bauen.js.
+#   tools/houseshot.sh garage "pos=21.2,-2.0,23.4&tgt=14.0,-2.7,18.6"   → tools/shots/house-garage.png (gibt den Pfad aus)
+#   tools/houseshot.sh eg "cam=ost&level=EG"                             → Kamera wie die Buttons, Geschossschnitt EG
+#   tools/houseshot.sh probe ankommen [5]                                → Rundgang wie beim Gehen prüfen, PROBE [[art, x, y, Höhe, Abstand, Teil], …]
+#   tools/houseshot.sh fingerprint                                       → Prüfsumme der Szene je Material, FP {…}
+# Weltkoordinaten wie View3D._view: X = Plan-Ost, Y = Höhe, Z = -Plan-Nord. Für mehrere Bilder und Vergleiche besser ./vg bild bzw. ./vg pruefen.
+cd "$(dirname "$0")/.." && exec node tools/browser.js houseshot "$@"

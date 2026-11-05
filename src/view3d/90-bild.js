@@ -179,30 +179,114 @@
   function setDate(y, m, d) { st.y = y; st.m = m; st.d = d; updateSun(); }
   function setTime(h) { st.h = h; updateSun(); }
   function snapshot() { renderFrame(); return renderer.domElement.toDataURL('image/png'); }
+  // ---------- Prüfhaken (tools/browser.js), ändern am Bild nichts ----------
+  // Netze für die Prüfstrahlen: nur Sichtbares, auch über die Gruppen (sonst zählen ausgeblendete Hilfen wie die roten Wurzelschutzkreise,
+  // die auf der Rampe über dem Boden liegen), ohne Durchsichtiges (Glas, Wasser) und Himmel; Laub-Karten (alphaTest) nur auf Wunsch
+  const shownAll = o => { for (let q = o; q; q = q.parent) if (!q.visible) return false; return true; };
+  function rayObjs(laub) {
+    const objs = [];
+    scene.traverse(o => { const m = o.material; if (o.isMesh && o !== sky && !Array.isArray(m) && m.visible !== false && shownAll(o) && !(m.transparent && m.opacity < 0.6) && (laub || !(m.alphaTest > 0))) objs.push(o); });
+    return objs;
+  }
+  const matNames = () => new Map([...Object.entries(carMats), ...Object.entries(M)].filter(([, v]) => v && v.isMaterial).map(([k, v]) => [v, k]));
+  const setDoor = d => { const e = d.open * d.open * (3 - 2 * d.open); if (d.set) d.set(e); else d.grp.rotation[d.axis || 'y'] = d.sign * d.max * e; };
+  // Schattenbild der Sonne für die Prüfbilder: die Sonne steht fest und ihr Schattenbild hängt nicht von der Kamera ab, nur davon, was Schatten
+  // wirft (Türen, Geschossschnitt, Ebenen, Schnitt, Tageszeit). Bleibt das gleich, nimmt das nächste Bild das alte Schattenbild – gleiches Bild,
+  // im Software-Rendering ein Viertel schneller. Die Seite selbst rechnet weiter jedes Bild neu.
+  // Hat zwischendurch jemand anders gezeichnet (Zähler der Bilder), wird das Schattenbild auf jeden Fall neu gerechnet.
+  let shadowKey = null, shadowFrame = -1;
+  function testShot() {
+    const key = JSON.stringify([st.level, st.cut, st.cutX, st.y, st.m, st.d, st.h, doors.map(d => d.open), Object.keys(L).map(k => [].concat(L[k]).map(o => o && o.visible))]);
+    renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = key !== shadowKey || renderer.info.render.frame !== shadowFrame;
+    try { renderFrame(); } finally { renderer.shadowMap.autoUpdate = true; }
+    shadowKey = key; shadowFrame = renderer.info.render.frame;
+    return renderer.domElement.toDataURL('image/png');
+  }
   return {
     init, show, goTo, setLayer, setCut, setLevel, setDate, setTime, snapshot,
     get ready() { return ready; }, state: st,
     play(on) { st.play = on; }, rotate(on) { st.rotate = on; }, zoom: zoomStep,
     // Rundgang starten (name) oder beenden (null); cb.onLabel bekommt die Stationen, cb.onEnd meldet das Ende
     tour(name, cb) { if (name) { startTour(name, cb); polar(); } else stopTour(false); },
-    // Für die Prüfung der Wege: Abtastpunkte eines Rundgangs in Weltkoordinaten
+    // Für die Prüfung der Wege: Namen aller Rundgänge, Abtastpunkte eines Rundgangs in Weltkoordinaten
+    _tours: () => Object.keys(TOURS),
     _tourPoints: name => tourPath(TOURS[name]).S.map(q => q.p.toArray()),
-    // Prüfung der Wege: alle 0,5 m in vier Richtungen auf Augenhöhe und nach unten zum Boden; meldet zu nahe Teile und fehlenden Boden
+    // Prüfung der Wege wie beim Gehen: der Rundgang läuft in Schritten von 1/30 s ab, Türen und Tore öffnen sich dabei wie unterwegs.
+    // Alle step × 5 cm Weg vier Strahlen auf Augenhöhe (nah: ein Bauteil näher als 0,2 m), einer zum Boden (boden: Augenhöhe weicht mehr
+    // als 0,3 m ab) und einer entlang des letzten Wegstücks (durch: der Weg schneidet ein Bauteil). Je Treffer [art, x, y (Plan), Höhe,
+    // Abstand, 'material @Trefferpunkt x,y,Höhe']. Danach stehen Türen und Kamera wieder wie vorher; ein Geschossschnitt ist dann aus.
     _probe(name, step = 10) {
-      // ohne laufende Bildschleife (verdecktes Fenster) sind die Weltmatrizen sonst nicht aktuell
+      if (!TOURS[name]) throw new Error(`Rundgang ${name} fehlt (${Object.keys(TOURS).join(', ')})`);
+      const vorher = { p: camP.position.clone(), t: controls.target.clone(), auf: doors.map(d => d.open) };
+      if (st.level !== 'alle') setLevel('alle');
+      // ohne laufende Bildschleife sind die Weltmatrizen sonst nicht aktuell
       scene.updateMatrixWorld(true);
-      const pts = tourPath(TOURS[name]).S, out = [], rc = new THREE.Raycaster(), objs = [];
-      const names = new Map([...Object.entries(carMats), ...Object.entries(M)].filter(([, v]) => v && v.isMaterial).map(([k, v]) => [v, k]));
-      scene.traverse(o => { const m = o.material; if (o.isMesh && o.visible && !Array.isArray(m) && !(m.transparent && m.opacity < 0.6) && !(m.alphaTest > 0) && o !== sky) objs.push(o); });
+      const out = [], rc = new THREE.Raycaster(), objs = rayObjs(false), names = matNames(), ds = step * 0.05;
+      const P = v => [+v.x.toFixed(2), +(-v.z).toFixed(2), +v.y.toFixed(2)];
+      const tag = h => `${names.get(h.object.material) || h.object.material.type} @${P(h.point).join(',')}`;
+      const hit = (p, d, far) => { rc.set(p, d); rc.far = far; return rc.intersectObjects(objs, false)[0]; };
       const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]].map(([x, z]) => new THREE.Vector3(x, 0, z)), down = new THREE.Vector3(0, -1, 0);
-      for (let j = 0; j < pts.length; j += step) {
-        const p = pts[j].p;
-        const tag = o => { const bs = o.geometry.boundingSphere; return `${names.get(o.material) || o.material.type}${bs ? ` @${bs.center.x.toFixed(1)},${bs.center.y.toFixed(1)},${bs.center.z.toFixed(1)} r${bs.radius.toFixed(1)}` : ''}`; };
-        for (const d of dirs) { rc.set(p, d); rc.far = 0.2; const h = rc.intersectObjects(objs, false)[0]; if (h) { out.push(['nah', +p.x.toFixed(2), +(-p.z).toFixed(2), +p.y.toFixed(2), +h.distance.toFixed(2), tag(h.object)]); break; } }
-        rc.set(p, down); rc.far = 3; const f = rc.intersectObjects(objs, false)[0];
-        if (!f || Math.abs(f.distance - EYE) > 0.3) out.push(['boden', +p.x.toFixed(2), +(-p.z).toFixed(2), +p.y.toFixed(2), f ? +f.distance.toFixed(2) : null, f ? tag(f.object) : '-']);
+      startTour(name);
+      const T = tour, prev = camP.position.clone();
+      let next = 0, done = -1;
+      const probe = () => {
+        const p = camP.position, [x, y, z] = P(p);
+        for (const d of dirs) { const h = hit(p, d, 0.2); if (h) { out.push(['nah', x, y, z, +h.distance.toFixed(2), tag(h)]); break; } }
+        const f = hit(p, down, 3);
+        if (!f || Math.abs(f.distance - EYE) > 0.3) out.push(['boden', x, y, z, f ? +f.distance.toFixed(2) : null, f ? tag(f) : '-']);
+        const w = p.clone().sub(prev), l = w.length();
+        if (l > 1e-3) { const h = hit(prev, w.normalize(), l); if (h) out.push(['durch', x, y, z, +h.distance.toFixed(2), tag(h)]); }
+        prev.copy(p); done = T.s;
+      };
+      probe(); next = ds;
+      for (let k = 0; tour === T && k < 30 * 1200; k++) {
+        const auf = doors.map(d => d.open);
+        stepTour(1 / 30); updateDoors(1 / 30);
+        // nur die bewegten Türen neu ausrichten; Tore mit eigener Bewegung (d.set) hängen nicht an einer Gruppe
+        let alle = false;
+        doors.forEach((d, i) => { if (d.open !== auf[i]) { if (d.grp) d.grp.updateMatrixWorld(true); else alle = true; } });
+        if (alle) scene.updateMatrixWorld(true);
+        if (T.s >= next) { probe(); next = (Math.floor(T.s / ds) + 1) * ds; }
       }
+      if (T.s > done + 0.05) probe();
+      stopTour(false);
+      doors.forEach((d, i) => { d.open = vorher.auf[i]; setDoor(d); });
+      scene.updateMatrixWorld(true);
+      camP.position.copy(vorher.p); controls.target.copy(vorher.t); camP.lookAt(controls.target); invalidate();
       return out;
+    },
+    // Prüfung einer Ansicht, Kamera und Ziel wie gerade eingestellt (beide Seiten aller Flächen zählen, Laub auch; im Geschossblick nur unter
+    // dem Schnitt): nah = ein Bauteil näher als 12 cm in einer der sechs Achsrichtungen oder die Kamera steckt in einem geschlossenen Körper
+    // (in mindestens vier Richtungen trifft der Strahl zuerst eine Rückseite – von innen sieht man die nicht, das Bild wirkt dann unauffällig);
+    // frei = Abstand bis zum ersten Bauteil auf der Sichtlinie zum Ziel, höchstens 4 m.
+    _sicht() {
+      scene.updateMatrixWorld(true);
+      const objs = rayObjs(true), names = matNames(), rc = new THREE.Raycaster(), p = camP.position.clone(), seiten = new Map(), m4 = new THREE.Matrix4();
+      const nm = h => names.get(h.object.material) || h.object.material.type;
+      const vis = h => st.level === 'alle' || h.point.y <= levelPlane.constant + 0.01;
+      // Rückseite: Flächennormale in Welt zeigt in Strahlrichtung, und das Material zeigt sonst nur die Vorderseite
+      const rueck = (h, d) => {
+        if (!h.face || seiten.get(h.object.material) !== THREE.FrontSide) return false;
+        m4.copy(h.object.matrixWorld);
+        if (h.object.isInstancedMesh && h.instanceId !== undefined) { const mi = new THREE.Matrix4(); h.object.getMatrixAt(h.instanceId, mi); m4.multiply(mi); }
+        return h.face.normal.clone().transformDirection(m4).dot(d) > 0;
+      };
+      for (const o of objs) if (!seiten.has(o.material)) { seiten.set(o.material, o.material.side); o.material.side = THREE.DoubleSide; }
+      try {
+        let nah = null, innen = 0, wer = null;
+        for (const a of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) {
+          const d = new THREE.Vector3(...a); rc.set(p, d); rc.far = 3;
+          const h = rc.intersectObjects(objs, false).find(vis);
+          if (!h) continue;
+          if (h.distance < 0.12 && (!nah || h.distance < nah.d)) nah = { d: +h.distance.toFixed(2), was: nm(h) };
+          if (rueck(h, d)) { innen++; if (!wer || h.distance < wer.d) wer = { d: +h.distance.toFixed(2), was: nm(h) }; }
+        }
+        if (!nah && innen >= 4) nah = { ...wer, innen: true };
+        const dir = controls.target.clone().sub(p), l = Math.min(4, dir.length());
+        rc.set(p, dir.normalize()); rc.far = l;
+        const h = rc.intersectObjects(objs, false).find(vis);
+        return { nah, frei: +(h ? h.distance : l).toFixed(2), was: h ? nm(h) : null, rueck: !!(h && rueck(h, dir)) };
+      } finally { for (const [m, s] of seiten) m.side = s; }
     },
     // Prüfsumme der Szene ohne Bild, für den Vergleich vorher/nachher (hat sich durch einen Umbau etwas verschoben?): je Material über Lage,
     // Geometrie und Instanzen aller Netze, dazu die Texturpixel; gesamt fasst alles zusammen. Gleich nach dem Laden aufrufen (Türen zu).
@@ -233,8 +317,15 @@
     // Rundgang ohne Bildschirm weiterlaufen lassen (für die Prüfung): sec Sekunden in Schritten von 1/30 s
     _step(sec) { for (let k = 0; k < sec * 30 && tour; k++) { stepTour(1 / 30); updateDoors(1 / 30); } renderFrame(); return tour ? tour.label : 'Ende'; },
     _view(p, t) { stopTour(false); setOrtho(false); tween = { t0: performance.now(), dur: 10, fp: camP.position.clone(), ft: controls.target.clone(), tp: new THREE.Vector3(...p), tt: new THREE.Vector3(...t) }; },
-    // Bildschleife n Schritte von Hand weiterlaufen lassen (Headless-Browser ohne Bildwechsel, tools/houseshot.sh)
+    // Bildschleife n Schritte von Hand weiterlaufen lassen (Headless-Browser ohne Bildwechsel, tools/browser.js)
     // nur rechnen, nicht zeichnen (das Bild entsteht danach mit snapshot) – im Software-Rendering sonst sehr langsam
     _frame(n = 1) { skipDraw = true; try { for (let i = 0; i < n; i++) { cancelAnimationFrame(raf); loop(Math.max(performance.now(), last) + 1000 / 30); } } finally { skipDraw = false; } return camP.position.toArray(); },
+    // Bild wie snapshot(), aber mit dem Schattenbild des letzten Prüfbilds, solange sich nichts Schattenwerfendes bewegt hat (tools/browser.js)
+    _shot: testShot,
+    // Nahebene beim nächsten Schritt der Schleife neu setzen: die Schleife ändert sie erst ab 5 mm Unterschied, sonst hinge ein Prüfbild über
+    // die Tiefengenauigkeit (Umgebungsverdeckung) von der Ansicht davor ab. Danach _frame(1).
+    _nahNeu() { camP.near = -1; invalidate(); },
+    // für Versuche in Prüfskripten (z. B. ein Teil verschieben und sehen, ob der Bildvergleich es findet): Szene, Türen, Materialnamen
+    _szene: () => ({ scene, doors, M, THREE }),
   };
 })();

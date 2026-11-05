@@ -7,6 +7,8 @@
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*)
+  # Git-Schritte bleiben in Git Bash: in Arbeitskopien zeigt .git auf einen Windows-Pfad, den Git in WSL nicht auflöst
+  case "${1:-}" in helfer | live) cd "$here"; exec bash "tools/$1.sh" "${@:2}" ;; esac
   w="$(cd "$here" && pwd -W)"
   # Ordner und Argumente über die Umgebung nach WSL reichen, dann stört keine Windows-Kommandozeile die Anführungszeichen
   export VG_DIR="/mnt/$(printf '%s' "${w:0:1}" | tr 'A-Z' 'a-z')${w:2}" VG_ARGS="$(printf '%q ' "$@")"

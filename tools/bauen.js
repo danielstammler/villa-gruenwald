@@ -4,7 +4,7 @@
 // Werte im Text: {{ Ausdruck }} in src/seite/*.html wird beim Bauen aus den Hausdaten ersetzt (Formate unten, z. B. {{ m(HOUSE.tg.bucht) }});
 // src/werte.js darf dafür Hilfsrechnungen anlegen, die nur beim Bauen gebraucht werden.
 const fs = require('fs'), path = require('path');
-const { ROOT, SRC, lesen, ordner, teil, BASIS, kontext, rechne } = require('./lib/laden');
+const { ROOT, SRC, lesen, teile, ordner, teil, BASIS, kontext, rechne } = require('./lib/laden');
 
 const zahl = (v, d = 2) => v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
 const FORMAT = {
@@ -16,22 +16,24 @@ const FORMAT = {
   grad: (v, d = 1) => `${zahl(v, d)}°`,      // 6,2°
 };
 
-function werte(html) {
+// Je Teildatei ersetzen, in einer gemeinsamen vm; DATEI nennt die Datei für Meldungen (auch in src/werte.js). Alle Fehler sammeln, dann abbrechen.
+let ctx = null, fehler = 0;
+function werte(html, datei) {
   if (!html.includes('{{')) return html;
-  const ctx = kontext(FORMAT);
-  if (fs.existsSync(path.join(SRC, 'werte.js'))) rechne(ctx, lesen('werte.js'));
-  let fehler = 0;
-  const out = html.replace(/\{\{([\s\S]*?)\}\}/g, (all, a) => {
+  if (!ctx) {
+    ctx = kontext(FORMAT);
+    if (fs.existsSync(path.join(SRC, 'werte.js'))) rechne(ctx, lesen('werte.js'));
+  }
+  ctx.DATEI = datei;
+  return html.replace(/\{\{([\s\S]*?)\}\}/g, (all, a) => {
     let v;
     try { v = rechne(ctx, a); } catch (e) { v = e; }
     if (typeof v !== 'string' || /NaN|undefined|Infinity/.test(v)) {
       fehler++;
-      console.error(`FEHLER im Text: {{${a}}} → ${v instanceof Error ? v.message : typeof v === 'number' ? `Zahl ${v} ohne Format (z/m/cm/m2/proz/grad)` : v}`);
+      console.error(`FEHLER in src/seite/${datei}: {{${a}}} → ${v instanceof Error ? v.message : typeof v === 'number' ? `Zahl ${v} ohne Format (z/m/cm/m2/proz/grad)` : v}`);
     }
     return v;
   });
-  if (fehler) process.exit(1);
-  return out;
 }
 
 const IMPORTS = [
@@ -45,7 +47,8 @@ const IMPORTS = [
 // Autos: Baukasten und je Modell eine Datei (fehlende Modelle ersetzt das 3D-Modell durch eine einfache Form)
 const AUTOS = ['car-ferrari.js', 'car-cayenne.js', 'car-vklasse.js'].filter(n => fs.existsSync(path.join(SRC, n)) && !process.env.OHNE_AUTOS);
 
-const page = werte(ordner('seite/', '.html'));
+const page = teile('seite/', '.html').map(n => werte(lesen(`seite/${n}`), n)).join('');
+if (fehler) process.exit(1);
 const css = lesen('style.css');
 const base = BASIS.map(teil).join('\n');
 // 3D-Modell: Bereichsdateien in src/view3d/, nach Namen sortiert zu einem Block zusammengesetzt (ein gemeinsamer Gültigkeitsbereich)

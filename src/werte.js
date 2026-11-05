@@ -2,7 +2,7 @@
 // SITE, HOUSE, Plans, Elev, Site … und die Formate z, m, cm, m2, proz, grad. Alles Abgeleitete ist eine Funktion: ein Fehler (Raum
 // umbenannt, Bauteil entfernt) erscheint dann beim Bauen mit dem Ausdruck, der ihn braucht, und bricht ab, statt still eine falsche Zahl
 // in den Text zu schreiben. Prosa, die Räume beim Namen nennt, bekommt daneben die unsichtbare Prüfung {{ W.da('UG', 'Gym', …) }}.
-// Jede Datei in src/seite mit Ausdrücken beginnt mit {{ W.datei('…') }}: der Bau ersetzt der Reihe nach, so nennen die Meldungen die Datei.
+// Der Bau ersetzt je Datei und setzt dafür DATEI (z. B. '30-grundrisse.html'), so nennen die Meldungen die Datei.
 
 // Anzahl als Wort wie im Text („drei Stellplätze“), ab 13 in Ziffern. 0, 1 und Brüche brechen ab: dann muss der Satz anders lauten.
 const wort = n => {
@@ -19,10 +19,8 @@ const masse = (P, d = 2) => {
 };
 
 const W = {
-  // Marke am Anfang einer Datei (liefert ''); wo() nennt sie in den Meldungen
-  _datei: '',
-  datei(n) { W._datei = n; return ''; },
-  wo: () => (W._datei ? `src/seite/${W._datei}` : 'src/seite/ (Marke {{ W.datei(…) }} am Dateianfang fehlt)'),
+  // Datei, deren Ausdrücke gerade ersetzt werden (setzt tools/bauen.js), für die Meldungen
+  wo: () => `src/seite/${DATEI}`,
   geschoss(fl) {
     if (!Plans.FL[fl]) throw new Error(`Geschoss ${fl} gibt es im Grundriss nicht (${Object.keys(Plans.FL).join(', ')}) – ${W.wo()} anpassen`);
     return Plans.FL[fl];

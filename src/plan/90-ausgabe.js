@@ -68,11 +68,18 @@
     try { FL[fl].furn(); } finally { Object.assign(fu, saved); }
     return out;
   }
+  // Für die Prüfungen (tools/lib/grundriss.js): dieselben Aufrufe, je Möbel das SVG, das der echte Helfer zeichnet (Formen ohne Nachbau)
+  function formen(fl) {
+    const out = [], saved = { ...fu };
+    for (const k of Object.keys(fu)) fu[k] = (...a) => { const svg = saved[k](...a); out.push({ t: k, a, svg }); return svg; };
+    try { FL[fl].furn(); } finally { Object.assign(fu, saved); }
+    return out;
+  }
   function wohnflaeche() {
     const part = ['EG', 'OG', 'DG'].map(fl => table(fl).wf);
     const B = HOUSE.balkon, BD = HOUSE.balkonDG;
     const aussen = 0.25 * (area([B.x0, B.x1, B.y0, B.y1]) + 15.0 + area([BD.x0, BD.x1, BD.y0, BD.y1]));
     return { eg: part[0], og: part[1], dg: part[2], aussen, sum: part[0] + part[1] + part[2] + aussen };
   }
-  return { render, table, wohnflaeche, items, FL, num, CORE: { LINE, FLIGHTS, HOLES, LIFT, VOID } };
+  return { render, table, wohnflaeche, items, formen, FL, num, CORE: { LINE, FLIGHTS, HOLES, LIFT, VOID } };
 })();

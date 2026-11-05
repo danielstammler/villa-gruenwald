@@ -87,8 +87,9 @@
     // OG: schwarzes Geländer am Luftraum neben dem Antritt der Dachtreppe; DG: Geländer an der Öffnung über der Dachtreppe
     railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -LINE[3] + 0.04), Plans.CORE.FLIGHTS.OG.x0 + 0.02, VOID[0][1] - 0.02, Zh.ffbOG, Zh.ffbOG + 1.0, 0);
     railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(HOLES.DG[1] + 0.04, 0, 0)), LINE[2] + 0.02, LINE[3] - 0.02, Zh.ffbDG, Zh.ffbDG + 1.0, 0);
-    // Kronleuchter im Luftraum über der Eingangsachse: Stange vom DG-Boden, zwei Ringe mit Lichtschirmen (leuchten abends)
-    const cx = 8.0, cy = (VOID[0][2] + VOID[0][3]) / 2;
+    // Kronleuchter im Luftraum über der Eingangsachse (Mitte der Öffnung „eingang“, wandert mit der Haustür): Stange vom DG-Boden,
+    // zwei Ringe mit Lichtschirmen (leuchten abends)
+    const eingang = HOUSE.fas.N.open.find(o => o.kind === 'eingang'), cx = HOUSE.W - (eingang.u0 + eingang.u1) / 2, cy = (VOID[0][2] + VOID[0][3]) / 2;
     addCyl(M.metal, cx, cy, Zh.deckeDG - 0.06, Zh.deckeDG, 0.11, 0.11, 18); addCyl(M.metal, cx, cy, 5.0, Zh.deckeDG - 0.06, 0.012, 0.012, 8);
     addCyl(M.metal, cx, cy, 4.42, 5.0, 0.035, 0.035, 12); addCyl(M.metal, cx, cy, 4.34, 4.42, 0.07, 0.02, 12);
     for (const [zr, rr, nn] of [[4.62, 0.62, 10], [4.95, 0.4, 6]]) {

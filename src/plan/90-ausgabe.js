@@ -9,7 +9,7 @@
       b.cols.map(x => sq(x, b.colY, b.colW, `Pfeiler · ${num(b.colW * 100, 0)} × ${num(b.colW * 100, 0)} cm`)).join('') +
       R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', `Freisitz · ${num(fz.x1 - fz.x0, 2)} × ${num(fz.y1 - fz.y0, 2)} m · überdacht, Esstisch`) + sq(fz.x1 - 0.175, fz.y0 + 0.175, 0.35) + sq(fz.x1 - 0.175, fz.y1 - 0.175, 0.35) +
       R(p.x0, p.x1, p.y0, p.y1, 'g-outside', 'Podest am Eingang') + R(W - pk.u1, W - pk.u0, 0, pk.depth, 'g-above', 'Portikus über dem Eingang') +
-      pk.pillars.map(u => sq(W - u, pk.py, pk.pw, 'Pfeiler des Portikus')).join('') + T(8, -15.25, 'Terrasse', 'g-ftxt') + T(17.5, -6.25, 'Freisitz', 'g-ftxt') + T(8, 0.4, 'Eingang', 'g-ftxt');
+      pk.pillars.map(u => sq(W - u, pk.py, pk.pw, 'Pfeiler des Portikus')).join('') + T(8, -15.25, 'Terrasse', 'g-ftxt') + T(17.5, -6.25, 'Freisitz', 'g-ftxt') + T(mm((EINGANG.x0 + EINGANG.x1) / 2), 0.4, 'Eingang', 'g-ftxt');
     if (fl === 'OG') return R(b.x0, b.x1, b.y0, b.y1, 'g-outside', `Balkon · ${num(b.x1 - b.x0, 2)} × ${num(b.y1 - b.y0, 2)} m`) + rails(b) + T(8, -14.3, 'Balkon', 'g-ftxt') +
       bd.cols.map(x => sq(x, bd.colY, bd.colW, `Pfeiler · ${num(bd.colW * 100, 0)} × ${num(bd.colW * 100, 0)} cm · trägt den Balkon im DG`)).join('') +
       R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', `Dachterrasse auf dem Freisitz · ${num(fz.x1 - fz.x0, 2)} × ${num(fz.y1 - fz.y0, 2)} m`) + T(17.5, -8.4, 'Dachterrasse', 'g-ftxt');

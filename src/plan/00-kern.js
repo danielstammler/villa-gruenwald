@@ -19,7 +19,7 @@ const Plans = (() => {
   // Treppenhalle (Daniel, 4.11.2026: „so, dass man beim Reinkommen auf sie zuschaut, nicht so zick zack“): eine gerade Treppenbahn
   // an der Rückwand der Halle (LINE = [Westende am Aufzug, Ostende, Südkante an der Rückwand, Nordkante zur Halle]). Kellertreppe UG→EG,
   // Haupttreppe EG→OG und Dachtreppe OG→DG sind je ein gerader Lauf, steigen nach Westen und liegen genau übereinander, je ein Geschoss
-  // versetzt (Kopfhöhe überall über 2,9 m). Antritt im Osten, Austritt im Westen auf das Podest vor dem Aufzug. Der Aufzug sitzt im
+  // versetzt (Kopfhöhe an den Deckenöffnungen prüft die Regel treppe-kopf). Antritt im Osten, Austritt im Westen auf das Podest vor dem Aufzug. Der Aufzug sitzt im
   // Wandblock westlich davon, Türen nach Osten.
   // Breiter oder schmaler: nur LINE[2] (nach Süden) oder LINE[3] (nach Norden) ändern. Daraus folgen RUECKWAND und VORDERWAND (unten),
   // mit ihnen alle Räume, Durchgänge, Türen und Möbel an diesen Wänden in 10-ug … 40-dg, dazu LIFT, VOID, HOLES, 3D, Regeln und

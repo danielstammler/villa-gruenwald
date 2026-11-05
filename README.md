@@ -36,5 +36,5 @@ Die Pläne selbst liegen nicht im Repo, nur die daraus gemessenen Koordinaten (`
 ./vg bauen
 OHNE_AUTOS=1 ./vg bauen   # mit einfachen Ersatzformen statt der Modelle aus src/car-*.js
 ./vg pruefen schnell      # Bau, Zeichnungen, Regeln, Wege – etwa 1 s
-./vg pruefen              # dazu 3D mit Bildvergleich – gut 1 min
+./vg pruefen              # dazu 3D mit Bildvergleich – 1 bis 1½ min
 ```

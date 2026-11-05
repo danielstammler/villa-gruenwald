@@ -5,13 +5,23 @@ Lageplan und Datenblatt in einer einzigen HTML-Seite, gebaut aus `src/`, live au
 hineinschreiben). Bauherr ist Daniel. Antworten, Code-Kommentare und Commit-Nachrichten auf Deutsch; Code im Stil der Umgebung
 (kompakt, dichte Einzeiler-Kommentare mit dem Warum).
 
+## Zusammenarbeit
+
+- Der Bauherr bedient selbst kein Terminal und kein WSL: alle Befehle führt der Assistent aus, Schritte für ihn nur über die
+  Windows-Oberfläche oder den Browser.
+- Änderungen ohne Rückfrage bis live bringen (prüfen, committen, pushen, `./vg live`, Claude-Ansicht neu veröffentlichen). Gestaltung
+  entscheidet er: Funde und Vorschläge melden, nicht ungefragt umbauen.
+- Viele Wünsche auf einmal: unabhängige Teile parallel an Hilfsagenten geben (siehe unten), Fortschritt kurz melden.
+- Sitzungsbeginn: `git status` und `./vg pruefen schnell`; die private Notiz lesen (Pfad unter „Veröffentlichen“).
+
 ## Befehle
 
-Alles über `./vg` im Repo (aus Git Bash startet es sich selbst in WSL neu; Node, Python und Chrome gibt es nur in WSL):
+Alles über `./vg` im Repo (aus Git Bash startet es sich selbst in WSL neu; Node, Python und Chrome gibt es nur in WSL; `./vg` allein
+zeigt die Übersicht):
 
 - `./vg bauen` – baut `docs/index.html` (Pages) und `dist/artifact.html` (Claude-Ansicht). `OHNE_AUTOS=1 ./vg bauen` ohne Automodelle.
 - `./vg pruefen schnell` – Bau, Zeichnungen, Regeln, Wege der Rundgänge und Anker der 3D-Ansichten in etwa 1 s: nach jeder Änderung.
-- `./vg pruefen` – zuerst das Billige (dazu Zeichnungen gegen die Referenz), dann 3D in gut 1 min: Rundgänge wie beim Gehen (bekannte
+- `./vg pruefen` – zuerst das Billige (dazu Zeichnungen gegen die Referenz), dann 3D, zusammen 1–1½ min: Rundgänge wie beim Gehen (bekannte
   Kontakte in `tools/erwartet.json`), Prüfsumme der Szene, 25 Ansichten (`tools/ansichten.json`) im Bildvergleich. Geänderte Bilder als
   vorher | nachher in `tools/shots/vergleich/`, alle klein in `tools/shots/uebersicht.png`. Vor jedem Commit; Änderungen allein sind kein
   Fehler, nur Bau, NaN, Regeln, Wege, unerwartete Kontakte und Bildfehler.
@@ -67,7 +77,10 @@ Grundlage für die Prüfungen ohne Browser in eine vm.
 ## Grundrisse, Treppe und Eingang ändern (kommt sehr oft vor)
 
 - Wo: Räume, Türen, Öffnungen und Möbel je Geschoss in `src/plan/10-ug.js` … `40-dg.js`. Räume sind lichte Rechtecke `r: [x0, x1, y0, y1]`
-  (plus `ext`-Rechtecke), Wände sind der Spalt dazwischen (innen meist 0,24 m), Türen `{ x, y, w, o, s, h }` sitzen mittig in der Wand.
+  (plus `ext`-Rechtecke, die sich berühren oder über `open` verbunden sein müssen, sonst ist ein Teil abgemauert), Wände sind der Spalt
+  dazwischen (innen meist 0,24 m), Durchgänge ohne Tür stehen in `open`. Türen `{ x, y, w, o, s, h }`: `o: 'h'` in einer Ost-West-Wand
+  mit x = Westende der Öffnung und y = Wandmitte, `o: 'v'` in einer Nord-Süd-Wand mit x = Wandmitte und y = Südende; `w` Breite,
+  `s: 1` schlägt nach Norden bzw. Osten auf (`-1` nach Süden bzw. Westen), `h: 1` Band am Ost- bzw. Nordende, `t` Wanddicke der Zeichnung.
   Treppe, Aufzug und Luftraum: `src/plan/00-kern.js` (`LINE`, `FLIGHTS`, `HOLES`, `LIFT`, `VOID`). Haustür und alle Fassadenöffnungen:
   `src/haus/10-fassaden.js`; Podest, Terrasse, Balkone: `src/haus/20-anbauten.js`.
 - Was automatisch folgt: 3D-Innenausbau (Wände, Böden, Türen, Treppe, Möbel über `Plans.items`), Schnitt A–A, Wohnfläche und
@@ -75,8 +88,9 @@ Grundlage für die Prüfungen ohne Browser in eine vm.
   Prüfung (am Raum verankert) und alle Zahlen im Seitentext (`{{ … }}`). Nur Prosa über Räume bleibt Handarbeit.
 - Ablauf: ändern → `./vg pruefen schnell` (Regeln finden Überlappungen, unerreichbare Räume, Türschwenks, Möbel in Wänden, fehlende
   Fenster, Treppe und Kopfhöhe; `Wege` prüft die Rundgänge; der Bau bricht ab, wenn der Seitentext einen fehlenden Raum nennt) →
-  `./vg raumbuch <Geschoss>` (Raumtabelle als Text) → `./vg plan <Geschoss>` und `./vg wege bild <Geschoss>` (Bild, bei Änderung
-  vorher | nachher) → `./vg pruefen` (3D) → nur die geänderten Ansichten ansehen → `./vg abnehmen` → committen.
+  `./vg raumbuch <Geschoss>` (Raumtabelle als Text) → `./vg plan <Geschoss>` (Bild, bei Änderung vorher | nachher; die Wege zeichnet
+  `./vg wege bild <Geschoss>` ein, ohne Vergleich) → `./vg pruefen` (3D) → nur die geänderten Ansichten ansehen → `./vg abnehmen` →
+  committen.
 - Prosa über Räume in `src/seite/*.html` bekommt daneben die unsichtbare Prüfung `{{ W.da('OG', 'Bad West', …) }}`; Anzahlen und
   Flächen kommen aus `W.raeume`/`W.spanne` (src/werte.js).
 
@@ -134,8 +148,8 @@ Grundlage für die Prüfungen ohne Browser in eine vm.
 
 - Unabhängige Teilaufgaben parallel, je Agent eigene Dateien; an derselben Datei nacheinander.
 - In einer Arbeitskopie (`.claude/worktrees/…`) zuerst `./vg helfer start` (aus Git Bash; Git in WSL kann Arbeitskopien nicht lesen):
-  holt den aktuellen Stand von main und nimmt `docs/index.html` aus den Commits (die Seite wird erst nach dem Zusammenführen auf main
-  gebaut). Dann einmal `./vg pruefen`, bevor etwas geändert wird: das legt die eigene Referenz an.
+  holt den aktuellen Stand von main (`git merge --ff-only main`, scheitert bei eigenen Commits, dann von Hand zusammenführen) und nimmt
+  `docs/index.html` aus den Commits (die Seite wird erst nach dem Zusammenführen auf main gebaut). Dann einmal `./vg pruefen`, bevor etwas geändert wird: das legt die eigene Referenz an.
 - Am Ende auf dem eigenen Zweig committen, nicht pushen und nicht zusammenführen. Große Dateien in mehreren kleinen Schritten schreiben.
 - Zusammenführen auf main: `git merge --no-edit <zweig>` je Helfer (für `docs/index.html` gilt automatisch die Fassung von main),
   dann `./vg pruefen`, die geänderten Ansichten ansehen, nach gewollten Änderungen `./vg abnehmen` und die neu gebaute Seite committen.
@@ -146,5 +160,6 @@ Grundlage für die Prüfungen ohne Browser in eine vm.
   starten, nicht aktiv warten.
 - Die private Claude-Ansicht („Forever Home Grünwald“, mit `Artifact list` zu finden) aus `dist/artifact.html` neu veröffentlichen.
   Private Notizen des Assistenten (Links, Lage, offene Fragen an den Bauherrn) liegen außerhalb des Repos in
-  `C:\Users\Daniel\.claude\projects\C--Users-Daniel\memory\villa-gruenwald-repo.md`.
+  `C:\Users\Daniel\.claude\projects\C--Users-Daniel\memory\villa-gruenwald-repo.md`; im selben Ordner allgemeine Notizen (Parallelarbeit,
+  Chrome headless, GitHub-Anmeldung), Übersicht in `MEMORY.md`.
 - Keine Zugangsdaten in Dateien. Downloads (z. B. fertige 3D-Modelle) nur nach ausdrücklichem OK mit Dateiname, Quelle und Größe.

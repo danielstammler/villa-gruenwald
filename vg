@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 # Einstieg für Bau und Prüfungen, aus Git Bash (Windows) wie aus WSL:
 #   ./vg bauen              baut docs/index.html und dist/artifact.html (tools/bauen.js)
-#   ./vg pruefen schnell    Bau, Zeichnungen, Regeln (etwa 1 s) · ./vg pruefen: dazu die 3D-Prüfungen
-#   ./vg <werkzeug> …       jedes andere Werkzeug tools/<werkzeug>.sh oder tools/<werkzeug>.js, z. B. ./vg houseshot fingerprint
+#   ./vg pruefen schnell    Bau, Zeichnungen, Regeln, Wege, Anker (etwa 1 s) · ./vg pruefen: dazu Bildvergleich und 3D (gut 1 min)
+#   ./vg <werkzeug> …       jedes andere Werkzeug tools/<werkzeug>.sh oder tools/<werkzeug>.js, z. B. ./vg raumbuch OG
+#   ./vg                    diese Übersicht mit allen Werkzeugen (Einzelheiten in CLAUDE.md)
 # Unter Windows startet sich das Skript selbst in WSL neu, denn Node, Python und Chrome gibt es nur dort.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
+if [ $# -eq 0 ] || [ "$1" = hilfe ]; then   # Übersicht ohne Umweg über WSL; früher lief hier still die volle Prüfung
+  sed -n '2,/^[^#]/s/^# \{0,1\}//p' "$0"; echo "Werkzeuge: $(ls "$here/tools" | sed -n 's/\.\(sh\|js\)$//p' | tr '\n' ' ')"; exit 0
+fi
 case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*)
   # Git-Schritte bleiben in Git Bash: in Arbeitskopien zeigt .git auf einen Windows-Pfad, den Git in WSL nicht auflöst
   case "${1:-}" in helfer | live) cd "$here"; exec bash "tools/$1.sh" "${@:2}" ;; esac
@@ -17,7 +21,7 @@ case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*)
   exec wsl.exe -e bash -lc 'cd "$VG_DIR" && eval "./vg $VG_ARGS"'
 esac
 cd "$here"
-cmd="${1:-pruefen}"; [ $# -gt 0 ] && shift
+cmd="$1"; shift
 [ "$cmd" = bauen ] && exec node tools/bauen.js "$@"
 [ -f "tools/$cmd.sh" ] && exec bash "tools/$cmd.sh" "$@"
 [ -f "tools/$cmd.js" ] && exec node "tools/$cmd.js" "$@"

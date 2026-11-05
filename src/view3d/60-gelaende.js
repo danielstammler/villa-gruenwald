@@ -19,7 +19,7 @@
     buildLichthof();
     // Pool: Rand, Becken 1,40 m tief, Wasser 12 cm unter dem Rand, Stufen über die ganze Breite an der Nordseite
     const PO = HOUSE.pool, pw = C.poolWasser, w = pw[1][0] - pw[0][0], d = pw[0][1] - pw[2][1];
-    g.add(extrude(poolOuter, M.coping, 0, 0.06, [pw]));
+    g.add(extrude(poolOuter, M.coping, 0, PO.rand, [pw]));
     const basin = new THREE.Mesh(new THREE.BoxGeometry(w, -PO.boden, d), M.tile);
     basin.position.set(pw[0][0] + w / 2, PO.boden / 2, -(pw[0][1] - d / 2)); basin.receiveShadow = true; g.add(basin);
     PO.stufen.forEach((z, i) => boxPlan(M.poolStep, pw[0][0], pw[1][0], pw[0][1] - PO.tritt * (i + 1), pw[0][1] - PO.tritt * i, PO.boden, z));

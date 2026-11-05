@@ -1,1 +1,4 @@
 *.sh text eol=lf
+vg text eol=lf
+# Erzeugte Seite (576 KB): keine Textunterschiede anzeigen; beim Zusammenführen die eigene Fassung behalten, danach neu bauen
+docs/index.html -diff merge=ours linguist-generated

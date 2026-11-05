@@ -1,0 +1,37 @@
+    <section id="view-lageplan" class="view-wrap" role="tabpanel" aria-labelledby="tab-lageplan" hidden>
+      <div class="stage" id="stageSite">
+        <svg id="siteSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lageplan"></svg>
+        <div class="stage-top">
+          <div class="cap hud-box"><strong>Lageplan</strong><span>Antippen oder darüberfahren zeigt Maße und Flächen</span></div>
+          <div class="zoom"><button id="siteZoomIn" aria-label="Vergrößern">+</button><button id="siteZoomOut" aria-label="Verkleinern">−</button><button id="siteHome" aria-label="Ganzes Grundstück">⤢</button><button class="maxbtn-in" data-max="#stageSite" aria-pressed="false">Vollbild</button></div>
+        </div>
+        <div class="tip" id="siteTip" hidden></div>
+      </div>
+      <aside class="panel" aria-label="Steuerung Lageplan">
+        <section class="group legend">
+          <h2>Ebenen</h2>
+          <label class="switch"><input type="checkbox" id="sl-konzept" data-site-layer="konzept" checked><i class="sw" style="background:var(--house)"></i> Konzept Chaline Deutsch</label>
+          <label class="switch"><input type="checkbox" id="sl-tg" data-site-layer="tg" checked><i class="sw" style="border-color:var(--tg)"></i> Tiefgarage (unterirdisch)</label>
+          <label class="switch"><input type="checkbox" id="sl-baeume" data-site-layer="baeume" checked><i class="sw" style="background:var(--lawn-2)"></i> Bäume und Wurzelschutzbereiche</label>
+          <label class="switch"><input type="checkbox" id="sl-grenze" data-site-layer="grenze" checked><i class="sw" style="border-color:var(--ink)"></i> Grenze und Grenzlängen</label>
+          <label class="switch"><input type="checkbox" id="sl-masse" data-site-layer="masse" checked><i class="sw" style="border-color:var(--ink);border-style:dashed"></i> Grenzabstände und Maße</label>
+          <label class="switch"><input type="checkbox" id="sl-linie" data-site-layer="linie" checked><i class="sw" style="border-color:var(--linie)"></i> Linie 5,00 m zur Straße</label>
+          <label class="switch"><input type="checkbox" id="sl-umgebung" data-site-layer="umgebung" checked><i class="sw" style="background:var(--nb)"></i> Nachbarhäuser und Straße</label>
+        </section>
+        <section class="group">
+          <h2>Auffälligkeiten</h2>
+          <ul class="notes">
+            <li class="info"><span>Vor der Rampe liegt ab der Grenze ein 3,00 m langer Vorplatz mit 4 % bis zu einer Rinne, dann fällt die offene Rampe mit 15 % (Garagenverordnung § 3). Das letzte Stück führt unter dem Poolhaus hindurch in die Tiefgarage.</span></li>
+            <li class="info"><span>An der Straße steht ein Zaun aus weißem Sockel, schwarzen Stäben und Pfeilern mit zweiflügeligem Einfahrtstor und Gartentür. Hecken säumen Straße, Rampe und Grenzen, im Vorgarten steht ein Spielturm mit Rutsche und Doppelschaukel. Die Terrasse läuft über die ganze Gartenseite. Rund um den Pool liegt eine Natursteinterrasse, die bis an die Veranda des Poolhauses reicht.</span></li>
+            <li class="warn"><span>Die Wurzelschutzbereiche der Nachbarbäume im Nordosten und Südosten reichen in Zuwegung und Zufahrt. Der Schutzbereich im Südosten erfasst auch den Anfang der Rampe.</span></li>
+          </ul>
+        </section>
+        <section class="group">
+          <h2>Flächenbilanz</h2>
+          <table class="fl"><tbody id="flaechen"></tbody></table>
+          <p>Grundstück laut Plan <span data-stat="plot"></span> m² (amtlich 1.661 m²).</p>
+        </section>
+        <button class="btn" id="siteDl">Lageplan speichern (SVG)</button>
+      </aside>
+    </section>
+

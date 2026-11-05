@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Einstieg für Bau und Prüfungen, aus Git Bash (Windows) wie aus WSL:
+#   ./vg bauen              baut docs/index.html und dist/artifact.html (tools/bauen.js)
+#   ./vg pruefen schnell    Bau, Zeichnungen, Regeln (etwa 1 s) · ./vg pruefen: dazu die 3D-Prüfungen
+#   ./vg <werkzeug> …       jedes andere Werkzeug tools/<werkzeug>.sh oder tools/<werkzeug>.js, z. B. ./vg houseshot fingerprint
+# Unter Windows startet sich das Skript selbst in WSL neu, denn Node, Python und Chrome gibt es nur dort.
+set -euo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*)
+  w="$(cd "$here" && pwd -W)"
+  # Ordner und Argumente über die Umgebung nach WSL reichen, dann stört keine Windows-Kommandozeile die Anführungszeichen
+  export VG_DIR="/mnt/$(printf '%s' "${w:0:1}" | tr 'A-Z' 'a-z')${w:2}" VG_ARGS="$(printf '%q ' "$@")"
+  export WSLENV="${WSLENV:+$WSLENV:}VG_DIR/u:VG_ARGS/u" MSYS_NO_PATHCONV=1
+  exec wsl.exe -e bash -lc 'cd "$VG_DIR" && eval "./vg $VG_ARGS"'
+esac
+cd "$here"
+cmd="${1:-pruefen}"; [ $# -gt 0 ] && shift
+[ "$cmd" = bauen ] && exec node tools/bauen.js "$@"
+[ -f "tools/$cmd.sh" ] && exec bash "tools/$cmd.sh" "$@"
+[ -f "tools/$cmd.js" ] && exec node "tools/$cmd.js" "$@"
+echo "Unbekannt: $cmd · Werkzeuge: $(ls tools | sed -n 's/\.\(sh\|js\)$//p' | tr '\n' ' ')"
+exit 2

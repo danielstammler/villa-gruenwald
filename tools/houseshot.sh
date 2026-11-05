@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Rendert das fertige Modell (docs/index.html, vorher python3 build.py) ohne Browser-Fenster als PNG oder prüft einen Rundgang – auch mehrfach gleichzeitig.
+# Rendert das fertige Modell (docs/index.html, vorher node tools/bauen.js) ohne Browser-Fenster als PNG oder prüft einen Rundgang – auch mehrfach gleichzeitig.
 # Aufruf in WSL im Repo:
 #   tools/houseshot.sh garage "pos=21.2,-2.0,23.4&tgt=14.0,-2.7,18.6"   → tools/shots/house-garage.png
 #   tools/houseshot.sh eg "cam=sued&level=EG"                            → Kamera wie die Buttons, Geschossblick EG
 #   tools/houseshot.sh probe ankommen                                    → Kollisionen und fehlender Boden entlang des Rundgangs (JSON)
+#   tools/houseshot.sh fingerprint                                       → Prüfsumme der Szene je Material (JSON), z. B. vor und nach einem Umbau
 # Weltkoordinaten wie View3D._view: X = Plan-Ost, Y = Höhe, Z = -Plan-Nord.
 set -euo pipefail
 # PORT=8767 tools/… für eine zweite Arbeitskopie (eigener Server, sonst 8766)
@@ -20,10 +21,12 @@ fi
 prof="$(mktemp -d)"; trap 'rm -rf "$prof"' EXIT
 chrome=(google-chrome --headless=new --no-sandbox --disable-dev-shm-usage --user-data-dir="$prof" --no-first-run --disable-gcm
   --use-angle=swiftshader --enable-unsafe-swiftshader --hide-scrollbars --window-size=1400,900 --virtual-time-budget=90000)
-if [ "$name" = probe ]; then
-  url="http://127.0.0.1:$port/tools/houseshot.html?probe=${par:?Rundgang fehlt}&step=${3:-10}"
+if [ "$name" = probe ] || [ "$name" = fingerprint ]; then
+  # fingerprint: Prüfsumme der Szene (View3D._fingerprint) als JSON, gleich nach dem Laden
+  if [ "$name" = probe ]; then url="http://127.0.0.1:$port/tools/houseshot.html?probe=${par:?Rundgang fehlt}&step=${3:-10}"
+  else url="http://127.0.0.1:$port/tools/houseshot.html?fingerprint=1"; fi
   dom=$("${chrome[@]}" --dump-dom "$url" 2>/dev/null || true)
-  res=$(printf '%s' "$dom" | sed -n 's/.*<pre id="out">\(PROBE \|FEHLER \)\(.*\)<\/pre>.*/\1\2/p')
+  res=$(printf '%s' "$dom" | sed -n 's/.*<pre id="out">\(PROBE \|FP \|FEHLER \)\(.*\)<\/pre>.*/\1\2/p')
   [ -n "$res" ] || { echo "FEHLER: keine Antwort von der Seite"; exit 1; }
   echo "$res" | sed 's/&quot;/"/g; s/&amp;/\&/g'
   case "$res" in FEHLER*) exit 1;; esac

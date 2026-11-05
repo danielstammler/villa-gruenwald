@@ -204,6 +204,32 @@
       }
       return out;
     },
+    // Prüfsumme der Szene ohne Bild, für den Vergleich vorher/nachher (hat sich durch einen Umbau etwas verschoben?): je Material über Lage,
+    // Geometrie und Instanzen aller Netze, dazu die Texturpixel; gesamt fasst alles zusammen. Gleich nach dem Laden aufrufen (Türen zu).
+    _fingerprint() {
+      scene.updateMatrixWorld(true);
+      const names = new Map([...Object.entries(carMats), ...Object.entries(M)].filter(([, v]) => v && v.isMaterial).map(([k, v]) => [v, k]));
+      const name = m => (m && (names.get(m) || m.type)) || '-', mats = new Set(), je = {};
+      const mix = (h, v) => Math.imul(h ^ v, 16777619) >>> 0, zahlen = (h, a) => { for (let i = 0; i < a.length; i++) h = mix(h, Math.round(a[i] * 1e4)); return h; };
+      scene.traverse(o => {
+        if (!o.geometry || o === sky) return;
+        const ms = [].concat(o.material), k = ms.map(name).join('+');
+        ms.forEach(m => m && mats.add(m));
+        let h = zahlen(je[k] || 2166136261, o.matrixWorld.elements);
+        for (const a of Object.values(o.geometry.attributes)) h = zahlen(h, a.array);
+        if (o.geometry.index) h = zahlen(h, o.geometry.index.array);
+        if (o.isInstancedMesh) h = zahlen(h, o.instanceMatrix.array);
+        je[k] = h;
+      });
+      for (const m of mats) for (const slot of ['map', 'normalMap', 'roughnessMap', 'bumpMap', 'alphaMap']) {
+        const c = m[slot] && m[slot].image;
+        if (!c || !c.getContext || !c.width) continue;
+        const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, k = `textur ${name(m)}.${slot}`;
+        let h = je[k] || 2166136261; for (let i = 0; i < d.length; i += 3) h = mix(h, d[i]); je[k] = h;
+      }
+      let gesamt = 2166136261; for (const k of Object.keys(je).sort()) gesamt = mix(mix(gesamt, je[k]), k.length);
+      return { gesamt: gesamt.toString(16), je: Object.fromEntries(Object.keys(je).sort().map(k => [k, je[k].toString(16)])) };
+    },
     // Rundgang ohne Bildschirm weiterlaufen lassen (für die Prüfung): sec Sekunden in Schritten von 1/30 s
     _step(sec) { for (let k = 0; k < sec * 30 && tour; k++) { stepTour(1 / 30); updateDoors(1 / 30); } renderFrame(); return tour ? tour.label : 'Ende'; },
     _view(p, t) { stopTour(false); setOrtho(false); tween = { t0: performance.now(), dur: 10, fp: camP.position.clone(), ft: controls.target.clone(), tp: new THREE.Vector3(...p), tt: new THREE.Vector3(...t) }; },

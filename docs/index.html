@@ -690,6 +690,9 @@ const SUN = (() => {
 // Wandhöhe 7,25 m und Firsthöhe 11,12 m: Proportionen des Renderings (Hausbreite 16,00 m als Maßstab). Gliederung der Fassade: Rendering
 // und Daniels Referenzbild (weißer Glattputz, schwarze Rahmen, Zwerchhaus mit Balkon, eckige Pfeiler, Kamine).
 // Alles andere (Geschosshöhen, Dachneigungen, Nord-/Ost-/Westfassade) ist eine plausible Annahme.
+// Teile in src/haus/, von tools/bauen.js nach Namen sortiert zu einer Datei zusammengesetzt: 00 Grundmaße, Höhen, Dach und Helfer,
+// 10 Fassaden mit allen Öffnungen, 20 Freisitz, Terrasse, Podest, Balkone, Kamine, 30 Rampe und Tiefgarage, 40 Pool, Poolhaus, Zaun,
+// Lichthof und Rückgabe, 50 Garten (Hecken, Spielplatz).
 const HOUSE = (() => {
   const W = 16.0, D = 11.65, wall = 0.36;
   // deckeSpitz: Unterseite der flachen Decke im DG (lichte Höhe 2,60 m), darüber der Spitzboden
@@ -720,6 +723,7 @@ const HOUSE = (() => {
   // Dachfenster in der steilen Dachfläche: Mitte c entlang der Traufe, v0..v1 die Fläche hinauf (Meter ab Traufe)
   const dachfenster = (c, w = 0.9) => ({ u0: c - w / 2, u1: c + w / 2, v0: 1.15, v1: 2.6 });
 
+  // Teil des Hausmodells (src/haus/, siehe 00-grund.js): Fassaden mit allen Fenstern und Türen, Lage der Fassaden im Plan
   // u läuft von links nach rechts, so wie man vor der jeweiligen Fassade steht.
   const fas = {
     S: {
@@ -784,6 +788,7 @@ const HOUSE = (() => {
     W: { o: [0, 0], r: [0, -1], n: [-1, 0] },
   };
 
+  // Teil des Hausmodells (src/haus/, siehe 00-grund.js): Freisitz, Terrasse, Podest, Balkone und Kamine
   const freisitz = { x0: 16, x1: 19, y0: -10.825, y1: -5.825, z: 0.18, slab: [3.0, 3.45], rail: 4.45, col: 0.35 };
   // Durchgehende Terrasse vor der ganzen Gartenseite, 4,00 m tief und im Osten bis an den Freisitz; in der Mitte eine Stufe zum Weg an den Pool
   const terrasse = { x0: 0, x1: 19, y0: -15.65, y1: -11.65, z: 0.18, stufe: [6.6, 9.4] };
@@ -798,6 +803,7 @@ const HOUSE = (() => {
   // Zwei Kamine auf der oberen Dachfläche, wie im Referenzbild links und rechts der Mitte
   const kamine = [{ x: 4.0, y: -D / 2, w: 0.75, d: 0.55, top: 11.9 }, { x: 12.0, y: -D / 2, w: 0.75, d: 0.55, top: 11.9 }];
 
+  // Teil des Hausmodells (src/haus/, siehe 00-grund.js): Rampe und Tiefgarage
   // Rampe in der Zufahrt, so wie Zufahrt, Poolhaus und Tiefgarage im Konzept aneinanderstoßen; Längsprofil nach GaStellV § 3 (Bayern):
   // ab der Grenze 3,00 m Vorplatz mit 4 % bis zur Rinne (y0), dann 15 % zwischen Betonwänden nach Norden und unter dem Poolhaus hindurch
   // (Unterkante Decke −0,15), unten 2,77 m Übergang mit 7,5 % und 0,40 m eben vor dem Tor mit Rinne und Pumpensumpf. Das Sektionaltor
@@ -852,10 +858,11 @@ const HOUSE = (() => {
   rampe.tor.sturz = tg.decke - rampe.zTG - rampe.tor.h;
   rampe.unterzug.lichte = Math.min(...[rampe.yPH - rampe.unterzug.b, rampe.yPH].map(y => tg.decke - rampe.z(y)));
 
+  // Teil des Hausmodells (src/haus/, siehe 00-grund.js): Pool, Poolterrasse, Poolhaus, Zaun und Lichthof; Rückgabe aller Werte
   // Pool aus dem Konzept: Wasser 12 cm unter dem Rand, 1,40 m tief, an der Nordseite vier Stufen über die ganze Breite,
   // gleichmäßig je etwa 29 cm vom Rand (+0,06) bis zum Boden.
   // Ringsum eine Natursteinterrasse, im Osten breit mit Liegen und bis an die Veranda des Poolhauses; ein Weg führt von der Terrasse herüber.
-  const pool = { wasser: -0.12, boden: -1.4, stufen: [-0.23, -0.52, -0.82, -1.11], tritt: 0.35 };
+  const pool = { rand: 0.06, wasser: -0.12, boden: -1.4, stufen: [-0.23, -0.52, -0.82, -1.11], tritt: 0.35 };
   const poolDeck = { z: 0.04, poly: [[4.5, -23.15], [13.5, -23.15], [13.5, -27.652], [19.384, -27.652], [19.384, -33.651], [13.5, -33.651], [13.5, -38.15], [4.5, -38.15]] };
   const poolWeg = { x0: 7.4, x1: 8.6, y0: -23.15, y1: -15.65 };
   // Poolhaus auf der Fläche aus dem Konzept (3,50 × 6,00 m) im Stil des Hauses: weißer Putz, Gesims, flaches Walmdach mit Schiefer.
@@ -877,6 +884,7 @@ const HOUSE = (() => {
   return { W, D, wall, Z, run1, run2, tan1, tan2, ueberstand, traufe, roofZ, roofIn, dachwinkel, fas, frame, freisitz, terrasse, podest, balkon, balkonDG, kamine, rampe,
     tg, pool, poolDeck, poolWeg, poolhaus, zaun, lichthof };
 })();
+// Teil des Hausmodells (src/haus/, siehe 00-grund.js): Garten mit Hecken und Spielplatz (HOUSE.garten)
 
 // Garten (Daniel, 4.11.2026): Hecken an allen Grenzen und an der Rampe, Spielplatz im Vorgarten. Gemeinsame Daten für 3D-Modell und Lageplan.
 HOUSE.garten = (() => {
@@ -925,6 +933,8 @@ HOUSE.garten = (() => {
 })();
 
 // Maßstäbliche Ansichten und Schnitt als SVG. Einheit: Meter; Höhe z wird zu SVG-y = -z.
+// Teile in src/ansicht/, von tools/bauen.js nach Namen sortiert zu einer Datei zusammengesetzt: 00 Kern, 10 Bauteile, 20 Fassaden,
+// 30 Schnitt A–A, 40 Schnitt B–B (Rampe), 90 Ausgabe.
 const Elev = (() => {
   const Z = HOUSE.Z, o = HOUSE.ueberstand, r1 = HOUSE.run1, r2 = HOUSE.run2;
   const f = v => +v.toFixed(3);
@@ -943,6 +953,7 @@ const Elev = (() => {
     <pattern id="pEarth" width="0.32" height="0.32" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V0.32" class="e-hatch"/></pattern>
   </defs>`;
 
+  // Teil der Ansichten (src/ansicht/, siehe 00-kern.js): Geländer, Öffnungen, Gauben, Freisitz, Säulen, Balkone, Portikus, Dachteile, Wege, Koten
   function rail(u0, u1, z0, z1) {
     const n = Math.max(2, Math.round((u1 - u0) / 0.11));
     let s = '';
@@ -1070,6 +1081,7 @@ const Elev = (() => {
     }
     return s;
   }
+  // Teil der Ansichten (src/ansicht/, siehe 00-kern.js): Fassadenansichten Süd, Nord, Ost, West
   const LEVELS = [[0, 'Gelände'], [Z.ffbEG, 'FFB EG'], [Z.ffbOG, 'FFB OG'], [Z.ffbDG, 'FFB DG'], [Z.wand, 'Wandhöhe'], [Z.knick, 'Dachknick'], [Z.first, 'First']];
 
   function facade(side, opt) {
@@ -1110,6 +1122,7 @@ const Elev = (() => {
     return { svg: s, vb: [x0, -12.6, x1 - x0, 12.6 - zu + 2.2] };
   }
 
+  // Teil der Ansichten (src/ansicht/, siehe 00-kern.js): Schnitt A–A durch das Haus
   function offsetPolyline(pts, d) {
     const seg = [];
     for (let i = 0; i < pts.length - 1; i++) {
@@ -1180,6 +1193,7 @@ const Elev = (() => {
     if (opt.koten) s += koten([[Z.ffbUG, 'FFB UG'], ...LEVELS, [zD, 'Decke über DG']], -4.6, -0.4);
     return { svg: s, vb: [x0, -12.6, x1 - x0, 17.9] };
   }
+  // Teil der Ansichten (src/ansicht/, siehe 00-kern.js)
   // Schnitt B–B in der Achse der Rampe, Blick nach Westen: links Straße und Zufahrt, rechts die Tiefgarage.
   function rampSection(opt) {
     const R0 = HOUSE.rampe, G = HOUSE.tg, yS = -53.2, u = y => y - yS, yEnd = -17.4, uE = u(yEnd), zPH = HOUSE.poolhaus.z, T = R0.tor, uz = R0.unterzug;
@@ -1240,6 +1254,7 @@ const Elev = (() => {
     }
     return { svg: s, vb: [x0, -4.3, x1 - x0, 9.5] };
   }
+  // Teil der Ansichten (src/ansicht/, siehe 00-kern.js): render und Schnittstelle
   function render(view, opt) {
     const res = view === 'A' ? section(opt) : view === 'B' ? rampSection(opt) : facade(view, opt);
     return { ...res, svg: DEFS + res.svg };
@@ -1500,6 +1515,8 @@ function PanZoom(svg, getHome) {
 
 // Vorgeschlagene Grundrisse: UG mit Tiefgarage, EG, OG, DG. Eigener Vorschlag auf Basis des Konzepts, keine Architektenplanung.
 // Räume sind lichte Rechtecke im Plan (x Ost, y Nord, Meter). Was zwischen ihnen frei bleibt, wird als Wand gezeichnet.
+// Teile in src/plan/, von tools/bauen.js nach Namen sortiert zu einer Datei zusammengesetzt: 00 Kern, Treppe, Aufzug und Möbel (fu),
+// 10–40 die Geschosse UG, EG, OG, DG (Räume, Öffnungen, Türen, Möbel), 50 Flächen und Zeichnen, 60 Tiefgarage, 90 Ausgabe.
 const Plans = (() => {
   const W = HOUSE.W, D = HOUSE.D, C = SITE.concept;
   const f = v => +v.toFixed(3);
@@ -1605,6 +1622,7 @@ const Plans = (() => {
     hob: (cx, cy) => [[-0.14, 0.14], [0.14, 0.14], [-0.14, -0.14], [0.14, -0.14]].map(([a, b]) => Ci(cx + a, cy + b, 0.09, 'g-furn')).join(''),
   };
 
+  // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Untergeschoss mit Gym, Foyer und Technik
   // ---------- Grundrisse ----------
   const FL = {
     UG: {
@@ -1642,6 +1660,7 @@ const Plans = (() => {
         fu.shelf(5.0, 11.4, -0.96, -0.36), fu.shelf(9.2, 11.68, -3.34, -2.74),
       ],
     },
+    // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Erdgeschoss
     EG: {
       titel: 'Erdgeschoss', ffb: HOUSE.Z.ffbEG,
       rooms: [
@@ -1683,6 +1702,7 @@ const Plans = (() => {
         fu.table(17.05, 17.95, -9.3, -7.3, 3),
       ],
     },
+    // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Obergeschoss
     OG: {
       titel: 'Obergeschoss', ffb: HOUSE.Z.ffbOG,
       rooms: [
@@ -1714,6 +1734,7 @@ const Plans = (() => {
         fu.table(7.4, 8.6, -13.6, -12.9, 1, false),
       ],
     },
+    // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Dachgeschoss
     DG: {
       titel: 'Dachgeschoss', ffb: HOUSE.Z.ffbDG,
       rooms: [
@@ -1747,6 +1768,7 @@ const Plans = (() => {
     },
   };
 
+  // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Flächen (auch DG nach lichter Höhe), Wände, Fenster, Türen, Treppe, Luftraum und Aufzug zeichnen
   // Dachgeschoss: lichte Höhe hängt vom Abstand s zur Außenwand ab (steile Mansarde, Dachaufbau 30 cm); im Zwerchhaus volle Höhe
   const h0 = HOUSE.Z.wand - 0.3 / Math.cos(Math.atan(HOUSE.tan1)) - HOUSE.Z.ffbDG;
   const sAt = h => (h - h0) / HOUSE.tan1;
@@ -1863,6 +1885,7 @@ const Plans = (() => {
       L(x0 + t, y0 + t, x1 - t, y1 - t, 'g-thin') + L(x0 + t, y1 - t, x1 - t, y0 + t, 'g-thin') +
       R(cx - 0.55, cx + 0.55, cy - 0.7, cy + 0.7, 'g-cabin') + R(x1 - t - 0.02, x1 + 0.02, dy - 0.45, dy + 0.45, 'g-gap') + T(cx, cy - 0.08, 'Aufzug', 'g-ftxt g-lifttxt');
   }
+  // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Tiefgarage im UG-Plan (Wände, Stellplätze, Fahrräder, Unterzug, Tor)
   function tiefgarage() {
     const tg = C.tg, ph = C.poolhaus, rp = HOUSE.rampe, PL = SITE.plot, wx0 = rp.x0 - rp.wand, wx1 = rp.x1 + rp.wand, rc = (rp.x0 + rp.x1) / 2;
     const kote = v => (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + num(Math.abs(v), 2);
@@ -1914,6 +1937,7 @@ const Plans = (() => {
     s += T(20.2, -14.85, 'Tiefgarage', 'g-roomtxt') + T(20.2, -15.5, `${num(area2(tg))} m² · lichte Höhe ${num(G.lichte, 2)} m`, 'g-areatxt');
     return s;
   }
+  // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Umgebung, Höhenlinien, render, Raumtabelle, Wohnfläche und Schnittstelle
   function context(fl) {
     const t = HOUSE.terrasse, b = HOUSE.balkon, fz = HOUSE.freisitz, p = HOUSE.podest;
     const sq = (x, y, w, tip) => R(x - w / 2, x + w / 2, y - w / 2, y + w / 2, 'g-col', tip);
@@ -3171,8 +3195,8 @@ CAR_MODELS.vklasse = k => {
   }
 };
 
-// Teil 1 des 3D-Modells: build.py setzt alle Dateien in src/view3d/ nach Namen sortiert zu einem Block zusammen (ein gemeinsamer
-// Gültigkeitsbereich). Hier Zustand, Hilfsfunktionen (addGeo, boxPlan, extrude, wallWithHoles …) und alle Materialien M für die anderen Teile.
+// Teil 1 des 3D-Modells: tools/bauen.js setzt alle Dateien in src/view3d/ nach Namen sortiert zu einem Block zusammen (ein gemeinsamer
+// Gültigkeitsbereich). Hier Zustand und Zufall; 01-material.js alle Materialien M, 02-formen.js die Geometrie-Hilfen (addGeo, boxPlan, extrude …).
 // 3D-Modell (three.js): Haus aus HOUSE, Grundstück und Umgebung aus SITE, Sonnenstand mit Schatten.
 // Weltkoordinaten: X = Plan-Ost, Y = Höhe, Z = -Plan-Nord. Das Haus liegt in X 0..16, Z 0..11,65.
 const View3D = (() => {
@@ -3207,6 +3231,7 @@ const View3D = (() => {
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): alle Materialien M mit ihren Texturen
   function makeMaterials() {
     const std = (color, r = 0.9, m = 0, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: r, metalness: m, ...extra });
     // Eichendielen 20 cm breit, 1,2 bis 2,4 m lang, versetzt gestoßen; Kachel 2,4 × 2,4 m, Holzbild leicht wechselnd
@@ -3539,6 +3564,7 @@ const View3D = (() => {
     // Stein und Außenmöbel: nur der Geschossschnitt erfasst sie (Balkone und Dachterrasse über der Schnitthöhe)
     for (const k of ['stone', 'fOut', 'fOutMetal', 'fCushionOut', 'fOutTop']) { levelMats.add(M[k]); M[k].clipShadows = true; }  }
 
+  // Teil des 3D-Modells (src/view3d/, siehe 00-kern.js): Geometrie-Hilfen (addGeo, boxPlan, extrude, wallWithHoles …)
   // Geometrien sammeln und je Material zusammenführen (wenige Draw-Calls).
   function addGeo(mat, geo, matrix) {
     if (matrix) geo.applyMatrix4(matrix);
@@ -5086,7 +5112,7 @@ const View3D = (() => {
     buildLichthof();
     // Pool: Rand, Becken 1,40 m tief, Wasser 12 cm unter dem Rand, Stufen über die ganze Breite an der Nordseite
     const PO = HOUSE.pool, pw = C.poolWasser, w = pw[1][0] - pw[0][0], d = pw[0][1] - pw[2][1];
-    g.add(extrude(poolOuter, M.coping, 0, 0.06, [pw]));
+    g.add(extrude(poolOuter, M.coping, 0, PO.rand, [pw]));
     const basin = new THREE.Mesh(new THREE.BoxGeometry(w, -PO.boden, d), M.tile);
     basin.position.set(pw[0][0] + w / 2, PO.boden / 2, -(pw[0][1] - d / 2)); basin.receiveShadow = true; g.add(basin);
     PO.stufen.forEach((z, i) => boxPlan(M.poolStep, pw[0][0], pw[1][0], pw[0][1] - PO.tritt * (i + 1), pw[0][1] - PO.tritt * i, PO.boden, z));
@@ -5985,6 +6011,32 @@ const View3D = (() => {
         if (!f || Math.abs(f.distance - EYE) > 0.3) out.push(['boden', +p.x.toFixed(2), +(-p.z).toFixed(2), +p.y.toFixed(2), f ? +f.distance.toFixed(2) : null, f ? tag(f.object) : '-']);
       }
       return out;
+    },
+    // Prüfsumme der Szene ohne Bild, für den Vergleich vorher/nachher (hat sich durch einen Umbau etwas verschoben?): je Material über Lage,
+    // Geometrie und Instanzen aller Netze, dazu die Texturpixel; gesamt fasst alles zusammen. Gleich nach dem Laden aufrufen (Türen zu).
+    _fingerprint() {
+      scene.updateMatrixWorld(true);
+      const names = new Map([...Object.entries(carMats), ...Object.entries(M)].filter(([, v]) => v && v.isMaterial).map(([k, v]) => [v, k]));
+      const name = m => (m && (names.get(m) || m.type)) || '-', mats = new Set(), je = {};
+      const mix = (h, v) => Math.imul(h ^ v, 16777619) >>> 0, zahlen = (h, a) => { for (let i = 0; i < a.length; i++) h = mix(h, Math.round(a[i] * 1e4)); return h; };
+      scene.traverse(o => {
+        if (!o.geometry || o === sky) return;
+        const ms = [].concat(o.material), k = ms.map(name).join('+');
+        ms.forEach(m => m && mats.add(m));
+        let h = zahlen(je[k] || 2166136261, o.matrixWorld.elements);
+        for (const a of Object.values(o.geometry.attributes)) h = zahlen(h, a.array);
+        if (o.geometry.index) h = zahlen(h, o.geometry.index.array);
+        if (o.isInstancedMesh) h = zahlen(h, o.instanceMatrix.array);
+        je[k] = h;
+      });
+      for (const m of mats) for (const slot of ['map', 'normalMap', 'roughnessMap', 'bumpMap', 'alphaMap']) {
+        const c = m[slot] && m[slot].image;
+        if (!c || !c.getContext || !c.width) continue;
+        const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, k = `textur ${name(m)}.${slot}`;
+        let h = je[k] || 2166136261; for (let i = 0; i < d.length; i += 3) h = mix(h, d[i]); je[k] = h;
+      }
+      let gesamt = 2166136261; for (const k of Object.keys(je).sort()) gesamt = mix(mix(gesamt, je[k]), k.length);
+      return { gesamt: gesamt.toString(16), je: Object.fromEntries(Object.keys(je).sort().map(k => [k, je[k].toString(16)])) };
     },
     // Rundgang ohne Bildschirm weiterlaufen lassen (für die Prüfung): sec Sekunden in Schritten von 1/30 s
     _step(sec) { for (let k = 0; k < sec * 30 && tour; k++) { stepTour(1 / 30); updateDoors(1 / 30); } renderFrame(); return tour ? tour.label : 'Ende'; },

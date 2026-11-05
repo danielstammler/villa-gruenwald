@@ -25,6 +25,7 @@ rahmen.src = (q.get('src') || '../docs/index.html') + '?v=' + Date.now() + '#mod
     let V = null;
     for (let i = 0; i < 900 && !(V && V.ready); i++) { await pause(100); V = rahmen.contentWindow && rahmen.contentWindow.View3D; }
     if (!(V && V.ready)) throw new Error('3D-Modell nicht bereit');
+    if (q.get('fingerprint')) { out.textContent = 'FP ' + JSON.stringify(V._fingerprint()); document.title = 'fertig'; return; }
     await pause(+(q.get('wait') || 1200));
     if (q.get('level')) V.setLevel(q.get('level'));
     if (q.get('probe')) { out.textContent = 'PROBE ' + JSON.stringify(V._probe(q.get('probe'), +(q.get('step') || 10))); document.title = 'fertig'; return; }

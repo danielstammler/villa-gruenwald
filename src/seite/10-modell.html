@@ -1,0 +1,80 @@
+    <section id="view-modell" class="view-wrap" role="tabpanel" aria-labelledby="tab-modell">
+      <div class="stage" id="stage3d">
+        <canvas aria-label="3D-Modell des Hauses mit Grundstück"></canvas>
+        <div class="fallback" hidden>Das 3D-Modell braucht WebGL. Die Ansichten und der Lageplan funktionieren auch ohne.</div>
+        <div class="hint hud-box">Ziehen: drehen · Rechts ziehen: verschieben · Rad, + / − oder Doppelklick: zoomen · WASD/Pfeile: gehen</div>
+        <button class="maxbtn hud-box" data-max="#stage3d" aria-pressed="false">Vollbild</button>
+        <div class="zoom zoom3d"><button id="zoom3dIn" aria-label="Näher heran (Taste +)">+</button><button id="zoom3dOut" aria-label="Weiter weg (Taste −)">−</button></div>
+        <div class="hud">
+          <div class="hud-box"><div class="hud-view">Garten</div><div class="hud-sun"></div></div>
+          <div class="hud-box scalebar" hidden><i></i><span>5 m</span></div>
+        </div>
+      </div>
+      <aside class="panel" aria-label="Steuerung 3D-Modell">
+        <section class="group">
+          <h2>Blick</h2>
+          <div class="chips" id="camChips">
+            <button data-cam="garten" aria-pressed="true">Garten</button>
+            <button data-cam="eingang">Eingang</button>
+            <button data-cam="ost">Ost</button>
+            <button data-cam="west">West</button>
+            <button data-cam="ueberblick" data-label="Überblick von Südwesten">Überblick</button>
+            <button data-cam="zufahrt" data-label="Zufahrt mit Rampe zur Tiefgarage">Zufahrt</button>
+            <button data-cam="innen" data-label="Innen · Essen und Wohnen">Innen</button>
+            <button data-cam="oben" data-label="Draufsicht">Draufsicht</button>
+            <button data-cam="front" data-label="Frontansicht Süd, orthogonal">Frontal maßstäblich</button>
+          </div>
+          <label class="switch"><input type="checkbox" id="optRotate"> Ums Haus fahren</label>
+          <p class="hint-text">Mit dem Mausrad, zwei Fingern oder den Knöpfen + und − im Bild lässt sich direkt durch Fenster und Türen ins Haus zoomen, Doppeltippen bzw. Doppelklick fliegt auf die Stelle zu. Am Rechner geht man mit W, A, S, D und den Pfeiltasten (Q und E: runter und hoch, + und −: zoomen, Umschalt: schneller).</p>
+        </section>
+        <section class="group">
+          <h2>Rundgang</h2>
+          <div class="chips" id="tourChips">
+            <button data-tour="ankommen" aria-pressed="false">Ankommen bis in den Pool</button>
+            <button data-tour="garage" aria-pressed="false">Garteneingang über Tiefgarage bis DG-Balkon</button>
+            <button data-tour="eg" aria-pressed="false">Durchs Erdgeschoss</button>
+            <button data-tour="garten" aria-pressed="false">Garten und Poolhaus</button>
+          </div>
+          <p class="hint-text">Geht in Augenhöhe wie ein Mensch durch Haus und Garten, Türen öffnen sich von selbst. Antippen des Bildes oder nochmal auf den Knopf beendet den Rundgang.</p>
+        </section>
+        <section class="group">
+          <h2>Geschoss</h2>
+          <div class="chips" id="levelChips">
+            <button data-level="alle" aria-pressed="true">Ganzes Haus</button>
+            <button data-level="DG">DG</button>
+            <button data-level="OG">OG</button>
+            <button data-level="EG">EG</button>
+            <button data-level="UG" data-label="Keller und Tiefgarage">UG + Tiefgarage</button>
+          </div>
+          <p class="hint-text">Blendet alles über dem Geschoss aus und zeigt es mit Möbeln von oben, beim UG auch Tiefgarage und Rampe.</p>
+        </section>
+        <section class="group">
+          <h2>Sonnenstand Grünwald</h2>
+          <div class="chips" id="dateChips">
+            <button data-date="09-05" aria-pressed="true">5. Sept.</button>
+            <button data-date="06-21">21. Juni</button>
+            <button data-date="12-21">21. Dez.</button>
+            <button data-date="heute">Heute</button>
+          </div>
+          <label class="field"><span>Datum</span><input type="date" id="sunDate" value="2026-09-05"></label>
+          <label class="field"><span>Uhrzeit <output id="sunTimeOut">16:45</output></span><input type="range" id="sunTime" min="4" max="22.5" step="0.0833" value="16.75"></label>
+          <button class="btn" id="sunPlay" aria-pressed="false">Tagesverlauf abspielen</button>
+          <dl class="readout" id="sunInfo"></dl>
+        </section>
+        <section class="group">
+          <h2>Ebenen</h2>
+          <label class="switch"><input type="checkbox" id="ly-nachbarn" data-layer3d="nachbarn" checked> Nachbarhäuser (amtliches 3D-Modell)</label>
+          <label class="switch"><input type="checkbox" id="ly-baeume" data-layer3d="baeume" checked> Bäume und Beete</label>
+          <label class="switch"><input type="checkbox" id="ly-grenze" data-layer3d="grenze"> Grundstücksgrenze und Flurstücke</label>
+          <label class="switch"><input type="checkbox" id="ly-schutz" data-layer3d="schutz"> Wurzelschutzbereiche (rot)</label>
+          <label class="switch"><input type="checkbox" id="ly-tg" data-layer3d="tg"> Tiefgarage und Keller durchsichtig zeigen</label>
+        </section>
+        <section class="group">
+          <h2>Schnitt</h2>
+          <label class="switch"><input type="checkbox" id="optCut"> Haus von Osten aufschneiden</label>
+          <label class="field"><span>Schnittlage ab Westfassade <output id="cutOut">8,00 m</output></span><input type="range" id="cutX" min="0.5" max="15.5" step="0.05" value="8"></label>
+        </section>
+        <button class="btn" id="snap3d">Bild speichern (PNG)</button>
+      </aside>
+    </section>
+

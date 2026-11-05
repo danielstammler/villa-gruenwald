@@ -20,14 +20,16 @@ Alles über `./vg` im Repo (aus Git Bash startet es sich selbst in WSL neu; Node
 zeigt die Übersicht):
 
 - `./vg bauen` – baut `docs/index.html` (Pages) und `dist/artifact.html` (Claude-Ansicht). `OHNE_AUTOS=1 ./vg bauen` ohne Automodelle.
-- `./vg pruefen schnell` – Bau, Zeichnungen, Regeln, Wege der Rundgänge und Anker der 3D-Ansichten in etwa 1 s: nach jeder Änderung.
+- `./vg pruefen schnell` – Bau, Zeichnungen, Regeln, Räume, Wege der Rundgänge und Anker der 3D-Ansichten in etwa 1,5 s: nach jeder
+  Änderung. Regeln und Räume vergleichen mit der Referenz und nennen geänderte Werte und Flächen mit vorher → nachher.
 - `./vg pruefen` – zuerst das Billige (dazu Zeichnungen gegen die Referenz), dann 3D, zusammen 1–1½ min: Rundgänge wie beim Gehen (bekannte
   Kontakte in `tools/erwartet.json`), Prüfsumme der Szene, 25 Ansichten (`tools/ansichten.json`) im Bildvergleich. Geänderte Bilder als
   vorher | nachher in `tools/shots/vergleich/`, alle klein in `tools/shots/uebersicht.png`. Vor jedem Commit; Änderungen allein sind kein
   Fehler, nur Bau, NaN, Regeln, Wege, unerwartete Kontakte und Bildfehler.
-- `./vg abnehmen` – nach gewollten Änderungen wird der Stand Referenz (`tools/shots/referenz/`, je Arbeitskopie; der erste `./vg pruefen`
-  legt sie an).
-- Für Grundrissarbeit: `./vg raumbuch [UG|EG|OG|DG]` (Räume mit Maßen, Türen, Fenstern als Text), `./vg plan [EG …]` (Grundrisse in 2 s als
+- `./vg abnehmen` – nach gewollten Änderungen wird der Stand Referenz (`tools/shots/referenz/`, je Arbeitskopie: Bilder, Zeichnungen,
+  Regelwerte `regeln.json`, Raumbuch `raumbuch.json`; der erste `./vg pruefen` legt sie an).
+- Für Grundrissarbeit: `./vg raumbuch [UG|EG|OG|DG]` (Räume mit Maßen, Türen, Fenstern und den Nachbarn je Seite samt Wandlage,
+  abgemauerte Teile, Flächen gegen die Referenz), `./vg plan [EG …]` (Grundrisse in 2 s als
   PNG `tools/shots/plan-EG.png`, bei Abweichung vorher | nachher), `./vg wege` (Rundgänge in 0,3 s; `./vg wege bild OG` zeichnet die Wege
   in den Grundriss), `./vg regeln -v` (alle Regeln mit Werten).
 - `./vg bild halle buero` – einzelne Ansichten mit Vergleich; `./vg bild test "pos=x,y,z&tgt=x,y,z[&level=EG]"`, `"cam=ost"`, `"level=OG"`;
@@ -81,11 +83,26 @@ Grundlage für die Prüfungen ohne Browser in eine vm.
   dazwischen (innen meist 0,24 m), Durchgänge ohne Tür stehen in `open`. Türen `{ x, y, w, o, s, h }`: `o: 'h'` in einer Ost-West-Wand
   mit x = Westende der Öffnung und y = Wandmitte, `o: 'v'` in einer Nord-Süd-Wand mit x = Wandmitte und y = Südende; `w` Breite,
   `s: 1` schlägt nach Norden bzw. Osten auf (`-1` nach Süden bzw. Westen), `h: 1` Band am Ost- bzw. Nordende, `t` Wanddicke der Zeichnung.
-  Treppe, Aufzug und Luftraum: `src/plan/00-kern.js` (`LINE`, `FLIGHTS`, `HOLES`, `LIFT`, `VOID`). Haustür und alle Fassadenöffnungen:
-  `src/haus/10-fassaden.js`; Podest, Terrasse, Balkone: `src/haus/20-anbauten.js`.
+  Treppe, Aufzug und Luftraum: `src/plan/00-kern.js` (`LINE`, `FLIGHTS`, `HOLES`, `LIFT`, `VOID`); die Wände an der Treppenbahn heißen
+  `RUECKWAND` und `VORDERWAND` (`.s`, `.m`, `.n` = Süd-, Mittel-, Nordlinie, aus `LINE` und `WAND` = 0,24 m), die Geschossdateien nehmen
+  nur diese Namen. Haustür und alle Fassadenöffnungen: `src/haus/10-fassaden.js` (Nordfassade: Plan-x = 16 − u); daraus `EINGANG` und
+  `HAUSTUER` in 00-kern.js für die Grundrisstür. Podest, Terrasse, Balkone: `src/haus/20-anbauten.js`.
 - Was automatisch folgt: 3D-Innenausbau (Wände, Böden, Türen, Treppe, Möbel über `Plans.items`), Schnitt A–A, Wohnfläche und
   Raumtabelle, die Rundgänge (Wege durch Türen und über die Treppe werden aus dem Grundriss berechnet), die Innenansichten der
-  Prüfung (am Raum verankert) und alle Zahlen im Seitentext (`{{ … }}`). Nur Prosa über Räume bleibt Handarbeit.
+  Prüfung (am Raum verankert) und alle Zahlen im Seitentext (`{{ … }}`). Von Hand bleiben: die Raumkante auf der anderen Seite
+  einer verschobenen Wand, Türen und `open`-Durchgänge in dieser Wand, Möbel (feste Koordinaten; abgeleitet nur an RUECKWAND und
+  VORDERWAND) und Prosa über Räume.
+- Typische Änderungen:
+  - Wand zwischen zwei Räumen verschieben: `./vg raumbuch <Geschoss>` zeigt je Raum die Nachbarn und die Wandlage. Beide Raumkanten,
+    Türen und `open` in dieser Wand und die Möbel an ihr mitnehmen; `./vg pruefen schnell` zeigt in der Zeile Räume die Flächen
+    vorher → nachher und meldet abgemauerte Teile (`raum-zusammen`), Überschneidungen, Türschwenks und Möbel in Wänden.
+  - Treppe breiter oder schmaler: nur `LINE[2]` (nach Süden; der Aufzugschacht wird mit tiefer) oder `LINE[3]` (nach Norden). Räume,
+    Türen, Durchgänge und Möbel an beiden Treppenwänden folgen in allen Geschossen; danach die Regeln `treppe-kopf` und `treppe-podest`
+    ansehen. Länge und Steigungen: `FLIGHTS` (x0 Antritt im Osten, x1 Austritt im Westen, n Steigungen), die Deckenöffnungen folgen.
+  - Haustür versetzen oder verbreitern: in `op(u0, u1, …, 'eingang', { side })` der Nordfassade beide Werte gleich verschieben (nach
+    Osten = kleineres u). Es folgen Grundrisstür, Konsole, Kübel, Laterne, Fußmatte, Lageplan-Pfeil, Beschriftung, Kronleuchter,
+    Ansichten und Rundgänge. Portikus mit Pfeilern, Podest, OG-Fenster und Zwerchhaus bleiben auf der Hausachse x = 8 (eigene Werte,
+    Gestaltungsfrage an den Bauherrn).
 - Ablauf: ändern → `./vg pruefen schnell` (Regeln finden Überlappungen, unerreichbare Räume, Türschwenks, Möbel in Wänden, fehlende
   Fenster, Treppe und Kopfhöhe; `Wege` prüft die Rundgänge; der Bau bricht ab, wenn der Seitentext einen fehlenden Raum nennt) →
   `./vg raumbuch <Geschoss>` (Raumtabelle als Text) → `./vg plan <Geschoss>` (Bild, bei Änderung vorher | nachher; die Wege zeichnet
@@ -127,7 +144,8 @@ Grundlage für die Prüfungen ohne Browser in eine vm.
   (§ 6), Stahl als Zaunmaterial (§ 9 Abs. 3), wo die Rampe beginnen darf.
 - Von den Regeln gefunden, Entscheidung des Bauherrn offen (`GEMELDET` in `tools/regeln.js`, gemeldet 5.11.2026): Kopfhöhe über der
   Treppe 1,86–1,88 m, Balkonschwellen OG ohne Rinne, Fensterfläche DG Schlafzimmer und Gäste unter ⅛, OG-Nordfenster vor einer
-  Innenwand, drei Regale im Türschwenk. Nach seiner Entscheidung beheben und dort austragen.
+  Innenwand, drei Regale im Türschwenk, OG Kind 1 und Kind 3 in zwei Teilen (Bett und Schreibtisch hinter einer durchgehenden Wand
+  zum Türstreifen, kein Zugang). Nach seiner Entscheidung beheben und dort austragen.
 
 ## Technische Stolpersteine
 

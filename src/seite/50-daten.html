@@ -3,39 +3,39 @@
         <section>
           <h2>Kurz gesagt</h2>
           <ul class="notes">
-            <li class="info"><span><b>Haus, Außenanlagen und Zufahrt kommen aus Chalines Konzept.</b> Von Vogel+Partner stammen nur Grundstück, Bäume und die Nachbarbebauung. Breite 16,00 m und Gesamthöhe 11,12 m passen zu den Proportionen des Renderings. Das Traufgesims sitzt bei 6,83 m, weil die Wandhöhe von 7,25 m bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt im steilen Mansarddach und bekommt Licht über die Zwerchhäuser im Süden und Norden, Dachfenster und zwei Gauben. Der Eingang im Norden hat ein Vordach auf zwei Pfeilern und eine einflügelige Haustür mit verglasten Seitenteilen. Dahinter öffnet sich eine zweigeschossige Halle, an ihrer Rückwand liegt quer die gerade Treppe, daneben der Aufzug.</span></li>
-            <li class="info"><span><b>Offene Rampe in der Zufahrt.</b> Ab der Grenze liegt ein 3,00 m langer Vorplatz mit 4 % bis zu einer Rinne, dann läuft die Rampe zwischen Betonwänden mit Geländer nach Norden: 2,80 m breit mit 15 %, unten 2,77 m Übergang mit 7,5 % und 0,40 m eben vor dem Tor, dort eine Rinne mit Pumpensumpf (Garagenverordnung § 3; die Knicke sind auf den Ferrari abgestimmt). Unter dem Poolhaus bleiben 2,05 m lichte Höhe, genug für die V-Klasse (1,94 m). Am Fuß der Rampe schließt ein Sektionaltor (2,80 × 2,30 m) die Tiefgarage. Sie liegt wie das Untergeschoss auf −3,40 m (stufenlos ins Haus), hat 2,70 m lichte Höhe, unter dem Unterzug an der Kante der Stellplätze 2,20 m, und drei 2,85 m breite Stellplätze an einer 6 m breiten Fahrgasse; die Fahrräder stehen an der Hauswand. Ein offener Eingangsbereich mittig vor dem Haus führt ins Foyer, der Aufzug verbindet von dort alle Geschosse.</span></li>
-            <li class="warn"><span><b>Schutzbäume der Nachbarn.</b> Der große Baum im Nordosten (Krone etwa 16 m) und der Baum im Südosten haben Wurzelschutzbereiche (Krone plus 1,50 m), die in Zuwegung und Zufahrt reichen. Der Schutzbereich im Südosten erfasst auch die ersten Meter der Rampe. Dort ist wurzelschonendes Bauen nötig.</span></li>
+            <li class="info"><span><b>Haus, Außenanlagen und Zufahrt kommen aus Chalines Konzept.</b> Von Vogel+Partner stammen nur Grundstück, Bäume und die Nachbarbebauung. Breite {{ m(HOUSE.W) }} und Gesamthöhe {{ m(HOUSE.Z.first) }} passen zu den Proportionen des Renderings. Das Traufgesims sitzt bei {{ m(HOUSE.Z.gesimsO) }}, weil die Wandhöhe von {{ m(HOUSE.Z.wand) }} bis zur Dachhaut gemessen wird. Das Dachgeschoss liegt im steilen Mansarddach und bekommt Licht über die Zwerchhäuser im Süden und Norden, Dachfenster und {{ wort(W.gauben()) }} Gauben. Der Eingang im Norden hat ein Vordach auf {{ wort(HOUSE.fas.N.portikus.pillars.length) }} Pfeilern und eine einflügelige Haustür mit verglasten Seitenteilen. Dahinter öffnet sich eine zweigeschossige Halle, an ihrer Rückwand liegt quer die gerade Treppe, daneben der Aufzug.</span></li>
+            <li class="info"><span><b>Offene Rampe in der Zufahrt.</b> Ab der Grenze liegt ein {{ m(HOUSE.rampe.vor.l) }} langer Vorplatz mit {{ proz(HOUSE.rampe.vor.s) }} bis zu einer Rinne, dann läuft die Rampe zwischen Betonwänden mit Geländer nach Norden: {{ m(HOUSE.rampe.x1 - HOUSE.rampe.x0) }} breit mit {{ proz(HOUSE.rampe.s) }}, unten {{ m(HOUSE.rampe.unten.l) }} Übergang mit {{ proz(HOUSE.rampe.unten.s, 1) }} und {{ m(HOUSE.rampe.eben) }} eben vor dem Tor, dort eine Rinne mit Pumpensumpf (Garagenverordnung § 3; die Knicke sind auf den Ferrari abgestimmt). Unter dem Poolhaus bleiben {{ m(HOUSE.rampe.lichte) }} lichte Höhe, genug für die V-Klasse (1,94 m). Am Fuß der Rampe schließt ein Sektionaltor ({{ z(HOUSE.rampe.tor.b) }} × {{ m(HOUSE.rampe.tor.h) }}) die Tiefgarage. Sie liegt wie das Untergeschoss auf {{ mv(HOUSE.Z.ffbUG) }} (stufenlos ins Haus), hat {{ m(HOUSE.tg.lichte) }} lichte Höhe, unter dem Unterzug an der Kante der Stellplätze {{ m(HOUSE.tg.unterzug.lichte) }}, und {{ wort(HOUSE.tg.autos.length) }} {{ m(HOUSE.tg.bucht) }} breite Stellplätze an einer {{ m(W.fahrgasse(), 0) }} breiten Fahrgasse; die Fahrräder stehen an der Hauswand. Ein offener Eingangsbereich mittig vor dem Haus führt ins Foyer, der Aufzug verbindet von dort alle Geschosse.</span></li>
+            <li class="warn"><span><b>Schutzbäume der Nachbarn.</b> Der große Baum im Nordosten (Krone etwa {{ m(W.schutzKrone(), 0) }}) und der Baum im Südosten haben Wurzelschutzbereiche (Krone plus 1,50 m), die in Zuwegung und Zufahrt reichen. Der Schutzbereich im Südosten erfasst auch die ersten Meter der Rampe. Dort ist wurzelschonendes Bauen nötig.</span></li>
           </ul>
         </section>
         <section>
           <h2>Kennzahlen</h2>
           <div class="facts">
             <div class="fact"><b>1.661 m²</b><span>Grundstück (amtlich)</span></div>
-            <div class="fact"><b>16,00 × 11,65</b><span>Wohnhaus in m · 186,4 m²</span></div>
-            <div class="fact"><b>372,8 m²</b><span>Geschossfläche EG + OG</span></div>
-            <div class="fact"><b>7,25 / 11,12</b><span>Wandhöhe / Firsthöhe in m</span></div>
+            <div class="fact"><b>{{ z(HOUSE.W) }} × {{ z(HOUSE.D) }}</b><span>Wohnhaus in m · {{ m2(HOUSE.W * HOUSE.D) }}</span></div>
+            <div class="fact"><b>{{ m2(2 * HOUSE.W * HOUSE.D) }}</b><span>Geschossfläche EG + OG</span></div>
+            <div class="fact"><b>{{ z(HOUSE.Z.wand) }} / {{ z(HOUSE.Z.first) }}</b><span>Wandhöhe / Firsthöhe in m</span></div>
             <div class="fact"><b data-stat="grz"></b><span>GRZ nur Wohnhaus</span></div>
             <div class="fact"><b><span data-stat="versiegelt"></span> %</b><span>überbaut und befestigt</span></div>
             <div class="fact"><b><span data-stat="tg"></span> m²</b><span>Tiefgarage außerhalb des Hauses</span></div>
-            <div class="fact"><b>9,00 m</b><span>Terrasse bis Pool</span></div>
+            <div class="fact"><b>{{ m(W.terrassePool()) }}</b><span>Terrasse bis Pool</span></div>
           </div>
         </section>
         <section>
           <h2>Was maßstäblich ist und was angenommen</h2>
           <div class="cols">
             <div><h3>Aus Chalines Konzeptplan, M 1:100</h3><ul>
-              <li>Haus 16,00 × 11,65 m und seine Lage auf dem Grundstück, Außenwand 36 cm</li><li>Sieben Fensterachsen der Südfassade</li>
-              <li>Terrasse 7,00 × 3,00 m mit Balkon darüber (auf Wunsch zur durchgehenden Terrasse verlängert), Freisitz 3,00 × 5,00 m, Podest 5,00 × 1,00 m</li><li>Zuwegung 1,50 m, Zufahrt, Pool 4,00 × 12,00 m, Poolhaus 3,50 × 6,00 m</li>
+              <li>Haus {{ masse(SITE.concept.haus) }} und seine Lage auf dem Grundstück, Außenwand {{ cm(HOUSE.wall) }}</li><li>{{ Wort(W.achsenSued()) }} Fensterachsen der Südfassade</li>
+              <li>Terrasse {{ masse(SITE.concept.terrasse) }} mit Balkon darüber (auf Wunsch zur durchgehenden Terrasse verlängert), Freisitz {{ masse(SITE.concept.freisitz) }}, Podest {{ masse(SITE.concept.podest) }}</li><li>Zuwegung {{ m(W.zuwegung()) }}, Zufahrt, Pool {{ masse(SITE.concept.pool) }}, Poolhaus {{ masse(SITE.concept.poolhaus) }}</li>
               <li>Umriss der Tiefgarage, Linie 5,00 m parallel zur Straße</li></ul></div>
             <div><h3>Grundstück und Umgebung</h3><ul>
-              <li>Grundstück mit sieben Grenzpunkten; Konzeptplan und Skizze Vogel+Partner stimmen darin überein</li><li>Bäume und Wurzelschutzbereiche</li>
+              <li>Grundstück mit {{ wort(SITE.plot.length) }} Grenzpunkten; Konzeptplan und Skizze Vogel+Partner stimmen darin überein</li><li>Bäume und Wurzelschutzbereiche</li>
               <li>Nachbarhäuser, Grenzen und Straße aus der Flurkarte; Dachformen und Höhen der Nachbarn aus dem amtlichen 3D-Gebäudemodell (LoD2)</li></ul></div>
             <div><h3>Aus dem Rendering oder angenommen</h3><ul>
-              <li>Wandhöhe 7,25 m und First 11,12 m nach den Proportionen des Renderings; Gestaltung und Materialien nach Rendering und Referenzbild, Zwerchhaus mit 1,00 m tiefem Balkon im DG</li>
-              <li>Geschosshöhen: EG 3,35 m, OG 3,10 m, Fußboden EG 0,20 m über Gelände; Dachneigung unten rund 70°, oben rund 9°</li><li>Nord-, Ost- und Westfassade, Zwerchhaus im Norden, Eingang mit Vordach, Dachfenster und Gauben</li>
+              <li>Wandhöhe {{ m(HOUSE.Z.wand) }} und First {{ m(HOUSE.Z.first) }} nach den Proportionen des Renderings; Gestaltung und Materialien nach Rendering und Referenzbild, Zwerchhaus mit {{ m(W.dgBalkon()) }} tiefem Balkon im DG</li>
+              <li>Geschosshöhen: EG {{ m(HOUSE.Z.ffbOG - HOUSE.Z.ffbEG) }}, OG {{ m(HOUSE.Z.ffbDG - HOUSE.Z.ffbOG) }}, Fußboden EG {{ m(HOUSE.Z.ffbEG - HOUSE.Z.gelaende) }} über Gelände; Dachneigung unten rund {{ grad(HOUSE.dachwinkel[0], 0) }}, oben rund {{ grad(HOUSE.dachwinkel[1], 0) }}</li><li>Nord-, Ost- und Westfassade, Zwerchhaus im Norden, Eingang mit Vordach, Dachfenster und Gauben</li>
               <li>Untergeschoss mit Lichthof vor dem Gym, Grundrisse, Innenwände, Halle mit Luftraum, Treppe, Aufzug, Eingangsbereich in der Tiefgarage und Foyer, Möbel und Außenmöbel als Vorschlag, Hecken an allen Grenzen und an der Rampe, Spielturm im Vorgarten</li><li>Durchgehende Terrasse, Poolterrasse, Weg zum Pool, Poolhaus mit Walmdach, offener Glasfront und Veranda, Zaun mit Toren an der Straße</li>
-              <li>Längsprofil der Rampe, Höhen der Tiefgarage (2,70 m lichte Höhe) und Stellplätze; die drei Autos nach den echten Modellen gebaut (ohne Markenzeichen)</li><li>Dachfarben der Nachbarn, Bäume in den Nachbargärten und Ziegelmauer an der Straßenecke nach Luftbildern; Baumhöhen</li></ul></div>
+              <li>Längsprofil der Rampe, Höhen der Tiefgarage ({{ m(HOUSE.tg.lichte) }} lichte Höhe) und Stellplätze; die {{ wort(HOUSE.tg.autos.length) }} Autos nach den echten Modellen gebaut (ohne Markenzeichen)</li><li>Dachfarben der Nachbarn, Bäume in den Nachbargärten und Ziegelmauer an der Straßenecke nach Luftbildern; Baumhöhen</li></ul></div>
           </div>
         </section>
         <section>

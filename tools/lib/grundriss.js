@@ -1,6 +1,7 @@
-// Grundrissanalyse für tools/regeln.js und tools/raumbuch.js: Räume, Wände, Türen mit Schwenkbereich, Durchgänge, Fenster (Fassaden über
-// HOUSE.frame aufs Geschoss gelegt), Möbelformen (Plans.formen), Treppe und Aufzug – alles aus Plans und HOUSE abgeleitet, damit ein
-// geänderter Grundriss sofort geprüft ist. Rechtecke wie im Plan: [x0, x1, y0, y1], x Ost, y Nord, Meter.
+// Grundrissanalyse für tools/regeln.js und tools/raumbuch.js: Räume (mit zusammenhängenden Teilen und Nachbarn je Seite), Wände, Türen mit
+// exaktem Schwenkbereich, Durchgänge, Fenster (Fassaden über HOUSE.frame aufs Geschoss gelegt), Möbelformen (Plans.formen), Treppe und
+// Aufzug – alles aus Plans und HOUSE abgeleitet, damit ein geänderter Grundriss sofort geprüft ist. Rechtecke wie im Plan: [x0, x1, y0, y1],
+// x Ost, y Nord, Meter.
 const { rechne } = require('./laden');
 const GESCHOSSE = ['UG', 'EG', 'OG', 'DG'];
 
@@ -47,6 +48,79 @@ const inForm = (f, p, tol = 0.02) => f.typ === 'rect' ? inR(f.r, p, -tol)
 const MOEBEL = { box: 'Möbel', shelf: 'Regal', bed: 'Bett', sofa: 'Sofa', table: 'Tisch', tub: 'Wanne', shower: 'Dusche', wc: 'WC', basin: 'Waschtisch',
   desk: 'Schreibtisch', hob: 'Kochfeld', car: 'Auto', carH: 'Auto' };
 const moebelName = m => (m.t === 'box' && (m.a[4] || m.a[5])) || MOEBEL[m.t] || m.t;
+
+// ---------- Türschwenk exakt (statt Raster: ein 3-cm-Raster hat ein Regal übersehen, das 4 cm hineinragte) ----------
+// Türkoordinaten: a entlang der Wand vom Band zur Schließkante, c quer in den Raum. Der Flügel überstreicht a > 0, c > cmin, a² + c² < w²
+// (cmin: bis zur Wandflucht steht er noch in der Öffnung). Ein konvexes Vieleck kommt in Türkoordinaten, wird an a = 0 und c = cmin
+// beschnitten (Sutherland–Hodgman) und ragt hinein, wenn ein Rest mit Fläche bleibt, der dem Band näher als w kommt. Rechtecke sind so
+// exakt, Ellipsen und fremde Schwenkbereiche als feines Vieleck (unter 0,2 mm Abweichung). Anliegen zählt nicht, nur Fläche.
+const lokal = (t, p) => { const dx = p[0] - t.Hg[0], dy = p[1] - t.Hg[1]; return [dx * t.uB[0] + dy * t.uB[1], dx * t.uS[0] + dy * t.uS[1]]; };
+const planPunkt = (t, a, c) => [t.Hg[0] + t.uB[0] * a + t.uS[0] * c, t.Hg[1] + t.uB[1] * a + t.uS[1] * c];
+// Teil des Vielecks mit Koordinate k ≥ v
+function kappen(P, k, v) {
+  const out = [];
+  P.forEach((A, i) => {
+    const C = P[(i + 1) % P.length], ia = A[k] >= v, ic = C[k] >= v;
+    if (ia) out.push(A);
+    if (ia !== ic) { const s = (v - A[k]) / (C[k] - A[k]); out.push([A[0] + s * (C[0] - A[0]), A[1] + s * (C[1] - A[1])]); }
+  });
+  return out;
+}
+const flaecheP = P => Math.abs(P.reduce((t, p, i) => { const q = P[(i + 1) % P.length]; return t + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
+// kleinster Abstand eines konvexen Vielecks zum Ursprung, 0 wenn er darin liegt (alle Kanten auf derselben Seite)
+function abstand0(P) {
+  let pos = 0, neg = 0, d = Infinity;
+  P.forEach((A, i) => {
+    const C = P[(i + 1) % P.length], x = A[0] * C[1] - A[1] * C[0], e = [C[0] - A[0], C[1] - A[1]], l = e[0] * e[0] + e[1] * e[1];
+    if (x > 1e-12) pos++; else if (x < -1e-12) neg++;
+    const s = l ? Math.max(0, Math.min(1, -(A[0] * e[0] + A[1] * e[1]) / l)) : 0;
+    d = Math.min(d, Math.hypot(A[0] + s * e[0], A[1] + s * e[1]));
+  });
+  return pos && neg ? d : 0;
+}
+function imViertel(t, P, cmin) {
+  if (!P) return false;
+  let Q = kappen(P.map(p => lokal(t, p)), 0, 0);
+  if (Q.length > 2) Q = kappen(Q, 1, cmin);
+  return Q.length > 2 && flaecheP(Q) > 1e-10 && abstand0(Q) < t.d.w - 1e-9;
+}
+// Vielecke: Rechteck um e eingerückt, Ellipse mit um e kürzeren Halbachsen (wie inForm), Schwenkbereich einer Tür um e eingerückt (wie imSchwenk)
+const eckRechteck = (r, e = 0) => r[1] - r[0] > 2 * e && r[3] - r[2] > 2 * e ? [[r[0] + e, r[2] + e], [r[1] - e, r[2] + e], [r[1] - e, r[3] - e], [r[0] + e, r[3] - e]] : null;
+const eckEllipse = (f, e = 0, n = 128) => f.rx > e && f.ry > e
+  ? Array.from({ length: n }, (_, i) => [f.cx + (f.rx - e) * Math.cos(2 * Math.PI * i / n), f.cy + (f.ry - e) * Math.sin(2 * Math.PI * i / n)]) : null;
+const eckForm = (f, e = 0) => (f.typ === 'rect' ? eckRechteck(f.r, e) : eckEllipse(f, e));
+function eckSchwenk(u, e = 0.02, n = 64) {
+  const R = u.d.w - e; if (R <= e * Math.SQRT2) return null;
+  const t0 = Math.asin(e / R), t1 = Math.PI / 2 - t0;
+  return [planPunkt(u, e, e), ...Array.from({ length: n + 1 }, (_, i) => { const th = t0 + (t1 - t0) * i / n; return planPunkt(u, R * Math.cos(th), R * Math.sin(th)); })];
+}
+// Eindringtiefe einer Form: so weit müsste man sie rundum einrücken, bis sie den Schwenk nicht mehr trifft (0: frei), auf 0,1 mm
+function tiefeImSchwenk(t, f, cmin) {
+  if (!imViertel(t, eckForm(f, 0), cmin)) return 0;
+  let lo = 0, hi = f.typ === 'rect' ? Math.min(f.r[1] - f.r[0], f.r[3] - f.r[2]) / 2 : Math.min(f.rx, f.ry);
+  while (hi - lo > 1e-4) { const mid = (lo + hi) / 2; if (imViertel(t, eckForm(f, mid), cmin)) lo = mid; else hi = mid; }
+  return lo;
+}
+
+// ---------- Wände und Berührungen zwischen Rechtecken ----------
+// Wandfuge zwischen p und q: Abstand unter 0,6 m in einer Richtung, über 0,1 m Überlappung in der anderen; seite = wo q von p aus liegt
+// (N, O, S, W), w = Lage der Wand quer zu ihr (von, bis), entlang = gemeinsamer Abschnitt
+function fuge(p, q) {
+  const gx = Math.max(p[0], q[0]) - Math.min(p[1], q[1]), gy = Math.max(p[2], q[2]) - Math.min(p[3], q[3]);
+  if (gx >= -0.001 && gx < 0.6 && gy < -0.1) { const o = q[0] + q[1] > p[0] + p[1];
+    return { d: Math.max(0, gx), lang: -gy, achse: 'x', seite: o ? 'O' : 'W', w: o ? [p[1], q[0]] : [q[1], p[0]], entlang: [Math.max(p[2], q[2]), Math.min(p[3], q[3])] }; }
+  if (gy >= -0.001 && gy < 0.6 && gx < -0.1) { const n = q[2] + q[3] > p[2] + p[3];
+    return { d: Math.max(0, gy), lang: -gx, achse: 'y', seite: n ? 'N' : 'S', w: n ? [p[3], q[2]] : [q[3], p[2]], entlang: [Math.max(p[0], q[0]), Math.min(p[1], q[1])] }; }
+  return null;
+}
+const GEGEN = { N: 'S', S: 'N', O: 'W', W: 'O' };
+// Berührung zweier Rechtecke: Länge der gemeinsamen Kante, bei Überlappung deren größere Ausdehnung, 0 ohne Berührung
+function kontakt(p, q) {
+  const gx = Math.max(p[0], q[0]) - Math.min(p[1], q[1]), gy = Math.max(p[2], q[2]) - Math.min(p[3], q[3]);
+  return gx <= 0.001 && gy <= 0.001 ? Math.max(-gx, -gy) : 0;
+}
+// so breit müssen sich zwei Teile eines Raums mindestens berühren (oder über einen Durchgang verbunden sein), damit man hindurchgeht
+const DURCHGANG = 0.6;
 
 // ---------- Ein Geschoss: Räume, Wo-ist-was, Außenflächen, Türen, Fenster, Möbel, Verbindungen ----------
 function geschoss(B, fl) {
@@ -96,18 +170,17 @@ function geschoss(B, fl) {
     const hz = d.o === 'h', nrm = hz ? [0, 1] : [1, 0], lng = hz ? [1, 0] : [0, 1];
     const at = (u, v) => [d.x + lng[0] * u + nrm[0] * v, d.y + lng[1] * u + nrm[1] * v];
     const suche = (sg, u) => { for (let v = 0.01; v <= 0.8; v += 0.01) { const w = wo(at(u, sg * v)); if (!w.wand && !w.offen) return { w, v }; } return null; };
+    // p: erster Punkt im Raum dahinter (für raum-zusammen: in welchem Teil eines Raums die Tür ankommt)
     const seite = sg => {
       const m = suche(sg, d.w / 2), n = m && name(m.w), enden = [suche(sg, 0.03), suche(sg, d.w - 0.03)];
-      return { n, v: m ? m.v - 0.005 : null, voll: enden.every(e => e && name(e.w) === n) };
+      return { n, v: m ? m.v - 0.005 : null, p: m ? at(d.w / 2, sg * m.v) : null, voll: enden.every(e => e && name(e.w) === n) };
     };
     const plus = seite(1), minus = seite(-1);
     const Hg = hz ? [d.h ? d.x + d.w : d.x, d.y] : [d.x, d.h ? d.y + d.w : d.y];
+    // Band Hg, Richtung uB zur Schließkante, uS in den Raum, in den der Flügel aufschlägt (Viertelkreis: schwenkTrifft, moebelImSchwenk)
     const uB = hz ? [d.h ? -1 : 1, 0] : [0, d.h ? -1 : 1], uS = hz ? [0, d.s] : [d.s, 0];
-    // Punkte im Viertelkreis des Flügels, mit Abstand c von der Wandachse (c < halbe Wanddicke: in der Öffnung)
-    const schwenk = [];
-    for (let a = 0.015; a < d.w; a += 0.03) for (let c = 0.015; c < d.w; c += 0.03) if (a * a + c * c < d.w * d.w) schwenk.push({ p: [Hg[0] + uB[0] * a + uS[0] * c, Hg[1] + uB[1] * a + uS[1] * c], c });
     const wand = plus.v != null && minus.v != null ? plus.v + minus.v : null;
-    return { d, k, hz, plus, minus, wand, in: d.s > 0 ? plus : minus, schwenk, Hg, uB, uS, breite: d.w, mitte: at(d.w / 2, 0), name: `${minus.n || '?'}–${plus.n || '?'}` };
+    return { d, k, hz, plus, minus, wand, in: d.s > 0 ? plus : minus, Hg, uB, uS, breite: d.w, mitte: at(d.w / 2, 0), name: `${minus.n || '?'}–${plus.n || '?'}` };
   });
   // Liegt p im Schwenkbereich der Tür t (tol nach innen)?
   const imSchwenk = (t, p, tol = 0.02) => {
@@ -117,6 +190,29 @@ function geschoss(B, fl) {
   // Doppeltüren: zwei Flügel auf einer Achse, die in der Mitte zusammenstoßen
   for (const a of tueren) for (const c of tueren) if (a !== c && a.hz === c.hz && !a.d.h && c.d.h && Math.abs(a.hz ? a.d.y - c.d.y : a.d.x - c.d.x) < 0.01
     && Math.abs(a.hz ? a.d.x + a.d.w - c.d.x : a.d.y + a.d.w - c.d.y) < 0.01) { a.breite = c.breite = a.d.w + c.d.w; a.paar = c; c.paar = a; }
+  // Was trifft der Flügel (tuer-schwenk), exakt ab 2 cm vor der Wandflucht: Erlaubt sind der Raum, in den er aufschlägt, Durchgänge und bei
+  // Außentüren nach außen das Freie, alles um TOL vergrößert (so weit darf eine Wand hineinragen). Der Umriss des Schwenks wird an allen
+  // Kanten der erlaubten Rechtecke in Zellen zerlegt; eine Zelle außerhalb, die in den Schwenk ragt, ist Wand (auch Luftraum, Aufzug oder
+  // ein anderer Raum). Treppe und Aufzug um TOL eingerückt, andere Flügel um TOL eingerückt wie imSchwenk.
+  const TOL = 0.02, WEIT = 1e3, draussen = [[-WEIT, 0, -WEIT, WEIT], [W, WEIT, -WEIT, WEIT], [-WEIT, WEIT, -WEIT, -D], [-WEIT, WEIT, 0, WEIT]];
+  function schwenkTrifft(t) {
+    const cmin = (t.wand || 0.3) / 2 + TOL, was = new Set(), rm = raeume.find(r => r.n === t.in.n);
+    const erlaubt = [...(rm ? rm.rects : []), ...offen, ...(t.in.n === 'außen' ? draussen : [])].map(q => [q[0] - TOL, q[1] + TOL, q[2] - TOL, q[3] + TOL]);
+    const ecken = [[0, cmin], [t.d.w, cmin], [0, t.d.w], [t.d.w, t.d.w]].map(([a, c]) => planPunkt(t, a, c));
+    const linien = k => { const lo = Math.min(...ecken.map(p => p[k])), hi = Math.max(...ecken.map(p => p[k]));
+      return [...new Set([lo, hi, ...erlaubt.flatMap(q => [q[2 * k], q[2 * k + 1]]).filter(v => v > lo && v < hi)])].sort((a, b) => a - b); };
+    const xs = linien(0), ys = linien(1);
+    for (let i = 0; i + 1 < xs.length; i++) for (let j = 0; j + 1 < ys.length; j++) {
+      const z = [xs[i], xs[i + 1], ys[j], ys[j + 1]];
+      if (!erlaubt.some(q => inR(q, [(z[0] + z[1]) / 2, (z[2] + z[3]) / 2])) && imViertel(t, eckRechteck(z), cmin)) was.add('Wand');
+    }
+    if (treppe.some(q => imViertel(t, eckRechteck(q, TOL), cmin))) was.add('Treppe');
+    if (imViertel(t, eckRechteck(LIFT, TOL), cmin)) was.add('Aufzug');
+    for (const u of tueren) if (u !== t && u !== t.paar && imViertel(t, eckSchwenk(u, TOL), cmin)) was.add(`Tür ${u.name}`);
+    return [...was];
+  }
+  // Wie tief ragt ein Möbel in den Schwenk (moebel-schwenk), ab der Wandflucht, größte seiner Formen; ein Treffer ist es erst über TOL
+  const moebelImSchwenk = (t, mb) => Math.max(0, ...mb.formen.map(f => tiefeImSchwenk(t, f, (t.wand || 0.3) / 2)));
 
   // Fenster dieses Geschosses: hinter der Öffnung entlang abgetastet, welche Räume (oder Wände) dahinter liegen
   const fenster = B.fenster.filter(f => f.fl === fl).map(f => {
@@ -139,8 +235,7 @@ function geschoss(B, fl) {
     const A = R[i], C = R[j], p = A.q, q = C.q, gx = Math.max(p[0], q[0]) - Math.min(p[1], q[1]), gy = Math.max(p[2], q[2]) - Math.min(p[3], q[3]);
     if (A.rm === C.rm) continue;
     if (gx < -0.001 && gy < -0.001) { schnitte.push({ a: A.rm.n, b: C.rm.n, qm: ueber(p, q) }); continue; }
-    if (gx >= -0.001 && gx < 0.6 && gy < -0.1) fugen.push({ a: A.rm.n, b: C.rm.n, d: Math.max(0, gx), lang: -gy });
-    if (gy >= -0.001 && gy < 0.6 && gx < -0.1) fugen.push({ a: A.rm.n, b: C.rm.n, d: Math.max(0, gy), lang: -gx });
+    const f = fuge(p, q); if (f) fugen.push({ a: A.rm.n, b: C.rm.n, ...f });
   }
   const innen = [H.wall, W - H.wall, -D + H.wall, -H.wall];
 
@@ -163,8 +258,46 @@ function geschoss(B, fl) {
   const erreicht = new Set(raeume.filter(r => r.core).map(r => r.n)), todo = [...erreicht];
   while (todo.length) for (const n of nb.get(todo.shift()) || []) if (nb.has(n) && !erreicht.has(n)) { erreicht.add(n); todo.push(n); }
 
+  // Teile eines Raums (raum-zusammen): seine Rechtecke hängen zusammen, wo sie sich auf mindestens DURCHGANG berühren oder überlappen,
+  // auch über Durchgänge (open); sonst ist ein Teil abgemauert. Je Teil die Zugänge: Türen, die in ihm ankommen, Durchgänge an ihm und
+  // Nachbarräume ohne Wand
+  for (const rm of raeume) {
+    const K = [...rm.rects, ...offen], teil = K.map(() => -1);
+    let n = 0;
+    for (let s = 0; s < rm.rects.length; s++) if (teil[s] < 0) {
+      const todo = [s]; teil[s] = n;
+      while (todo.length) { const i = todo.pop(); K.forEach((q, j) => { if (teil[j] < 0 && kontakt(K[i], q) >= DURCHGANG - 0.001) { teil[j] = n; todo.push(j); } }); }
+      n++;
+    }
+    rm.teile = Array.from({ length: n }, (_, k) => {
+      const rects = rm.rects.filter((_, i) => teil[i] === k), drin = p => p && rects.some(q => inR(q, p, 0.001));
+      const tu = tueren.filter(t => [t.plus, t.minus].some(s => s.n === rm.n && drin(s.p)));
+      const of = K.filter((_, i) => i >= rm.rects.length && teil[i] === k);
+      const ow = R.filter(o => o.rm !== rm && rects.some(q => kontakt(q, o.q) >= DURCHGANG - 0.001));
+      return { rects, tueren: tu, offen: of, zugang: tu.length + of.length + ow.length };
+    });
+    // Wände zwischen getrennten Teilen (Fugen wie zwischen zwei Räumen)
+    rm.trennung = rm.teile.flatMap((T, i) => rm.teile.slice(i + 1).flatMap((U, j) => T.rects.flatMap(p => U.rects.map(q => fuge(p, q))
+      .filter(Boolean).map(f => ({ ...f, i, j: i + 1 + j })))));
+  }
+  // Nachbarn je Raum für das Raumbuch: Seite, wer dort liegt (Raum, Aufzug, Luftraum oder Außenwand) und die Lage der Wand dazwischen, aus
+  // denselben Fugen wie raum-fuge
+  const sonst = [{ n: 'Aufzug', q: LIFT }, ...luft.map(q => ({ n: 'Luftraum', q }))];
+  for (const rm of raeume) {
+    const L = [];
+    for (const f of fugen) if (f.a === rm.n) L.push({ ...f, n: f.b }); else if (f.b === rm.n) L.push({ ...f, n: f.a, seite: GEGEN[f.seite] });
+    for (const q of rm.rects) {
+      for (const s of sonst) { const f = fuge(q, s.q); if (f) L.push({ ...f, n: s.n }); }
+      // an der Innenkante der Außenwand
+      const aw = [['W', 0, [0, innen[0]]], ['O', 1, [innen[1], W]], ['S', 2, [-D, innen[2]]], ['N', 3, [innen[3], 0]]];
+      for (const [seite, k, w] of aw) if (Math.abs(q[k] - innen[k]) < 0.005)
+        L.push({ seite, n: 'Außenwand', w, d: H.wall, achse: k < 2 ? 'x' : 'y', entlang: k < 2 ? [q[2], q[3]] : [q[0], q[1]] });
+    }
+    rm.nachbarn = L;
+  }
+
   return { fl, F, ffb: F.ffb, decke: B.decke[fl], hoehe: B.decke[fl] - F.ffb, raeume, offen, luft, treppe, haus, innen, wo, name, frei, flaechen, pfeiler,
-    aussenFlaeche, tueren, imSchwenk, fenster, moebel, fugen, schnitte, kanten, nachbarn: nb, erreicht };
+    aussenFlaeche, tueren, imSchwenk, schwenkTrifft, moebelImSchwenk, fenster, moebel, fugen, schnitte, kanten, nachbarn: nb, erreicht };
 }
 
 // ---------- Ganzes Haus: Fenster aller Fassaden, Geschosse, Treppenläufe ----------
@@ -211,5 +344,6 @@ function analyse(ctx) {
   return B;
 }
 
-module.exports = { GESCHOSSE, analyse, inR, qm, ueber, inPoly, teilung, raster, formPunkte, inForm, art, LAUF_DICKE };
+module.exports = { GESCHOSSE, analyse, inR, qm, ueber, inPoly, teilung, raster, formPunkte, inForm, art, LAUF_DICKE,
+  imViertel, eckRechteck, eckForm, eckSchwenk, tiefeImSchwenk, fuge, kontakt, DURCHGANG };
 

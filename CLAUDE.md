@@ -23,9 +23,12 @@ zeigt die Übersicht):
 - `./vg pruefen schnell` – Bau, Zeichnungen, Regeln, Räume, Wege der Rundgänge und Anker der 3D-Ansichten in etwa 1,5 s: nach jeder
   Änderung. Regeln und Räume vergleichen mit der Referenz und nennen geänderte Werte und Flächen mit vorher → nachher.
 - `./vg pruefen` – zuerst das Billige (dazu Zeichnungen gegen die Referenz), dann 3D, zusammen 1–1½ min: Rundgänge wie beim Gehen (bekannte
-  Kontakte in `tools/erwartet.json`), Prüfsumme der Szene, 25 Ansichten (`tools/ansichten.json`) im Bildvergleich. Geänderte Bilder als
-  vorher | nachher in `tools/shots/vergleich/`, alle klein in `tools/shots/uebersicht.png`. Vor jedem Commit; Änderungen allein sind kein
-  Fehler, nur Bau, NaN, Regeln, Wege, unerwartete Kontakte und Bildfehler.
+  Kontakte in `tools/erwartet.json`), Prüfsumme der Szene, 25 Ansichten (`tools/ansichten.json`) im Bildvergleich, eingestuft als
+  deutlich, sichtbar oder Rauschen. Wandert eine am Grundriss verankerte Kamera, wird zusätzlich vom alten Standpunkt verglichen (die
+  Zeile nennt den Versatz, Kameras der Referenz in `kameras.json`). Deutliche und sichtbare als vorher | nachher in
+  `tools/shots/vergleich/` (`<ansicht>.png`, `zeichnung-*`; `./vg plan` schreibt `plan-*`, `./vg bild` `bild-*`), alle klein in
+  `tools/shots/uebersicht.png`. Vor jedem Commit; Änderungen allein sind kein Fehler, nur Bau, NaN, Regeln, Wege, unerwartete Kontakte
+  und Bildfehler.
 - `./vg abnehmen` – nach gewollten Änderungen wird der Stand Referenz (`tools/shots/referenz/`, je Arbeitskopie: Bilder, Zeichnungen,
   Regelwerte `regeln.json`, Raumbuch `raumbuch.json`; der erste `./vg pruefen` legt sie an).
 - Für Grundrissarbeit: `./vg raumbuch [UG|EG|OG|DG]` (Räume mit Maßen, Türen, Fenstern und den Nachbarn je Seite samt Wandlage,
@@ -159,8 +162,10 @@ Grundlage für die Prüfungen ohne Browser in eine vm.
 - Zufall im 3D nur über eigene Folgen je Bereich: `const rnd = zufall('hecke west')` (00-kern.js, Startwerte in `ZUFALL`). So ändert ein
   zusätzlicher Busch nur seinen Bereich. Einen Schlüssel umbenennen heißt neues Aussehen dieses Bereichs; neue Bäume in `SITE.trees` und
   neue Buchskugeln einer Gruppe hinten anfügen (Form hängt von der Reihenfolge ab). Kein `Math.random` im Modell.
-- three.js würfelt das Rauschen der Umgebungsverdeckung (GTAO) bei jedem Laden mit `Math.random` neu: gleiche Bilder nur mit festem
-  Zufall in Chrome (`--js-flags=--random-seed=4711`, so in den Prüfwerkzeugen).
+- Die Umgebungsverdeckung (`GTAOPass`) würfelt ihr Entrauschungsmuster im Konstruktor mit `Math.random`, dessen Stand von der Zahl der
+  Objekte abhängt (jede UUID zieht Zufallszahlen): ein Möbel mehr gab sonst allen Bildern ein neues Muster. Deshalb baut `setupPost`
+  (90-bild.js) sie mit `zufall('gtao rauschen')`; eine Änderung zeigt sich so nur in den Ansichten, in denen sie zu sehen ist. Die
+  Chrome-Saat `--js-flags=--random-seed=4711` bleibt in den Werkzeugen als Reserve.
 
 ## Hilfsagenten und Arbeitskopien
 

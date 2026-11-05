@@ -1420,7 +1420,9 @@ const Site = (() => {
     s.push(text([8, -4.6], 'Wohnhaus', 's-houselabel') + text([8, -6.0], '16,00 × 11,65', 's-houselabel s-small') + text([8, -7.2], '186,4 m²', 's-houselabel s-small'));
     s.push(text([2.4, -14.1], 'Terrasse', 's-lbl s-small') + text([17.5, -8.6], 'Freisitz', 's-lbl s-small', -90) + text([8, 0.35], 'Podest', 's-lbl s-tiny'));
     s.push(text([11.8, -36.9], 'Poolterrasse', 's-lbl s-tiny'));
-    s.push(poly([[8, 1.1], [7.55, 2.05], [8.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));
+    // Pfeil mittig vor der Haustür (Öffnung „eingang“ der Nordfassade, Plan-x = Hausbreite − u)
+    const tuer = HOUSE.fas.N.open.find(o => o.kind === 'eingang'), tx = HOUSE.W - (tuer.u0 + tuer.u1) / 2;
+    s.push(poly([[tx, 1.1], [tx - 0.45, 2.05], [tx + 0.45, 2.05]], 's-entry', 'Hauseingang (Nordseite)'));
     s.push(text([8, -30.65], 'Pool 4,00 × 12,00', 's-lbl s-small', -90) + text([21.13, -30.65], 'Poolhaus 3,50 × 6,00', 's-lbl s-tiny', -90));
     s.push(text([23.63, -21], 'Zuwegung 1,50', 's-lbl s-tiny', -90) + text([22.6, -49.75], 'Zufahrt', 's-lbl s-small'));
     s.push('</g>');
@@ -1536,11 +1538,22 @@ const Plans = (() => {
   const pts = P => P.map(p => `${f(p[0])},${f(-p[1])}`).join(' ');
   const area = r => (r[1] - r[0]) * (r[3] - r[2]);
   const area2 = P => Math.abs(P.reduce((t, p, i) => { const q = P[(i + 1) % P.length]; return t + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
-  // Treppenhalle (Daniel, 4.11.2026: „so, dass man beim Reinkommen auf sie zuschaut, nicht so zick zack“): eine gerade, 1,30 m
-  // breite Treppenbahn an der Rückwand der Halle (LINE). Kellertreppe UG→EG, Haupttreppe EG→OG und Dachtreppe OG→DG sind je ein
-  // gerader Lauf, steigen nach Westen und liegen genau übereinander, je ein Geschoss versetzt (Kopfhöhe überall über 2,9 m).
-  // Antritt im Osten, Austritt im Westen auf das Podest vor dem Aufzug. Der Aufzug sitzt im Wandblock westlich davon, Türen nach Osten.
+  // Treppenhalle (Daniel, 4.11.2026: „so, dass man beim Reinkommen auf sie zuschaut, nicht so zick zack“): eine gerade Treppenbahn
+  // an der Rückwand der Halle (LINE = [Westende am Aufzug, Ostende, Südkante an der Rückwand, Nordkante zur Halle]). Kellertreppe UG→EG,
+  // Haupttreppe EG→OG und Dachtreppe OG→DG sind je ein gerader Lauf, steigen nach Westen und liegen genau übereinander, je ein Geschoss
+  // versetzt (Kopfhöhe an den Deckenöffnungen prüft die Regel treppe-kopf). Antritt im Osten, Austritt im Westen auf das Podest vor dem Aufzug. Der Aufzug sitzt im
+  // Wandblock westlich davon, Türen nach Osten.
+  // Breiter oder schmaler: nur LINE[2] (nach Süden) oder LINE[3] (nach Norden) ändern. Daraus folgen RUECKWAND und VORDERWAND (unten),
+  // mit ihnen alle Räume, Durchgänge, Türen und Möbel an diesen Wänden in 10-ug … 40-dg, dazu LIFT, VOID, HOLES, 3D, Regeln und
+  // Seitentext. Die x-Enden liegen an den Seitenwänden der Halle: LIFT, VOID und die Durchgänge in der Rückwand folgen ihnen, die Räume
+  // dort tragen 4,72 und 11,68 als eigene Wandkanten.
   const LINE = [4.72, 11.68, -4.88, -3.58];
+  const WAND = 0.24;                               // Innenwand, wie zwischen den Räumen der Geschosse
+  const mm = v => Math.round(v * 1000) / 1000;     // auf Millimeter: −4,88 − 0,24 ergibt so genau −5,12, ohne Gleitkommarest
+  // Wände an der Treppenbahn mit Südseite s, Mitte m (für Türen) und Nordseite n: die Rückwand südlich der Bahn läuft durchs ganze
+  // Haus, die Vorderwand nördlich gibt es im UG (Abstellraum), im OG am Podest (Kind 2) und im DG (Bad, Abstellraum); im EG ist dort die Halle
+  const RUECKWAND = { s: mm(LINE[2] - WAND), m: mm(LINE[2] - WAND / 2), n: LINE[2] };
+  const VORDERWAND = { s: LINE[3], m: mm(LINE[3] + WAND / 2), n: mm(LINE[3] + WAND) };
   const FLIGHTS = {
     UG: { x0: 10.69, x1: 6.01, n: 19, za: HOUSE.Z.ffbUG, zb: HOUSE.Z.ffbEG },   // 19 Steigungen à 18,9 cm, Auftritt 26 cm
     EG: { x0: 10.6, x1: 6.01, n: 18, za: HOUSE.Z.ffbEG, zb: HOUSE.Z.ffbOG },    // 18 à 18,6 cm, Auftritt 27 cm
@@ -1549,14 +1562,20 @@ const Plans = (() => {
   // Deckenöffnung über einem Lauf: so weit, wie man unter der Decke sonst keine 2,00 m Kopfhöhe hätte
   const holeOver = (fl, under) => { const F = FLIGHTS[fl]; return [F.x1, F.x0 - (under - 2 - F.za) / (F.zb - F.za) * (F.x0 - F.x1), LINE[2], LINE[3]]; };
   const HOLES = { EG: holeOver('UG', HOUSE.Z.ffbEG - 0.35), OG: holeOver('EG', HOUSE.Z.gurtU), DG: holeOver('OG', HOUSE.Z.deckeDG) };
-  const LIFT = [2.92, 4.72, -4.88, -3.08];
-  // Luftraum über dem vorderen Teil der Halle, im OG mit Geländer an der Treppe
-  const VOID = [[6.25, 11.68, -3.58, -0.36]];
+  const LIFT = [2.92, LINE[0], LINE[2], -3.08];
+  // Luftraum über dem vorderen Teil der Halle bis an die Treppenbahn, im OG mit Geländer an der Treppe
+  const VOID = [[6.25, LINE[1], LINE[3], -0.36]];
   // Fläche eines Raums ohne Treppe, Aufzug und (im OG) Luftraum, soweit sie darin liegen
   const cutA = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[2], b[2]));
   const STAIRUSE = { UG: [FLIGHTS.UG.x1, FLIGHTS.UG.x0, LINE[2], LINE[3]], EG: [FLIGHTS.EG.x1, FLIGHTS.EG.x0, LINE[2], LINE[3]],
     OG: [FLIGHTS.EG.x1, FLIGHTS.OG.x0, LINE[2], LINE[3]], DG: HOLES.DG };
   const coreIn = (fl, r) => cutA(r, STAIRUSE[fl]) + cutA(r, LIFT) + (fl === 'OG' ? VOID.reduce((t, v) => t + cutA(r, v), 0) : 0);
+  // Haustür: Öffnung „eingang“ der Nordfassade (src/haus/10-fassaden.js, nur dort versetzen oder verbreitern; Nordseite x = W − u),
+  // hier im Plan als EINGANG (x0 West-, x1 Ostkante samt Seitenteilen). HAUSTUER ist die Tür des EG-Grundrisses: das Türblatt zwischen
+  // den Seitenteilen, mittig in der Außenwand. Ebenso folgen ihr die Konsole in der Halle (20-eg.js), die Pflanzkübel
+  // (view3d/60-gelaende.js), der Pfeil im Lageplan, Laterne, Fußmatte und Rahmung, Ansicht „eingang“ und die Rundgänge (Tür 'EG N').
+  const EINGANG = (o => ({ x0: mm(W - o.u1), x1: mm(W - o.u0), seite: o.side || 0 }))(HOUSE.fas.N.open.find(o => o.kind === 'eingang'));
+  const HAUSTUER = { x: mm(EINGANG.x0 + EINGANG.seite), y: -HOUSE.wall / 2, w: mm(EINGANG.x1 - EINGANG.x0 - 2 * EINGANG.seite) };
 
   // ---------- Möbel und Ausstattung ----------
   const fu = {
@@ -1629,28 +1648,30 @@ const Plans = (() => {
 
   // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Untergeschoss mit Gym, Foyer und Technik
   // ---------- Grundrisse ----------
+  // In allen Geschossen: Kanten an der Rückwand und an der Wand vor der Treppe als RUECKWAND.s|m|n und VORDERWAND.s|m|n, Enden der
+  // Treppenbahn als LINE[0]/LINE[1], die Haustür als HAUSTUER (00-kern.js); so nimmt eine breitere Treppe Räume, Türen und Möbel mit
   const FL = {
     UG: {
       titel: 'Untergeschoss mit Tiefgarage', ffb: HOUSE.Z.ffbUG,
       rooms: [
         // Gym im Westen mit Sportboden und Lichthof davor (Daniel, 4.11.2026)
-        { n: 'Gym', r: [0.36, 6.48, -11.29, -6.56], ext: [[0.36, 4.48, -6.56, -5.12]], at: [3.0, -8.9] },
+        { n: 'Gym', r: [0.36, 6.48, -11.29, -6.56], ext: [[0.36, 4.48, -6.56, RUECKWAND.s]], at: [3.0, -8.9] },
         // Zugang von der Tiefgarage mittig, wo früher die Fahrräder standen: Foyer, Flur und Treppenbahn
-        { n: 'Foyer', r: [6.72, 9.28, -11.29, -6.32], ext: [[4.72, 11.68, -6.32, -5.12], LINE], core: true, at: [8.0, -8.9] },
-        { n: 'Ruheraum', r: [9.52, 15.64, -8.26, -6.56], ext: [[11.92, 15.64, -6.56, -5.12]], at: [12.6, -7.0] },
+        { n: 'Foyer', r: [6.72, 9.28, -11.29, -6.32], ext: [[4.72, 11.68, -6.32, RUECKWAND.s], LINE], core: true, at: [8.0, -8.9] },
+        { n: 'Ruheraum', r: [9.52, 15.64, -8.26, -6.56], ext: [[11.92, 15.64, -6.56, RUECKWAND.s]], at: [12.6, -7.0] },
         { n: 'Sauna', r: [9.52, 12.2, -11.29, -8.5], at: [10.86, -9.9] }, { n: 'Dusche / WC', r: [12.44, 15.64, -11.29, -8.5], at: [13.9, -9.9] },
-        { n: 'Technik', r: [11.92, 15.64, -4.88, -0.36], at: [13.8, -2.6] },
+        { n: 'Technik', r: [11.92, 15.64, RUECKWAND.n, -0.36], at: [13.8, -2.6] },
         // Waschen und ein richtiger Abstellraum nebeneinander (Hauswirtschaft); der Aufzug sitzt im Wandblock daneben
-        { n: 'Waschen', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, -4.88, -2.84]], at: [2.3, -1.6] },
-        { n: 'Abstellraum', r: [4.72, 11.68, -3.34, -0.36], at: [8.2, -1.85] },
+        { n: 'Waschen', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, RUECKWAND.n, -2.84]], at: [2.3, -1.6] },
+        { n: 'Abstellraum', r: [4.72, 11.68, VORDERWAND.n, -0.36], at: [8.2, -1.85] },
       ],
       // Durchgänge vom Flur zur Treppenbahn: im Westen zum Aufzug und Abstellraum, im Osten zum Antritt der Kellertreppe
-      open: [[4.72, FLIGHTS.UG.x1, -5.12, -4.88], [FLIGHTS.UG.x0, 11.68, -5.12, -4.88]],
+      open: [[LINE[0], FLIGHTS.UG.x1, RUECKWAND.s, RUECKWAND.n], [FLIGHTS.UG.x0, LINE[1], RUECKWAND.s, RUECKWAND.n]],
       doors: [
         { x: 7.3, y: -11.47, w: 0.7, o: 'h', s: 1, h: 0, t: 0.5 }, { x: 8.0, y: -11.47, w: 0.7, o: 'h', s: 1, h: 1, t: 0.5 },
         { x: 6.6, y: -8.0, w: 0.9, o: 'v', s: -1, h: 0 }, { x: 11.8, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 },
         { x: 10.4, y: -8.38, w: 0.7, o: 'h', s: -1, h: 0 }, { x: 13.4, y: -8.38, w: 0.8, o: 'h', s: -1, h: 0 },
-        { x: 11.8, y: -4.8, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 4.85, y: -3.46, w: 0.8, o: 'h', s: 1, h: 0 },
+        { x: 11.8, y: -4.8, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 4.85, y: VORDERWAND.m, w: 0.8, o: 'h', s: 1, h: 0 },
         { x: 4.6, y: -2.6, w: 0.85, o: 'v', s: -1, h: 0 },
       ],
       furn: () => [
@@ -1662,20 +1683,20 @@ const Plans = (() => {
         fu.box(9.9, 11.5, -7.9, -7.2, 'Liege'), fu.box(12.0, 13.6, -7.9, -7.2, 'Liege'), fu.shelf(15.04, 15.64, -8.0, -5.5),
         fu.box(12.2, 13.8, -1.5, -0.6, 'Wärmepumpe'), Ci(14.8, -1.25, 0.5, 'g-furn'), T(14.8, -1.33, 'Speicher', 'g-ftxt'), fu.box(12.2, 13.4, -3.6, -2.8, 'Anschluss'),
         fu.box(0.6, 1.2, -1.0, -0.4, 'WM'), fu.box(1.3, 1.9, -1.0, -0.4, 'TR'), fu.box(2.1, 3.3, -0.96, -0.4, 'Spüle', 'spuelzeile'), fu.shelf(0.36, 0.86, -4.6, -2.2),
-        fu.shelf(5.0, 11.4, -0.96, -0.36), fu.shelf(9.2, 11.68, -3.34, -2.74),
+        fu.shelf(5.0, 11.4, -0.96, -0.36), fu.shelf(9.2, 11.68, VORDERWAND.n, mm(VORDERWAND.n + 0.6)),
       ],
     },
     // Teil der Grundrisse (src/plan/, siehe 00-kern.js): Erdgeschoss
     EG: {
       titel: 'Erdgeschoss', ffb: HOUSE.Z.ffbEG,
       rooms: [
-        { n: 'Wohnen', r: [0.36, 6.48, -11.29, -5.12] }, { n: 'Essen', r: [6.72, 11.28, -11.29, -5.12], at: [9.0, -10.6] },
+        { n: 'Wohnen', r: [0.36, 6.48, -11.29, RUECKWAND.s] }, { n: 'Essen', r: [6.72, 11.28, -11.29, RUECKWAND.s], at: [9.0, -10.6] },
         // Küche L-förmig: 1 m weiter nach Norden, dafür ist die Backkitchen kleiner (Daniel, 4.11.2026)
-        { n: 'Küche', r: [11.52, 15.64, -11.29, -5.12], ext: [[11.92, 15.64, -5.12, -4.12]], at: [13.6, -10.4] },
+        { n: 'Küche', r: [11.52, 15.64, -11.29, RUECKWAND.s], ext: [[11.92, 15.64, RUECKWAND.s, -4.12]], at: [13.6, -10.4] },
         // Halle mit der Treppenbahn an der Rückwand: beim Hereinkommen steigt die Haupttreppe quer vor einem auf
-        { n: 'Halle', r: [4.72, 11.68, -4.88, -0.36], core: true, at: [7.6, -2.2] },
+        { n: 'Halle', r: [4.72, 11.68, RUECKWAND.n, -0.36], core: true, at: [7.6, -2.2] },
         // Gäste-WC dort, wo früher der kleine Abstellraum war; an der alten WC-Stelle sitzt jetzt der Aufzug
-        { n: 'Garderobe', r: [0.36, 4.48, -2.84, -0.36], at: [2.4, -1.65] }, { n: 'Gäste-WC', r: [0.36, 2.68, -4.88, -3.08], at: [1.52, -3.98] },
+        { n: 'Garderobe', r: [0.36, 4.48, -2.84, -0.36], at: [2.4, -1.65] }, { n: 'Gäste-WC', r: [0.36, 2.68, RUECKWAND.n, -3.08], at: [1.52, -3.98] },
         { n: 'Backkitchen', r: [11.92, 15.64, -3.88, -0.36], at: [13.75, -1.65] },
       ],
       open: [[6.48, 6.72, -10.4, -5.9], [11.28, 11.52, -10.4, -6.2]],
@@ -1683,8 +1704,9 @@ const Plans = (() => {
         { x: 4.6, y: -1.85, w: 0.9, o: 'v', s: -1, h: 1 }, { x: 1.1, y: -2.96, w: 0.8, o: 'h', s: -1, h: 0 },
         { x: 11.8, y: -4.84, w: 0.7, o: 'v', s: 1, h: 0 }, { x: 12.3, y: -4.0, w: 0.9, o: 'h', s: 1, h: 1 },
         // vom Podest unter dem Treppenaustritt ins Wohnzimmer
-        { x: 4.95, y: -5.0, w: 0.9, o: 'h', s: -1, h: 0 },
-        { x: 7.35, y: -0.18, w: 1.3, o: 'h', s: -1, h: 0, t: 0.5 },
+        { x: 4.95, y: RUECKWAND.m, w: 0.9, o: 'h', s: -1, h: 0 },
+        // Haustür: Lage und Breite kommen aus der Nordfassade (HAUSTUER in 00-kern.js)
+        { ...HAUSTUER, o: 'h', s: -1, h: 0, t: 0.5 },
       ],
       furn: () => [
         fu.box(0.36, 0.86, -8.2, -6.95, 'Kamin'), fu.sofa(2.9, 3.85, -8.9, -6.3, 'E'), fu.box(1.45, 2.35, -8.15, -7.05, '', 'couchtisch'),
@@ -1695,11 +1717,12 @@ const Plans = (() => {
         // kleiner Esstisch für vier vor den Gartentüren der Küche
         fu.table(12.75, 13.95, -10.45, -9.65, 2, false),
         fu.shelf(1.8, 3.1, -2.84, -2.24), fu.box(3.95, 4.48, -2.8, -2.05, 'Bank'),
-        fu.wc(1.6, -4.88, 'S'), fu.basin(0.36, -3.7, 0.45, 'W'),
+        fu.wc(1.6, RUECKWAND.n, 'S'), fu.basin(0.36, -3.7, 0.45, 'W'),
         fu.box(12.2, 15.64, -1.0, -0.36, '', 'zeile'), fu.box(12.8, 13.6, -0.95, -0.42, 'Spüle'), fu.box(15.0, 15.64, -3.6, -1.0, '', 'hochschrank'),
         fu.shelf(11.92, 12.5, -3.85, -1.4), fu.box(13.2, 14.6, -2.9, -2.1, 'Arbeitsfläche'),
-        // Halle: Konsole mit Spiegel an der Nordwand neben dem Eingang, Garderobenschrank für Gäste in der Nordostecke
-        fu.box(5.0, 6.4, -0.76, -0.36, '', 'konsole'), fu.box(11.08, 11.68, -2.9, -0.36, '', 'hochschrank'),
+        // Halle: Konsole mit Spiegel an der Nordwand neben dem Eingang (1,40 m, 0,20 m westlich der Öffnung, wandert mit der Haustür),
+        // Garderobenschrank für Gäste in der Nordostecke
+        fu.box(mm(EINGANG.x0 - 1.6), mm(EINGANG.x0 - 0.2), -0.76, -0.36, '', 'konsole'), fu.box(11.08, 11.68, -2.9, -0.36, '', 'hochschrank'),
         // draußen: Lounge mittig unter dem Balkon (Blick in den Garten, vor der Fassade bleibt ein Gang), Esstisch auf dem Freisitz;
         // Liegen stehen am Pool, nicht am Haus
         fu.sofa(6.8, 9.2, -13.95, -13.1, 'N'), fu.box(7.4, 8.6, -14.85, -14.35, '', 'couchtisch'),
@@ -1713,27 +1736,27 @@ const Plans = (() => {
       rooms: [
         // vier größere Kinderzimmer (Daniel, 4.11.2026: kein Wohnzimmer im OG) und zwei Bäder mit Wanne, die sich je zwei Kinder teilen
         { n: 'Kind 1', r: [0.36, 4.48, -11.29, -7.24], ext: [[4.72, 6.48, -11.29, -6.56]], at: [2.5, -9.7] },
-        { n: 'Bad West', r: [0.36, 4.48, -7.0, -5.12], at: [2.4, -6.06] },
-        { n: 'Kind 2', r: [0.36, 6.01, -2.84, -0.36], ext: [[0.36, 2.68, -4.88, -2.84], [4.72, 6.01, -3.34, -2.84]], at: [3.4, -1.75] },
+        { n: 'Bad West', r: [0.36, 4.48, -7.0, RUECKWAND.s], at: [2.4, -6.06] },
+        { n: 'Kind 2', r: [0.36, 6.01, -2.84, -0.36], ext: [[0.36, 2.68, RUECKWAND.n, -2.84], [4.72, 6.01, VORDERWAND.n, -2.84]], at: [3.4, -1.75] },
         { n: 'Kind 3', r: [11.52, 15.64, -11.29, -7.24], ext: [[9.52, 11.28, -11.29, -6.56]], at: [13.5, -9.7] },
-        { n: 'Bad Ost', r: [11.52, 15.64, -7.0, -5.12], at: [13.6, -6.06] },
-        { n: 'Kind 4', r: [11.92, 15.64, -4.88, -0.36], at: [13.8, -2.4] },
+        { n: 'Bad Ost', r: [11.52, 15.64, -7.0, RUECKWAND.s], at: [13.6, -6.06] },
+        { n: 'Kind 4', r: [11.92, 15.64, RUECKWAND.n, -0.36], at: [13.8, -2.4] },
         // Flur mit Treppenbahn: die Haupttreppe kommt im Westen an, die Dachtreppe beginnt im Osten; Mittelgang bis zur Balkontür
-        { n: 'Flur', r: [4.72, 11.28, -6.32, -5.12], ext: [[6.72, 9.28, -11.29, -6.32], LINE], core: true, at: [8.0, -9.2] },
+        { n: 'Flur', r: [4.72, 11.28, -6.32, RUECKWAND.s], ext: [[6.72, 9.28, -11.29, -6.32], LINE], core: true, at: [8.0, -9.2] },
       ],
-      open: [...VOID, [4.72, FLIGHTS.EG.x1, -5.12, -4.88], [FLIGHTS.OG.x0, 11.28, -5.12, -4.88]],
+      open: [...VOID, [LINE[0], FLIGHTS.EG.x1, RUECKWAND.s, RUECKWAND.n], [FLIGHTS.OG.x0, 11.28, RUECKWAND.s, RUECKWAND.n]],
       doors: [
         { x: 5.2, y: -6.44, w: 0.85, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -6.2, w: 0.75, o: 'v', s: -1, h: 0 },
-        { x: 4.9, y: -3.46, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 10.0, y: -6.44, w: 0.85, o: 'h', s: -1, h: 1 },
+        { x: 4.9, y: VORDERWAND.m, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 10.0, y: -6.44, w: 0.85, o: 'h', s: -1, h: 1 },
         { x: 11.4, y: -6.2, w: 0.75, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
         fu.bed(1.0, 2.4, -9.24, -7.24, 'N'), fu.desk(2.7, 4.1, -11.29, -10.6, 'N'), fu.shelf(3.0, 4.48, -7.84, -7.24), fu.shelf(4.72, 5.32, -11.0, -8.6),
-        fu.tub(0.5, 2.2, -7.0, -6.25), fu.basin(3.0, -5.12, 1.2, 'N'), fu.wc(4.48, -6.65, 'E'),
+        fu.tub(0.5, 2.2, -7.0, -6.25), fu.basin(3.0, RUECKWAND.s, 1.2, 'N'), fu.wc(4.48, -6.65, 'E'),
         fu.bed(0.5, 2.5, -4.78, -3.38, 'W'), fu.desk(2.8, 4.2, -1.06, -0.36, 'S'), fu.shelf(5.41, 6.01, -2.8, -0.6),
         fu.bed(13.64, 15.04, -9.24, -7.24, 'N'), fu.desk(11.92, 13.32, -11.29, -10.6, 'N'), fu.shelf(11.52, 13.0, -7.84, -7.24), fu.shelf(10.68, 11.28, -11.0, -8.6),
-        fu.tub(13.8, 15.5, -7.0, -6.25), fu.basin(12.8, -5.12, 1.2, 'N'), fu.wc(11.52, -6.65, 'W'),
-        fu.bed(13.9, 15.3, -4.88, -2.88, 'S'), fu.desk(12.2, 13.6, -1.06, -0.36, 'S'), fu.shelf(11.92, 12.52, -4.2, -1.6),
+        fu.tub(13.8, 15.5, -7.0, -6.25), fu.basin(12.8, RUECKWAND.s, 1.2, 'N'), fu.wc(11.52, -6.65, 'W'),
+        fu.bed(13.9, 15.3, RUECKWAND.n, mm(RUECKWAND.n + 2), 'S'), fu.desk(12.2, 13.6, -1.06, -0.36, 'S'), fu.shelf(11.92, 12.52, -4.2, -1.6),
         fu.box(6.72, 7.17, -10.6, -8.6, 'Bank'),
         // draußen auf dem Balkon über der Terrasse
         fu.table(7.4, 8.6, -13.6, -12.9, 1, false),
@@ -1745,18 +1768,18 @@ const Plans = (() => {
       rooms: [
         // Büro vorne mittig im Zwerchhaus mit Balkon (Daniel, 4.11.2026); Elternbereich im Westen, en suite: Flur → Schlafzimmer → Ankleide → Bad
         { n: 'Büro', r: [4.72, 11.28, -11.29, -6.56], at: [8.0, -10.4] },
-        { n: 'Flur', r: [4.72, 11.28, -6.32, -5.12], ext: [LINE], core: true, at: [8.0, -5.72] },
-        { n: 'Schlafzimmer', r: [0.36, 4.48, -11.29, -5.12], at: [2.4, -9.9] },
-        { n: 'Ankleide', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, -4.88, -2.84]], at: [2.6, -1.75] },
-        { n: 'Bad', r: [4.72, 9.28, -3.34, -0.36], at: [6.9, -2.1] },
+        { n: 'Flur', r: [4.72, 11.28, -6.32, RUECKWAND.s], ext: [LINE], core: true, at: [8.0, -5.72] },
+        { n: 'Schlafzimmer', r: [0.36, 4.48, -11.29, RUECKWAND.s], at: [2.4, -9.9] },
+        { n: 'Ankleide', r: [0.36, 4.48, -2.84, -0.36], ext: [[0.36, 2.68, RUECKWAND.n, -2.84]], at: [2.6, -1.75] },
+        { n: 'Bad', r: [4.72, 9.28, VORDERWAND.n, -0.36], at: [6.9, -2.1] },
         // die Ostseite ist frei geworden: Gästezimmer und Abstellraum
-        { n: 'Gäste', r: [11.52, 15.64, -11.29, -5.12], at: [13.6, -9.9] },
-        { n: 'Abstellraum', r: [11.92, 15.64, -4.88, -0.36], ext: [[9.52, 11.92, -3.34, -0.36]], wf: 0, at: [13.8, -2.6] },
+        { n: 'Gäste', r: [11.52, 15.64, -11.29, RUECKWAND.s], at: [13.6, -9.9] },
+        { n: 'Abstellraum', r: [11.92, 15.64, RUECKWAND.n, -0.36], ext: [[9.52, 11.92, VORDERWAND.n, -0.36]], wf: 0, at: [13.8, -2.6] },
       ],
-      open: [[4.72, FLIGHTS.OG.x1, -5.12, -4.88], [HOLES.DG[1], 11.28, -5.12, -4.88]],
+      open: [[LINE[0], FLIGHTS.OG.x1, RUECKWAND.s, RUECKWAND.n], [HOLES.DG[1], 11.28, RUECKWAND.s, RUECKWAND.n]],
       doors: [
         { x: 7.6, y: -6.44, w: 0.9, o: 'h', s: -1, h: 0 }, { x: 4.6, y: -6.2, w: 0.85, o: 'v', s: -1, h: 0 },
-        { x: 1.0, y: -5.0, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 4.6, y: -1.2, w: 0.8, o: 'v', s: 1, h: 0 },
+        { x: 1.0, y: RUECKWAND.m, w: 0.8, o: 'h', s: 1, h: 0 }, { x: 4.6, y: -1.2, w: 0.8, o: 'v', s: 1, h: 0 },
         { x: 11.4, y: -6.2, w: 0.85, o: 'v', s: 1, h: 0 }, { x: 11.8, y: -4.8, w: 0.8, o: 'v', s: 1, h: 0 },
       ],
       furn: () => [
@@ -1764,9 +1787,9 @@ const Plans = (() => {
         fu.bed(2.38, 4.48, -9.1, -7.3, 'E'), fu.box(4.0, 4.48, -7.3, -6.82, '', 'nacht'), fu.box(4.0, 4.48, -9.58, -9.1, '', 'nacht'),
         fu.box(1.6, 3.2, -11.0, -10.5, '', 'kommode'), fu.box(1.2, 2.0, -6.6, -5.8, '', 'sessel-W'),
         fu.shelf(1.0, 4.4, -1.6, -1.1), fu.shelf(2.0, 4.48, -2.84, -2.34), fu.shelf(0.9, 1.5, -4.8, -2.9),
-        fu.tub(6.6, 8.4, -1.2, -0.45), fu.shower(4.72, 5.92, -3.34, -2.14), fu.basin(9.28, -2.0, 1.4, 'E'), fu.wc(7.0, -3.34, 'S'),
+        fu.tub(6.6, 8.4, -1.2, -0.45), fu.shower(4.72, 5.92, VORDERWAND.n, mm(VORDERWAND.n + 1.2)), fu.basin(9.28, -2.0, 1.4, 'E'), fu.wc(7.0, VORDERWAND.n, 'S'),
         fu.bed(12.6, 14.4, -8.7, -6.7, 'N'), fu.desk(13.9, 15.3, -11.29, -10.6, 'N'), fu.shelf(11.52, 12.02, -10.6, -8.8),
-        fu.shelf(12.2, 15.4, -1.6, -1.1), fu.shelf(9.52, 11.6, -3.34, -2.84),
+        fu.shelf(12.2, 15.4, -1.6, -1.1), fu.shelf(9.52, 11.6, VORDERWAND.n, mm(VORDERWAND.n + 0.5)),
         // draußen auf dem Balkon vor dem Büro, neben der Tür
         fu.table(9.15, 9.55, -12.45, -11.85, 1, false),
       ],
@@ -1956,7 +1979,7 @@ const Plans = (() => {
       b.cols.map(x => sq(x, b.colY, b.colW, `Pfeiler · ${num(b.colW * 100, 0)} × ${num(b.colW * 100, 0)} cm`)).join('') +
       R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', `Freisitz · ${num(fz.x1 - fz.x0, 2)} × ${num(fz.y1 - fz.y0, 2)} m · überdacht, Esstisch`) + sq(fz.x1 - 0.175, fz.y0 + 0.175, 0.35) + sq(fz.x1 - 0.175, fz.y1 - 0.175, 0.35) +
       R(p.x0, p.x1, p.y0, p.y1, 'g-outside', 'Podest am Eingang') + R(W - pk.u1, W - pk.u0, 0, pk.depth, 'g-above', 'Portikus über dem Eingang') +
-      pk.pillars.map(u => sq(W - u, pk.py, pk.pw, 'Pfeiler des Portikus')).join('') + T(8, -15.25, 'Terrasse', 'g-ftxt') + T(17.5, -6.25, 'Freisitz', 'g-ftxt') + T(8, 0.4, 'Eingang', 'g-ftxt');
+      pk.pillars.map(u => sq(W - u, pk.py, pk.pw, 'Pfeiler des Portikus')).join('') + T(8, -15.25, 'Terrasse', 'g-ftxt') + T(17.5, -6.25, 'Freisitz', 'g-ftxt') + T(mm((EINGANG.x0 + EINGANG.x1) / 2), 0.4, 'Eingang', 'g-ftxt');
     if (fl === 'OG') return R(b.x0, b.x1, b.y0, b.y1, 'g-outside', `Balkon · ${num(b.x1 - b.x0, 2)} × ${num(b.y1 - b.y0, 2)} m`) + rails(b) + T(8, -14.3, 'Balkon', 'g-ftxt') +
       bd.cols.map(x => sq(x, bd.colY, bd.colW, `Pfeiler · ${num(bd.colW * 100, 0)} × ${num(bd.colW * 100, 0)} cm · trägt den Balkon im DG`)).join('') +
       R(fz.x0, fz.x1, fz.y0, fz.y1, 'g-outside', `Dachterrasse auf dem Freisitz · ${num(fz.x1 - fz.x0, 2)} × ${num(fz.y1 - fz.y0, 2)} m`) + T(17.5, -8.4, 'Dachterrasse', 'g-ftxt');
@@ -4079,8 +4102,9 @@ const View3D = (() => {
     // OG: schwarzes Geländer am Luftraum neben dem Antritt der Dachtreppe; DG: Geländer an der Öffnung über der Dachtreppe
     railing(M.metal, new THREE.Matrix4().makeTranslation(0, 0, -LINE[3] + 0.04), Plans.CORE.FLIGHTS.OG.x0 + 0.02, VOID[0][1] - 0.02, Zh.ffbOG, Zh.ffbOG + 1.0, 0);
     railing(M.metal, new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(HOLES.DG[1] + 0.04, 0, 0)), LINE[2] + 0.02, LINE[3] - 0.02, Zh.ffbDG, Zh.ffbDG + 1.0, 0);
-    // Kronleuchter im Luftraum über der Eingangsachse: Stange vom DG-Boden, zwei Ringe mit Lichtschirmen (leuchten abends)
-    const cx = 8.0, cy = (VOID[0][2] + VOID[0][3]) / 2;
+    // Kronleuchter im Luftraum über der Eingangsachse (Mitte der Öffnung „eingang“, wandert mit der Haustür): Stange vom DG-Boden,
+    // zwei Ringe mit Lichtschirmen (leuchten abends)
+    const eingang = HOUSE.fas.N.open.find(o => o.kind === 'eingang'), cx = HOUSE.W - (eingang.u0 + eingang.u1) / 2, cy = (VOID[0][2] + VOID[0][3]) / 2;
     addCyl(M.metal, cx, cy, Zh.deckeDG - 0.06, Zh.deckeDG, 0.11, 0.11, 18); addCyl(M.metal, cx, cy, 5.0, Zh.deckeDG - 0.06, 0.012, 0.012, 8);
     addCyl(M.metal, cx, cy, 4.42, 5.0, 0.035, 0.035, 12); addCyl(M.metal, cx, cy, 4.34, 4.42, 0.07, 0.02, 12);
     for (const [zr, rr, nn] of [[4.62, 0.62, 10], [4.95, 0.4, 6]]) {
@@ -5356,9 +5380,10 @@ const View3D = (() => {
     // kleine Buchskugeln als Allee am Weg zum Pool
     const allee = zufall('buchs allee');
     for (let y = -17.2; y > -22.6; y -= 1.35) for (const x of [7.12, 8.88]) items.buchs.push([x, y, 0.26, allee]);
-    // Zwei Pflanzkübel mit Buchskugeln unter dem Vordach links und rechts der Haustür
-    const zk = HOUSE.podest.z + 0.55, kuebel = zufall('buchs kübel');
-    for (const x of [6.15, 9.85]) { boxPlan(M.kuebel, x - 0.2, x + 0.2, 0.12, 0.52, HOUSE.podest.z, zk); items.buchs.push([x, 0.32, 0.23, kuebel, zk]); }
+    // Zwei Pflanzkübel mit Buchskugeln unter dem Vordach links und rechts der Haustür, je 0,45 m neben der Öffnung „eingang“ der
+    // Nordfassade (Plan-x = Hausbreite − u; auf Millimeter gerundet, damit keine Gleitkommareste ins Modell kommen)
+    const zk = HOUSE.podest.z + 0.55, kuebel = zufall('buchs kübel'), tuer = HOUSE.fas.N.open.find(o => o.kind === 'eingang');
+    for (const x of [HOUSE.W - tuer.u1 - 0.45, HOUSE.W - tuer.u0 + 0.45].map(v => Math.round(v * 1000) / 1000)) { boxPlan(M.kuebel, x - 0.2, x + 0.2, 0.12, 0.52, HOUSE.podest.z, zk); items.buchs.push([x, 0.32, 0.23, kuebel, zk]); }
     // Jede Pflanze: dunkler Kern und darauf Blatt- bzw. Blütenkarten; Lavendel als gekreuzte, senkrechte Karten
     const core = [], cards = { blatt: [], hortensie: [], buchs: [], lavendel: [] };
     const shell = (list, x, y, cy, r, ry, n, sz, k0, rnd) => {
@@ -6308,7 +6333,13 @@ const View3D = (() => {
       const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: Math.min(big ? 4 : 2, renderer.capabilities.maxSamples || 4) });
       rt.depthTexture = new THREE.DepthTexture(4, 4);
       const out = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
-      const ao = new GTAOPass(scene, camP, 2, 2);
+      // Rauschen der Entrauschung fest: GTAOPass würfelt es im Konstruktor mit Math.random (SimplexNoise, 256 Zahlen), und dessen Stand hängt
+      // an der Zahl der Objekte davor (jede UUID zieht vier Zahlen) – ein Möbel mehr im DG gab sonst allen Bildern ein neues Muster. Mit eigener
+      // Folge ist es bei jedem Laden und in jeder Szene gleich; später würfelt GTAO nicht mehr (setSize und die Materialien rechnen ohne Zufall).
+      const wuerfel = Math.random;
+      let ao;
+      Math.random = zufall('gtao rauschen');
+      try { ao = new GTAOPass(scene, camP, 2, 2); } finally { Math.random = wuerfel; }
       ao.setGBuffer(rt.depthTexture);
       ao.updateGtaoMaterial({ radius: 1.1, distanceExponent: 1.4, thickness: 1.6, scale: 1.5, samples: big ? 16 : 10, distanceFallOff: 1.0, screenSpaceRadius: false });
       ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, radiusExponent: 1, rings: 2, samples: big ? 16 : 10 });

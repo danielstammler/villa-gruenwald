@@ -196,9 +196,10 @@
     // kleine Buchskugeln als Allee am Weg zum Pool
     const allee = zufall('buchs allee');
     for (let y = -17.2; y > -22.6; y -= 1.35) for (const x of [7.12, 8.88]) items.buchs.push([x, y, 0.26, allee]);
-    // Zwei Pflanzkübel mit Buchskugeln unter dem Vordach links und rechts der Haustür
-    const zk = HOUSE.podest.z + 0.55, kuebel = zufall('buchs kübel');
-    for (const x of [6.15, 9.85]) { boxPlan(M.kuebel, x - 0.2, x + 0.2, 0.12, 0.52, HOUSE.podest.z, zk); items.buchs.push([x, 0.32, 0.23, kuebel, zk]); }
+    // Zwei Pflanzkübel mit Buchskugeln unter dem Vordach links und rechts der Haustür, je 0,45 m neben der Öffnung „eingang“ der
+    // Nordfassade (Plan-x = Hausbreite − u; auf Millimeter gerundet, damit keine Gleitkommareste ins Modell kommen)
+    const zk = HOUSE.podest.z + 0.55, kuebel = zufall('buchs kübel'), tuer = HOUSE.fas.N.open.find(o => o.kind === 'eingang');
+    for (const x of [HOUSE.W - tuer.u1 - 0.45, HOUSE.W - tuer.u0 + 0.45].map(v => Math.round(v * 1000) / 1000)) { boxPlan(M.kuebel, x - 0.2, x + 0.2, 0.12, 0.52, HOUSE.podest.z, zk); items.buchs.push([x, 0.32, 0.23, kuebel, zk]); }
     // Jede Pflanze: dunkler Kern und darauf Blatt- bzw. Blütenkarten; Lavendel als gekreuzte, senkrechte Karten
     const core = [], cards = { blatt: [], hortensie: [], buchs: [], lavendel: [] };
     const shell = (list, x, y, cy, r, ry, n, sz, k0, rnd) => {

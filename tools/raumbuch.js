@@ -14,9 +14,10 @@ const zahl = (v, d = 2) => (+v).toLocaleString('de-DE', { minimumFractionDigits:
 const spanne = ([a, b]) => `${zahl(a)}${a < 0 || b < 0 ? '…' : '–'}${zahl(b)}`;
 
 // ---------- Referenz: Fläche, Wohnfläche und Rechtecke je Raum ----------
+// Flächen ungerundet: die Zeile Räume rundet wie die Tabelle nur einmal auf 0,1 m² (aus 7,7456 wurde über 7,75 sonst „7,8“)
 const REF = path.join(ROOT, 'tools', 'shots', 'referenz', 'raumbuch.json');
 const STAND = Object.fromEntries(GR.GESCHOSSE.map(fl => [fl, Object.fromEntries(B.G[fl].raeume.map(r =>
-  [r.n, { a: +r.a.toFixed(2), wf: +r.wf.toFixed(2), rects: r.rects.map(q => q.map(v => +v.toFixed(3))) }]))]));
+  [r.n, { a: r.a, wf: r.wf, rects: r.rects.map(q => q.map(v => +v.toFixed(3))) }]))]));
 const ANZAHL = GR.GESCHOSSE.reduce((t, fl) => t + B.G[fl].raeume.length, 0);
 const schreibRef = () => { fs.mkdirSync(path.dirname(REF), { recursive: true }); fs.writeFileSync(REF, JSON.stringify({ stand: new Date().toISOString(), raeume: STAND }, null, 1)); };
 if (args.includes('--abnehmen')) { schreibRef(); console.log(`Räume: Referenz übernommen, ${ANZAHL} Räume (tools/shots/referenz/raumbuch.json)`); process.exit(0); }
@@ -24,11 +25,12 @@ let REFERENZ = null;
 try { REFERENZ = JSON.parse(fs.readFileSync(REF, 'utf8')).raeume; } catch (e) { /* noch keine Referenz */ }
 const NEU = !REFERENZ;
 if (NEU) schreibRef();
-// geänderte Räume: Fläche (auf 0,1 m²), sonst Wohnfläche, sonst Lage; neue und entfernte Räume
+// geänderte Räume: Fläche (auf 0,1 m²), sonst Wohnfläche, sonst Lage; neue und entfernte Räume. Flächen gelten erst ab 0,006 m² Abweichung
+// als geändert: ältere Referenzen runden auf 2 Stellen (bis ./vg abnehmen sie neu schreibt), und 7,7499 → 7,7501 wäre sonst „7,7 → 7,8 m²“
 const AENDERUNGEN = NEU ? [] : GR.GESCHOSSE.flatMap(fl => {
-  const alt = REFERENZ[fl] || {}, neu = STAND[fl], f1 = v => zahl(v, 1);
+  const alt = REFERENZ[fl] || {}, neu = STAND[fl], f1 = v => zahl(v, 1), anders = (p, q) => Math.abs(p - q) > 0.006 && f1(p) !== f1(q);
   return [...Object.entries(neu).map(([n, r]) => { const o = alt[n];
-    const t = !o ? `neu, ${f1(r.a)} m²` : f1(o.a) !== f1(r.a) ? `${f1(o.a)} → ${f1(r.a)} m²` : f1(o.wf) !== f1(r.wf) ? `Wohnfläche ${f1(o.wf)} → ${f1(r.wf)} m²`
+    const t = !o ? `neu, ${f1(r.a)} m²` : anders(o.a, r.a) ? `${f1(o.a)} → ${f1(r.a)} m²` : anders(o.wf, r.wf) ? `Wohnfläche ${f1(o.wf)} → ${f1(r.wf)} m²`
       : JSON.stringify(o.rects) !== JSON.stringify(r.rects) ? `Lage geändert, ${f1(r.a)} m²` : null;
     return t && { fl, n, t }; }),
     ...Object.keys(alt).filter(n => !neu[n]).map(n => ({ fl, n, t: `entfernt (${f1(alt[n].a)} m²)` }))].filter(Boolean);

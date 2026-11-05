@@ -10,9 +10,10 @@ case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*)
   # Git-Schritte bleiben in Git Bash: in Arbeitskopien zeigt .git auf einen Windows-Pfad, den Git in WSL nicht auflöst
   case "${1:-}" in helfer | live) cd "$here"; exec bash "tools/$1.sh" "${@:2}" ;; esac
   w="$(cd "$here" && pwd -W)"
-  # Ordner und Argumente über die Umgebung nach WSL reichen, dann stört keine Windows-Kommandozeile die Anführungszeichen
+  # Ordner und Argumente über die Umgebung nach WSL reichen, dann stört keine Windows-Kommandozeile die Anführungszeichen;
+  # PORT und OHNE_AUTOS mit (ohne WSLENV kämen sie in WSL nicht an, houseshot.sh nähme dann still den Server von main)
   export VG_DIR="/mnt/$(printf '%s' "${w:0:1}" | tr 'A-Z' 'a-z')${w:2}" VG_ARGS="$(printf '%q ' "$@")"
-  export WSLENV="${WSLENV:+$WSLENV:}VG_DIR/u:VG_ARGS/u" MSYS_NO_PATHCONV=1
+  export WSLENV="${WSLENV:+$WSLENV:}VG_DIR/u:VG_ARGS/u:PORT/u:OHNE_AUTOS/u" MSYS_NO_PATHCONV=1
   exec wsl.exe -e bash -lc 'cd "$VG_DIR" && eval "./vg $VG_ARGS"'
 esac
 cd "$here"

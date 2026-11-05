@@ -8,9 +8,10 @@
 // Lichthof und Rückgabe, 50 Garten (Hecken, Spielplatz).
 const HOUSE = (() => {
   const W = 16.0, D = 11.65, wall = 0.36;
-  // deckeSpitz: Unterseite der flachen Decke im DG (lichte Höhe 2,60 m), darüber der Spitzboden
+  // deckeSpitz: Unterseite der flachen Decke im DG (lichte Höhe 2,60 m), darüber der Spitzboden; deckeUG: Unterseite der Decke über dem UG
+  // (wie im 3D und in Plans.CORE.HOLES, für die Prüfungen in tools/regeln.js)
   const Z = {
-    ffbUG: -3.4, gelaende: 0, sockel: 0.2, ffbEG: 0.2, gurtU: 3.2, gurtO: 3.45, ffbOG: 3.55,
+    ffbUG: -3.4, deckeUG: -0.15, gelaende: 0, sockel: 0.2, ffbEG: 0.2, gurtU: 3.2, gurtO: 3.45, ffbOG: 3.55,
     sturzOG: 6.05, deckeDG: 6.3, ffbDG: 6.65, gesimsU: 6.55, gesimsO: 6.83, wand: 7.25, deckeSpitz: 9.25, knick: 10.35, first: 11.12,
   };
   // Klassisches Mansarddach wie im Rendering: unten steil (~70°), oben flach (~9°)
@@ -30,6 +31,8 @@ const HOUSE = (() => {
   // Alle Fenster und Fenstertüren mit senkrechter Mittelsprosse, also zwei Glasfelder (Daniel, 4.11.2026); die Haustür bleibt einflügelig.
   // Türen bis 1,10 m Breite einflügelig mit aufgesetzter Sprosse (zwei Flügel à ~0,37 m wären unbrauchbar), sonst zwei Flügel
   const fluegel = (u0, u1, kind) => kind === 'tuer' && u1 - u0 <= 1.1 ? { leaves: 1, sprosse: true } : { leaves: 2 };
+  // Blendrahmen je Seite wie im 3D (windowUnit): die lichte Breite einer Fenstertür ist die Öffnung ohne zwei Rahmen (tools/regeln.js)
+  const rahmen = 0.07;
   const op = (u0, u1, z0, z1, kind, extra = {}) => ({ u0, u1, z0, z1, kind, ...fluegel(u0, u1, kind), ...extra });
   const gaube = (u0, u1, win, extra = {}) => ({ u0, u1, top: 9.4, clad: 'putz', front: 0.2, win, ...extra });
   const gWin = (c, w = 0.9, z1 = 9.05) => ({ u0: c - w / 2, u1: c + w / 2, z0: 7.9, z1, leaves: 2 });
